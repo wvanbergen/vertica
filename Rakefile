@@ -14,9 +14,6 @@ task :default => "test"
 desc "Clean"
 task :clean do
   include FileUtils
-  Dir.chdir('ext') do
-    rm(Dir.glob('*') - ['extconf.rb'])
-  end
   rm_rf 'pkg'
 end
  
@@ -39,4 +36,3 @@ namespace :doc do
     rdoc.options << "--line-numbers" << "--inline-source"
   end
 end
-
