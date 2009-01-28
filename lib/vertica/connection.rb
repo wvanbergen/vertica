@@ -13,6 +13,11 @@ module Vertica
 
       @options = options
       establish_connection
+      
+      unless options[:skip_startup]
+        Messages::Startup.new(@options[:user], @options[:database]).to_bytes(@conn)
+        process
+      end
     end
     
     def close
@@ -72,6 +77,7 @@ module Vertica
     end
     
     def query(query_string)
+      raise ArgumentError.new("Query string cannot be blank or empty.") if query_string.nil? || query_string.empty?
       raise_if_not_open
       reset_result
 
@@ -102,42 +108,30 @@ module Vertica
       max_rows    = 0  # return all rows
 
             
-      # Bind
       reset_result
       
       Messages::Bind.new(portal_name, name, param_values).to_bytes(@conn)
-      # Messages::Describe.new(:portal, portal_name).to_bytes(@conn)
-      # Messages::Flush.new.to_bytes(@conn)
-
-      process
-
-      # Execute
       Messages::Execute.new(portal_name, max_rows).to_bytes(@conn)
       Messages::Sync.new.to_bytes(@conn)
       Messages::Flush.new.to_bytes(@conn)
-      
-      # process
-
-      # Get updated transaction status
-      # Messages::Sync.new.to_bytes(@conn)
-      # Messages::Flush.new.to_bytes(@conn)
-      
+            
       result = process(true)
 
       # Close the portal
-      # Messages::Close.new(:portal, portal_name).to_bytes(@conn)
-      # Messages::Flush.new.to_bytes(@conn)
-      # 
-      # process
+      Messages::Close.new(:portal, portal_name).to_bytes(@conn)
+      Messages::Flush.new.to_bytes(@conn)
+      
+      process
       
       # Return the result from the prepared statement
       result
     end
 
     def self.cancel(existing_conn)
-      conn = new(existing_conn.options)
-      Messages::Cancel(existing_conn.backend_pid, existing_conn.backend_key).to_bytes(conn)
-      conn.terminate
+      conn = new(existing_conn.options.merge(:skip_startup => true))
+      Messages::CancelRequest.new(existing_conn.backend_pid, existing_conn.backend_key).to_bytes(conn.send(:conn))
+      Messages::Flush.new.to_bytes(conn.send(:conn))
+      conn.close
     end
 
     protected
@@ -154,11 +148,7 @@ module Vertica
         else
           raise Error::ConnectionError.new("SSL requested but server doesn't support it.")
         end
-      end
-      
-      Messages::Startup.new(@options[:user], @options[:database]).to_bytes(@conn)
-
-      process
+      end      
     end
     
     def process(return_result = false)
@@ -257,6 +247,10 @@ module Vertica
       else
         nil
       end
+    end
+
+    def conn
+      @conn
     end
 
   end

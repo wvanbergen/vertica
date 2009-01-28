@@ -36,7 +36,7 @@ class ConnectionTest < Test::Unit::TestCase
   
   def test_select_query_with_results
     c = Vertica::Connection.new(TEST_CONNECTION_HASH)
-    r = c.query("SELECT * FROM USERS")
+    r = c.query("SELECT * FROM test_table")
     assert_equal 1, r.row_count
     assert_equal 2, r.columns.length
     assert_equal :in, r.columns[0].data_type
@@ -49,7 +49,7 @@ class ConnectionTest < Test::Unit::TestCase
   
   def test_select_query_with_no_results
     c = Vertica::Connection.new(TEST_CONNECTION_HASH)
-    r = c.query("SELECT * FROM USERS WHERE 1 != 1")
+    r = c.query("SELECT * FROM test_table WHERE 1 != 1")
     assert_equal 0, r.row_count
     assert_equal 2, r.columns.length
     assert_equal :in, r.columns[0].data_type
@@ -60,20 +60,58 @@ class ConnectionTest < Test::Unit::TestCase
     c.close
   end
   
-  # test execute (delete)
-  # test insert (get ROWID)
-  
-  def test_empty_query
+  def test_delete_of_no_rows
     c = Vertica::Connection.new(TEST_CONNECTION_HASH)
-    r = c.query("")
-    assert_equal 0, r.row_count
-    assert_equal 0, r.columns.length
-    assert_equal [], r.columns
-    assert_equal [], r.rows
+    r = c.query("DELETE FROM test_table WHERE 1 != 1")
+    assert_equal 1, r.row_count
+    assert_equal 1, r.columns.length
+    assert_equal :in, r.columns[0].data_type
+    assert_equal 'OUTPUT', r.columns[0].name
+    assert_equal [[0]], r.rows
+    c.close
+  end  
+
+  def test_insert
+    c = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    r = c.query("INSERT INTO test_table VALUES (2, 'stefanie')")
+    assert_equal 1, r.row_count
+    assert_equal 1, r.columns.length
+    assert_equal :in, r.columns[0].data_type
+    assert_equal 'OUTPUT', r.columns[0].name
+    assert_equal [[1]], r.rows
     c.close
   end
 
-  # test cancel
-  # test process message lst
-  # test COPY IN/OUT
+  def test_delete_of_a_row
+    test_insert
+    c = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    r = c.query("DELETE FROM test_table WHERE id = 2")
+    assert_equal 1, r.row_count
+    assert_equal 1, r.columns.length
+    assert_equal :in, r.columns[0].data_type
+    assert_equal 'OUTPUT', r.columns[0].name
+    assert_equal [[0]], r.rows
+    c.close
+  end  
+    
+  def test_empty_query
+    c = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    assert_raises ArgumentError do
+      r = c.query("")
+    end
+    assert_raises ArgumentError do
+      r = c.query(nil)
+    end
+    c.close
+  end
+
+  def test_cancel
+    c = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    Vertica::Connection.cancel(c)
+    c.close
+  end
+
+  # test function call
+  # test parameters
+
 end

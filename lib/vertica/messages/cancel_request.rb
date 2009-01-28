@@ -15,9 +15,9 @@ module Vertica
         size += 4
 
         stream.write_network_int32(size) # size
-        stream.write_cstring(80877102)
+        stream.write_network_int32(80877102)
         stream.write_network_int32(@backend_pid)
-        stream.write_network_int16(@backend_key)
+        stream.write_network_int32(@backend_key)
       end
 
     end
