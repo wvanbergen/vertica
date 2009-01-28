@@ -10,6 +10,8 @@ module Vertica
   
   PROTOCOL_VERSION = 3 << 16
   
+  VERSION = "0.7.3"
+  
 end
 
 require 'vertica/column'
