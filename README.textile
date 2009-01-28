@@ -1,2 +1,64 @@
-h1. Vertica Ruby Adapter
+h1. Vertica
+    by Matt Bauer
+    http://github.com/mattbauer/vertica
 
+h2. Description
+
+Vertica is a pure Ruby library for connecting to Vertica databases.  You can learn more
+about Vertica at http://www.vertica.com.  This library currently supports queries and
+prepared statements.
+
+h2. Install
+
+  $ gem install mattbauer-vertica --source http://gems.github.com
+
+h2. Source
+
+Vertica's git repo is available on GitHub, which can be browsed at:
+
+  http://github.com/mattbauer/vertica
+
+and cloned from:
+
+  git://github.com/mattbauer/vertica.git
+
+h2. Usage
+
+h4. Example Query
+
+<pre>
+<code>
+  c = Vertica::Connection.new(
+    :user     => 'user',
+    :password => 'password',
+    :host     => 'db_server',
+    :port     => '5433',
+    :database => 'db
+  )
+  r = c.query("SELECT * FROM my_table")
+  puts r.row_count
+  puts r.columns[0].name
+  puts r.rows
+  c.close
+</code>
+</pre>
+
+h4. Example Prepared Statement
+
+<pre>
+<code>
+  c = Vertica::Connection.new(
+    :user     => 'user',
+    :password => 'password',
+    :host     => 'db_server',
+    :port     => '5433',
+    :database => 'db
+  )
+  c.prepare("my_prepared_statement", "SELECT * FROM my_table WHERE id = ?", 1)
+  r = c.execute_prepared("my_prepared_statement", 13)
+  puts r.row_count
+  puts r.columns[0].name
+  puts r.rows
+  c.close
+</code>
+</pre>
