@@ -1,7 +1,6 @@
 h1. Vertica
 
-    by Matt Bauer
-    http://github.com/mattbauer/vertica
+by Matt Bauer
 
 h2. Description
 
