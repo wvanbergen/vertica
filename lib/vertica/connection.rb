@@ -44,10 +44,6 @@ module Vertica
       @transaction_status
     end
 
-    def parameter_status
-      @parameter_status.dup
-    end
-
     def backend_pid
       @backend_pid
     end
@@ -100,20 +96,17 @@ module Vertica
     end
     
     def execute_prepared(name, *param_values)
-      # raise NotImplementedError.new("Prepared statements are not supported in Vertica")
-            
       raise_if_not_open
       
       portal_name = "" # use the unnamed portal
       max_rows    = 0  # return all rows
-
             
       reset_result
       
       Messages::Bind.new(portal_name, name, param_values).to_bytes(@conn)
       Messages::Execute.new(portal_name, max_rows).to_bytes(@conn)
-      Messages::Sync.new.to_bytes(@conn)
-      Messages::Flush.new.to_bytes(@conn)
+      # Messages::Sync.new.to_bytes(@conn)
+      # Messages::Flush.new.to_bytes(@conn)
             
       result = process(true)
 
@@ -164,7 +157,7 @@ module Vertica
           @backend_pid = message.pid
           @backend_key = message.key
         when Messages::BindComplete
-          break
+          :nothing
         when Messages::CloseComplete
           break
         when Messages::CommandComplete
@@ -219,7 +212,6 @@ module Vertica
     def reset_values
       reset_notifications
       reset_result
-      @options            = {}
       @parameters         = {}
       @backend_pid        = nil
       @backend_key        = nil

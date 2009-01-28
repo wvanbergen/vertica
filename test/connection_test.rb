@@ -8,6 +8,10 @@ class ConnectionTest < Test::Unit::TestCase
     assert c.backend_pid
     assert c.backend_key
     assert c.transaction_status
+    assert c.opened?
+    assert !c.closed?
+    assert_equal({"server_version" => "8.0"}, c.parameters)
+    assert_equal([], c.notifications)
     c.close
     assert_equal({}, c.parameters)
     assert_nil c.backend_pid
@@ -26,6 +30,20 @@ class ConnectionTest < Test::Unit::TestCase
     assert_nil c.backend_pid
     assert_nil c.backend_key
     assert_nil c.transaction_status
+  end
+  
+  def test_reset
+    c = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    assert !c.parameters.empty?
+    assert c.backend_pid
+    assert c.backend_key
+    assert c.transaction_status
+    c.reset
+    assert_equal({}, c.parameters)
+    assert_nil c.backend_pid
+    assert_nil c.backend_key
+    assert_nil c.transaction_status
+    c.close
   end
   
   def test_new_with_error_response
@@ -110,8 +128,49 @@ class ConnectionTest < Test::Unit::TestCase
     Vertica::Connection.cancel(c)
     c.close
   end
+  
+  def test_prepared_statement_with_no_params
+    c = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    c.prepare("my_ps", "SELECT * FROM test_table")
+    r = c.execute_prepared("my_ps")
+    assert_equal 1, r.row_count
+    assert_equal 2, r.columns.length
+    assert_equal :in, r.columns[0].data_type
+    assert_equal 'id', r.columns[0].name
+    assert_equal :varchar, r.columns[1].data_type
+    assert_equal 'name', r.columns[1].name
+    assert_equal [[1, 'matt']], r.rows
+    c.close    
+  end
 
-  # test function call
+  def test_prepared_statement_with_one_param
+    c = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    c.prepare("my_ps", "SELECT * FROM test_table WHERE id = ?", 1)
+    r = c.execute_prepared("my_ps", 1)
+    assert_equal 1, r.row_count
+    assert_equal 2, r.columns.length
+    assert_equal :in, r.columns[0].data_type
+    assert_equal 'id', r.columns[0].name
+    assert_equal :varchar, r.columns[1].data_type
+    assert_equal 'name', r.columns[1].name
+    assert_equal [[1, 'matt']], r.rows
+    c.close    
+  end
+
+  def test_prepared_statement_with_two_params
+    c = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    c.prepare("my_ps", "SELECT * FROM test_table WHERE id = ? OR id = ?", 2)
+    r = c.execute_prepared("my_ps", 1, 3)
+    assert_equal 1, r.row_count
+    assert_equal 2, r.columns.length
+    assert_equal :in, r.columns[0].data_type
+    assert_equal 'id', r.columns[0].name
+    assert_equal :varchar, r.columns[1].data_type
+    assert_equal 'name', r.columns[1].name
+    assert_equal [[1, 'matt']], r.rows
+    c.close    
+  end
+
   # test parameters
 
 end

@@ -36,3 +36,9 @@ namespace :doc do
     rdoc.options << "--line-numbers" << "--inline-source"
   end
 end
+
+desc "Run rcov on current app"
+task :rcov do
+  system "rm -rf coverage && rcov -o coverage -x rcov.rb test/*_test.rb"
+  system("open coverage/index.html") if PLATFORM['darwin']
+end
