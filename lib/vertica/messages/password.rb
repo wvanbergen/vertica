@@ -23,11 +23,9 @@ module Vertica
       def to_bytes(stream)
         size = LENGTH_SIZE
         size += @password.length + 1
-        size += 1 # ending zero
         stream.write_byte(message_id)
         stream.write_network_int32(size) # size
         stream.write_cstring(@password)
-        stream.write_byte(0)
       end
 
     end

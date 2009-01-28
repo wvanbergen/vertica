@@ -15,7 +15,14 @@ module Vertica
     end
     
     def rows
-      @field_values.map { |fv| fv.map { |f| f[:value] }}
+      @field_values.map do |fv|
+        index = 0
+        fv.map do |f|
+          index += 1
+          self.columns[index-1].convert(f[:value])
+        end
+      end
     end
+    
   end
 end

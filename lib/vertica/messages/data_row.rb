@@ -14,7 +14,7 @@ module Vertica
           size = stream.read_network_int32
           @fields << {
             :size   => size,
-            :value  => stream.readn(size)
+            :value  => size == -1 ? nil : stream.readn(size)
           }
         end
       end

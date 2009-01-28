@@ -7,6 +7,8 @@ module Vertica
       attr_reader :fields
       
       def initialize(stream, size)
+        super
+
         @fields = []
         
         @field_count = stream.read_network_int16
