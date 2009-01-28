@@ -4,9 +4,9 @@ require "vertica"
  
 class Test::Unit::TestCase
   
-  TEST_CONNECTION_USER     = 'dbadmin'
-  TEST_CONNECTION_PASSWORD = 'clitheur'
-  TEST_CONNECTION_HOST     = 'ec2-174-129-157-242.compute-1.amazonaws.com'
+  TEST_CONNECTION_USER     = 'user'
+  TEST_CONNECTION_PASSWORD = 'password'
+  TEST_CONNECTION_HOST     = 'server'
   TEST_CONNECTION_PORT     = 5433
   TEST_CONNECTION_DATABASE = 'db'
 

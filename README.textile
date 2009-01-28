@@ -62,3 +62,8 @@ h4. Example Prepared Statement
   c.close
 </code>
 </pre>
+
+h2. Running The Tests
+
+To run the tests, change the values in test_helper.rb to match your db configuration.  Then
+execute the create_schema.sql on the database.  Then you may run the tests.
