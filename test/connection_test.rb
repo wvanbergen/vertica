@@ -88,7 +88,7 @@ class ConnectionTest < Test::Unit::TestCase
     assert_equal [[0]], r.rows
     c.close
   end  
-
+  
   def test_insert
     c = Vertica::Connection.new(TEST_CONNECTION_HASH)
     r = c.query("INSERT INTO test_table VALUES (2, 'stefanie')")
@@ -99,7 +99,7 @@ class ConnectionTest < Test::Unit::TestCase
     assert_equal [[1]], r.rows
     c.close
   end
-
+  
   def test_delete_of_a_row
     test_insert
     c = Vertica::Connection.new(TEST_CONNECTION_HASH)
@@ -122,7 +122,7 @@ class ConnectionTest < Test::Unit::TestCase
     end
     c.close
   end
-
+  
   def test_cancel
     c = Vertica::Connection.new(TEST_CONNECTION_HASH)
     Vertica::Connection.cancel(c)
@@ -142,7 +142,7 @@ class ConnectionTest < Test::Unit::TestCase
     assert_equal [[1, 'matt']], r.rows
     c.close    
   end
-
+  
   def test_prepared_statement_with_one_param
     c = Vertica::Connection.new(TEST_CONNECTION_HASH)
     c.prepare("my_ps", "SELECT * FROM test_table WHERE id = ?", 1)
@@ -156,7 +156,7 @@ class ConnectionTest < Test::Unit::TestCase
     assert_equal [[1, 'matt']], r.rows
     c.close    
   end
-
+  
   def test_prepared_statement_with_two_params
     c = Vertica::Connection.new(TEST_CONNECTION_HASH)
     c.prepare("my_ps", "SELECT * FROM test_table WHERE id = ? OR id = ?", 2)
@@ -169,6 +169,21 @@ class ConnectionTest < Test::Unit::TestCase
     assert_equal 'name', r.columns[1].name
     assert_equal [[1, 'matt']], r.rows
     c.close    
+  end
+
+  def test_double_select
+    c = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    5.times do
+      r = c.query("SELECT * FROM test_table")
+      assert_equal 1, r.row_count
+      assert_equal 2, r.columns.length
+      assert_equal :in, r.columns[0].data_type
+      assert_equal 'id', r.columns[0].name
+      assert_equal :varchar, r.columns[1].data_type
+      assert_equal 'name', r.columns[1].name
+      assert_equal [[1, 'matt']], r.rows
+    end
+    c.close
   end
 
   # test parameters

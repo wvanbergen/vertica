@@ -78,7 +78,6 @@ module Vertica
       reset_result
 
       Messages::Query.new(query_string).to_bytes(@conn)
-      
       process(true)
     end
     
@@ -105,8 +104,7 @@ module Vertica
       
       Messages::Bind.new(portal_name, name, param_values).to_bytes(@conn)
       Messages::Execute.new(portal_name, max_rows).to_bytes(@conn)
-      # Messages::Sync.new.to_bytes(@conn)
-      # Messages::Flush.new.to_bytes(@conn)
+      Messages::Sync.new.to_bytes(@conn)
             
       result = process(true)
 
@@ -194,7 +192,7 @@ module Vertica
           break
         when Messages::ReadyForQuery
           @transaction_status = convert_transaction_status_to_sym(message.transaction_status)
-          break
+          break unless return_result
         when Messages::RowDescription
           @field_descriptions = message.fields
         when Messages::Unknown
