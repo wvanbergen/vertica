@@ -1,9 +1,3 @@
-require 'uri'
-require 'stringio'
-require 'vertica/vertica_socket'
-require 'vertica/messages/message'
-require 'openssl/ssl'
-
 module Vertica
   
   class Connection

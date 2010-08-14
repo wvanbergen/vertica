@@ -3,13 +3,9 @@ module Vertica
     class Message
       LENGTH_SIZE   = 4
       
-      class << self
-        
-        def message_id(message_id)
-          self.const_set(:MESSAGE_ID, message_id) 
-          class_eval "def message_id; MESSAGE_ID end"
-        end
-        
+      def self.message_id(message_id)
+        self.const_set(:MESSAGE_ID, message_id) 
+        class_eval "def message_id; MESSAGE_ID end"
       end
     end
     
@@ -18,26 +14,23 @@ module Vertica
       
       attr_reader :size
       
-      class << self
-        def message_id(message_id)
-          super
-          MessageIdMap[message_id] = self
-        end
-        
-        def read(stream)
-          type = stream.read_byte
-          size = stream.read_network_int32
-
-          raise Vertica::Error::MessageError.new("Bad message size: #{size}") unless size >= 4
-
-          message_klass = MessageIdMap[type]
-          if message_klass.nil?
-            Messages::Unknown.new(type)
-          else
-            message_klass.new(stream, size)
-          end
-        end
+      def self.message_id(message_id)
+        super
+        MessageIdMap[message_id] = self
+      end
       
+      def self.read(stream)
+        type = stream.read_byte
+        size = stream.read_network_int32
+
+        raise Vertica::Error::MessageError.new("Bad message size: #{size}") unless size >= 4
+
+        message_klass = MessageIdMap[type]
+        if message_klass.nil?
+          Messages::Unknown.new(type)
+        else
+          message_klass.new(stream, size)
+        end
       end
       
       def initialize(stream, size)
@@ -51,35 +44,3 @@ module Vertica
 
   end
 end
-
-require 'vertica/messages/unknown'
-require 'vertica/messages/error_response'
-require 'vertica/messages/startup'
-require 'vertica/messages/authentication'
-require 'vertica/messages/password'
-require 'vertica/messages/parameter_status'
-require 'vertica/messages/backend_key_data'
-require 'vertica/messages/ready_for_query'
-require 'vertica/messages/terminate'
-require 'vertica/messages/notification_response'
-require 'vertica/messages/query'
-require 'vertica/messages/notice_response'
-require 'vertica/messages/row_description'
-require 'vertica/messages/command_complete'
-require 'vertica/messages/data_row'
-require 'vertica/messages/empty_query_response'
-require 'vertica/messages/sync'
-require 'vertica/messages/ssl_request'
-require 'vertica/messages/parse'
-require 'vertica/messages/parse_complete'
-require 'vertica/messages/bind'
-require 'vertica/messages/bind_complete'
-require 'vertica/messages/describe'
-require 'vertica/messages/flush'
-require 'vertica/messages/parameter_description'
-require 'vertica/messages/no_data'
-require 'vertica/messages/execute'
-require 'vertica/messages/close'
-require 'vertica/messages/close_complete'
-require 'vertica/messages/portal_suspended'
-require 'vertica/messages/cancel_request'
