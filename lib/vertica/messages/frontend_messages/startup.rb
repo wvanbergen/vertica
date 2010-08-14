@@ -16,21 +16,15 @@ module Vertica
         size += @options.length  + 7 + 2 if @options
         size += 1 # ending zero
 
-        stream.write_network_int32(size) # size
-        stream.write_network_int32(Vertica::PROTOCOL_VERSION) # proto version
-        if @user
-          stream.write_cstring('user')
-          stream.write_cstring(@user)
-        end
-        if @database
-          stream.write_cstring('database')
-          stream.write_cstring(@database)
-        end
-        if @options
-          stream.write_cstring('options')
-          stream.write_cstring(@options)
-        end
-        stream.write_byte(0)
+        bytes = [
+          size.to_network_int32,
+          Vertica::PROTOCOL_VERSION.to_network_int32
+        ]
+        bytes += ['user'.to_cstring, @user.to_cstring] if @user
+        bytes += ['database'.to_cstring, @database.to_cstring] if @database
+        bytes += ['options'.to_cstring, @options.to_cstring] if @options
+        bytes << 0
+        bytes.flatten.join
       end
 
     end

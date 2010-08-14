@@ -2,10 +2,10 @@ module Vertica
   module Messages
     class DataRow < BackendMessage
       message_id ?D
-      
+
       attr_reader :field_count
       attr_reader :fields
-      
+
       def initialize(stream, size)
         @fields = []
 

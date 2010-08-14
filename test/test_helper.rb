@@ -1,9 +1,10 @@
 require "test/unit"
 $:.unshift(File.dirname(__FILE__) + '/../lib')
 require "vertica"
- 
+require 'stringio'
+
 class Test::Unit::TestCase
-  
+
   TEST_CONNECTION_USER     = 'dbadmin'
   TEST_CONNECTION_PASSWORD = 'cl3v3rcstore'
   TEST_CONNECTION_HOST     = 'ec2-174-129-157-242.compute-1.amazonaws.com'

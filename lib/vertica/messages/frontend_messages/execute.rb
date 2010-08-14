@@ -8,15 +8,16 @@ module Vertica
         @max_rows    = max_rows
       end
 
-      def to_bytes(stream)
+      def to_bytes
         size = LENGTH_SIZE
         size += @portal_name.length + 1
         size += 4
-        
-        stream.write_byte(message_id)
-        stream.write_network_int32(size) # size
-        stream.write_cstring(@portal_name)
-        stream.write_network_int32(@max_rows)
+
+        [ message_id.to_byte,
+          size.to_network_int32,
+          @portal_name.to_cstring,
+          @max_rows.to_network_int32
+        ].join
       end
 
     end

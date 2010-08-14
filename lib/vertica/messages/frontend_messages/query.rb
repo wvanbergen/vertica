@@ -7,12 +7,13 @@ module Vertica
         @query_string = query_string
       end
 
-      def to_bytes(stream)
+      def to_bytes
         size = LENGTH_SIZE
         size += @query_string.length + 1
-        stream.write_byte(message_id)
-        stream.write_network_int32(size) # size
-        stream.write_cstring(@query_string)
+        [ message_id.to_byte,
+          size.to_network_int32,
+          @query_string.to_cstring
+        ].join
       end
 
     end

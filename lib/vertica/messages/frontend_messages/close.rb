@@ -4,25 +4,24 @@ module Vertica
       message_id ?C
 
       def initialize(close_type, close_name)
-        if close_type == :portal
-          @close_type = ?P
-        elsif close_type == :prepared_statement
-          @close_type = ?S
-        else
-          raise ArgumentError.new("#{close_type} is not a valid close_type.  Must be either :portal or :prepared_statement.")
-        end
         @close_name = close_name
+        @close_type = case close_type
+        when :portal              then ?P
+        when :prepared_statement  then ?S
+        else raise ArgumentError.new("#{close_type} is not a valid close_type.  Must be either :portal or :prepared_statement.")
+        end
       end
 
-      def to_bytes(stream)
+      def to_bytes
         size = LENGTH_SIZE
         size += 1
         size += @close_name.length + 1
-        
-        stream.write_byte(message_id)
-        stream.write_network_int32(size) # size
-        stream.write_byte(@close_type)
-        stream.write_cstring(@close_name)
+
+        [ message_id.to_byte,
+          size.to_network_int32,
+          @close_type.to_byte,
+          @close_name.to_cstring
+        ].join
       end
 
     end

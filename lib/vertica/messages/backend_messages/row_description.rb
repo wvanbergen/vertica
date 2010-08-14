@@ -2,15 +2,15 @@ module Vertica
   module Messages
     class RowDescription < BackendMessage
       message_id ?T
-      
+
       attr_reader :field_count
       attr_reader :fields
-      
+
       def initialize(stream, size)
         super
 
         @fields = []
-        
+
         @field_count = stream.read_network_int16
         @field_count.times do |field_index|
           @fields << {

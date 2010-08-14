@@ -9,21 +9,20 @@ module Vertica
         @param_types  = param_types
       end
 
-      def to_bytes(stream)
+      def to_bytes
         size = LENGTH_SIZE
         size += @name.length + 1
         size += @query.length + 1
         size += 2
         size += (@param_types.length * 4)
-        
-        stream.write_byte(message_id)
-        stream.write_network_int32(size) # size
-        stream.write_cstring(@name)
-        stream.write_cstring(@query)
-        stream.write_network_int16(@param_types.length)
-        @param_types.each do |param_type|
-          stream.write_network_int32(param_type)
-        end
+
+        [ message_id.to_byte,
+          size.to_network_int32,
+          @name.to_cstring,
+          @query.to_cstring,
+          @param_types.length.to_network_int16,
+          @param_types.map { |type| type.to_network_int32 }
+        ].flatten.join
       end
 
     end

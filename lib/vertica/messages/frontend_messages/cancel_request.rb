@@ -8,16 +8,17 @@ module Vertica
         @backend_key = backend_key
       end
 
-      def to_bytes(stream)
+      def to_bytes
         size = LENGTH_SIZE
         size += 4
         size += 4
         size += 4
 
-        stream.write_network_int32(size) # size
-        stream.write_network_int32(80877102)
-        stream.write_network_int32(@backend_pid)
-        stream.write_network_int32(@backend_key)
+        [ size.to_network_int32,
+          80877102.to_network_int32,
+          @backend_pid.to_network_int32,
+          @backend_key.to_network_int32
+        ].join
       end
 
     end

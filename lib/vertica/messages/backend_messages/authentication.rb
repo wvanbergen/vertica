@@ -12,11 +12,11 @@ module Vertica
       GSS                 = 7
       GSS_CONTINUE        = 8
       SSPI                = 9
-      
+
       attr_reader :code
       attr_reader :salt
       attr_reader :auth_data
-      
+
       def initialize(stream, size)
         super
         @code = stream.read_network_int32
