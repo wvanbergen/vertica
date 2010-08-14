@@ -52,7 +52,7 @@ module Vertica
     end
 
     def write(message)
-      raise ArgumentError, "message must be a Message. was (#{message.class})" unless message.kind_of?(Message)
+      raise ArgumentError, "message must be a Message. was (#{message.class})" unless message.kind_of?(Messages::Message)
       connection.write message.to_bytes
     end
 
@@ -102,7 +102,7 @@ module Vertica
       raise ArgumentError.new("Query string cannot be blank or empty.") if query_string.nil? || query_string.empty?
       reset_result
       write Messages::Query.new(query_string)
-      process(true)
+      process(true)#Result.new connection
     end
 
     def prepare(name, query, params_count = 0)
@@ -154,7 +154,7 @@ module Vertica
           @backend_key = message.key
 
         when Messages::DataRow
-          result.add_value(message.fields) if result
+          result.add_row(message) if result
 
         when Messages::ErrorResponse
           raise Error::MessageError.new(message.error)
@@ -175,7 +175,7 @@ module Vertica
           break unless return_result
 
         when Messages::RowDescription
-          result.set_field_descriptions(message.fields) if result
+          result.descriptions = message if result
 
         when Messages::Unknown
           raise Error::MessageError.new("Unknown message type: #{message.message_id}")

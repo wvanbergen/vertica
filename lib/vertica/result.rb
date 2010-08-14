@@ -1,28 +1,34 @@
 module Vertica
   class Result
-    
-    def initialize(field_descriptions, field_values)
-      @field_descriptions = field_descriptions
-      @field_values = field_values
+    include Enumerable
+
+    attr_reader :columns
+
+    def initialize#(stream)
+      # @stream = stream
+      @rows = []
     end
-    
-    def row_count
-      @row_count ||= @field_values.length
+
+    def descriptions=(message)
+      @columns = message.fields.map { |fd| Column.new(fd) }
     end
-    
-    def columns
-      @columns ||= @field_descriptions.map { |fd| Column.new(fd[:type_modifier], fd[:format_code], fd[:table_oid], fd[:name], fd[:attribute_number], fd[:data_type_oid], fd[:data_type_size]) }
-    end
-    
-    def rows
-      @field_values.map do |fv|
-        index = 0
-        fv.map do |f|
-          index += 1
-          self.columns[index-1].convert(f[:value])
-        end
+
+    def add_row(row_data)
+      row = {}
+      row_data.fields.each_with_index do |field, idx|
+        col = columns[idx]
+        row[col.name] = col.convert(field)
       end
+      @rows << row
     end
-    
+
+    def each(&block)
+      @rows.each(&block)
+    end
+
+    def all
+      map { |r| r }
+    end
+
   end
 end

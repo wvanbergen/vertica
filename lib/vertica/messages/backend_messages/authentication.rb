@@ -19,13 +19,10 @@ module Vertica
 
       def initialize(stream, size)
         super
-        @code = stream.read_network_int32
-        if @code == CRYPT_PASSWORD
-          @salt = stream.readn(2)
-        elsif @code == MD5_PASSWORD
-          @salt = stream.readn(4)
-        elsif @code == GSS_CONTINUE
-          @auth_data = stream.readn(size - 9)
+        case @code = stream.read_network_int32
+        when CRYPT_PASSWORD then @salt = stream.readn(2)
+        when MD5_PASSWORD   then @salt = stream.readn(4)
+        when GSS_CONTINUE   then @auth_data = stream.readn(size - 9)
         end
       end
     end

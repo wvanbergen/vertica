@@ -23,27 +23,27 @@ module Vertica
       [:timestamp_tz, lambda { |s| DateTime.parse(s, true) }],
       [:interval,     nil],
       [:time_tz,      lambda { |s| Time.parse(s) }],
-      [:numberic,     lambda { |s| s.to_d }],
+      [:numeric,      lambda { |s| s.to_d }],
       [:bytea,        nil],
       [:rle_tuple,    nil]
     ]
 
     DATA_TYPES = DATA_TYPE_CONVERSIONS.map { |t| t[0] }
 
-    def initialize(type_modifier, format_code, table_oid, name, attribute_number, data_type_oid, size)
-      @type_modifier = type_modifier
-      @format = (format_code == 0 ? :text : :binary)
-      @table_oid = table_oid
-      @name = name
-      @attribute_number = attribute_number
-      @data_type = DATA_TYPES[data_type_oid]
-      @size = size
+    def initialize(col)
+      @type_modifier    = col[:type_modifier]
+      @format           = col[:format_code] == 0 ? :text : :binary
+      @table_oid        = col[:table_oid]
+      @name             = col[:name].to_sym
+      @attribute_number = col[:attribute_number]
+      @data_type        = DATA_TYPE_CONVERSIONS[col[:data_type_oid]][0]
+      @converter        = DATA_TYPE_CONVERSIONS[col[:data_type_oid]][1]
+      @size             = col[:data_type_size]
     end
 
     def convert(s)
       return unless s
-      l = DATA_TYPES[DATA_TYPE_CONVERSIONS[@data_type][1]]
-      l ? l.call(s) : s
+      @converter ? @converter.call(s) : s
     end
   end
 end

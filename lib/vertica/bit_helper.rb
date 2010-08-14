@@ -1,14 +1,6 @@
 module Vertica
   module BitHelper
 
-    def read_message
-      type = read_byte
-      size = read_network_int32
-
-      raise Vertica::Error::MessageError.new("Bad message size: #{size}") unless size >= 4
-      Message.factory type, self, size
-    end
-
     def readn(n)
       s = read(n)
       raise "couldn't read #{n} characters" if s.nil? or s.size != n # TODO make into a Vertica Exception
@@ -16,19 +8,19 @@ module Vertica
     end
 
     def read_byte
-      readn(1).unpack('C').first
+      readn(1).to_byte
     end
 
     def read_network_int16
-      readn(2).unpack('n').first
+      readn(2).to_network_int16
     end
 
     def read_network_int32
-      handle_endian_flavor(readn(4)).unpack('l').first
+      handle_endian_flavor(readn(4)).to_network_int32
     end
 
     def read_cstring
-      readline("\000")[0..-2]
+      readline("\000").from_cstring
     end
 
     def handle_endian_flavor(s)

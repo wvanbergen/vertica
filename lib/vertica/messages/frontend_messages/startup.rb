@@ -9,7 +9,7 @@ module Vertica
         @options  = options
       end
 
-      def to_bytes(stream)
+      def to_bytes
         size = LENGTH_SIZE + 4 # length + protocol
         size += @user.length     + 4 + 2 if @user
         size += @database.length + 8 + 2 if @database

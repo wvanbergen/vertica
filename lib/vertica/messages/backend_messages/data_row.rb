@@ -12,10 +12,7 @@ module Vertica
         @field_count = stream.read_network_int16
         @field_count.times do |field_index|
           size = stream.read_network_int32
-          @fields << {
-            :size   => size,
-            :value  => size == -1 ? nil : stream.readn(size)
-          }
+          @fields << (size == -1 ? nil : stream.readn(size))
         end
       end
     end
