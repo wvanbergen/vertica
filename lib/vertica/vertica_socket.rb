@@ -10,5 +10,10 @@ module Vertica
       Messages::BackendMessage.factory type, self, size
     end
 
+    def write_message(message)
+      raise ArgumentError, "message must be a Message. was (#{message.class})" unless message.kind_of?(Messages::Message)
+      write message.to_bytes
+    end
+
   end
 end

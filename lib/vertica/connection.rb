@@ -52,8 +52,7 @@ module Vertica
     end
 
     def write(message)
-      raise ArgumentError, "message must be a Message. was (#{message.class})" unless message.kind_of?(Messages::Message)
-      connection.write message.to_bytes
+      connection.write_message message
     end
 
     def close
