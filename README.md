@@ -63,7 +63,7 @@ This is flaky at best right now and needs some work.
 
 # Todo
 
-Lots still to do.
+Tests. Lots of tests.
 
 # Authors
 
