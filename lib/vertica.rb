@@ -5,7 +5,7 @@ module Vertica
   end
 
   PROTOCOL_VERSION = 3 << 16
-  VERSION = "0.7.3"
+  VERSION = File.read(File.join(File.dirname(__FILE__), *%w[.. VERSION])).strip
 end
 
 %w[
