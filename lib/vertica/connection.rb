@@ -97,11 +97,12 @@ module Vertica
     def put_copy_end;  raise NotImplementedError.new; end
     def get_copy_data; raise NotImplementedError.new; end
 
-    def query(query_string)
+    def query(query_string, &block)
       raise ArgumentError.new("Query string cannot be blank or empty.") if query_string.nil? || query_string.empty?
       reset_result
       write Messages::Query.new(query_string)
-      process(true)#Result.new connection
+      @process_row = block
+      process(true)
     end
 
     def prepare(name, query, params_count = 0)
@@ -153,7 +154,8 @@ module Vertica
           @backend_key = message.key
 
         when Messages::DataRow
-          result.add_row(message) if result
+          @process_row.call(result.format_row(message)) if @process_row && result
+          result.add_row(message) if result && !@process_row
 
         when Messages::ErrorResponse
           raise Error::MessageError.new(message.error)
@@ -211,7 +213,8 @@ module Vertica
       @backend_pid        = nil
       @backend_key        = nil
       @transaction_status = nil
-      @conn               = nil
+      @connection         = nil
+      @process_row        = nil
     end
 
     def reset_notifications
