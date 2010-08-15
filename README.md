@@ -8,17 +8,17 @@ statements still need a bit of work
 
 # Install
 
-  $ gem install vertica
+    $ gem install vertica
 
 # Source
 
 Vertica's git repo is available on GitHub, which can be browsed at:
 
-  http://github.com/sprsquish/vertica
+    http://github.com/sprsquish/vertica
 
 and cloned from:
 
-  git://github.com/sprsquish/vertica.git
+    git://github.com/sprsquish/vertica.git
 
 # Usage
 
@@ -49,7 +49,7 @@ and cloned from:
     end
     c.close
 
-## Example Prepared Statement
+### Example Prepared Statement
 
 This is flaky at best right now and needs some work.
 
