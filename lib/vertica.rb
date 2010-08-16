@@ -6,6 +6,10 @@ module Vertica
 
   PROTOCOL_VERSION = 3 << 16
   VERSION = File.read(File.join(File.dirname(__FILE__), *%w[.. VERSION])).strip
+
+  def self.connect(*args)
+    Connection.new(*args)
+  end
 end
 
 %w[
@@ -14,6 +18,7 @@ end
   openssl/ssl
   bigdecimal
   bigdecimal/util
+  date
 
   vertica/core_ext/numeric
   vertica/core_ext/string

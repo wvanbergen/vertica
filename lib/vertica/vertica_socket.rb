@@ -11,7 +11,7 @@ module Vertica
     end
 
     def write_message(message)
-      raise ArgumentError, "message must be a Message. was (#{message.class})" unless message.kind_of?(Messages::Message)
+      raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
       write message.to_bytes
     end
 

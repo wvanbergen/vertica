@@ -102,7 +102,8 @@ module Vertica
       reset_result
       write Messages::Query.new(query_string)
       @process_row = block
-      process(true)
+      result = process(true)
+      result unless @process_row
     end
 
     def prepare(name, query, params_count = 0)
