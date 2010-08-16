@@ -1,8 +1,7 @@
 module Vertica
   class Result
-    include Enumerable
-
     attr_reader :columns
+    attr_reader :rows
 
     def initialize#(stream)
       # @stream = stream
@@ -26,12 +25,8 @@ module Vertica
       @rows << format_row(row_data)
     end
 
-    def each(&block)
+    def each_row(&block)
       @rows.each(&block)
-    end
-
-    def all
-      map { |r| r }
     end
 
   end
