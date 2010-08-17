@@ -12,7 +12,7 @@ begin
     gem.homepage = 'http://github.com/sprsquish/vertica'
     gem.authors = ['Jeff Smick', 'Matt Bauer']
 
-    gem.files = FileList['lib/**/*.rb'].to_a
+    gem.files = FileList["[A-Z]*", 'lib/**/*.rb'].to_a
 
     gem.test_files = FileList['test/**/*.rb']
 
