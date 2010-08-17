@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jeff Smick", "Matt Bauer"]
-  s.date = %q{2010-08-14}
+  s.date = %q{2010-08-17}
   s.description = %q{Query Vertica with ruby}
   s.email = %q{sprsquish@gmail.com}
   s.extra_rdoc_files = [
@@ -17,7 +17,11 @@ Gem::Specification.new do |s|
      "README.md"
   ]
   s.files = [
-    "lib/vertica.rb",
+    "LICENSE",
+     "README.md",
+     "Rakefile",
+     "VERSION",
+     "lib/vertica.rb",
      "lib/vertica/bit_helper.rb",
      "lib/vertica/column.rb",
      "lib/vertica/connection.rb",
