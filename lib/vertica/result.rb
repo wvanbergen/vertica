@@ -3,8 +3,7 @@ module Vertica
     attr_reader :columns
     attr_reader :rows
 
-    def initialize#(stream)
-      # @stream = stream
+    def initialize
       @rows = []
     end
 
@@ -27,6 +26,10 @@ module Vertica
 
     def each_row(&block)
       @rows.each(&block)
+    end
+
+    def row_count
+      @rows.count
     end
 
   end
