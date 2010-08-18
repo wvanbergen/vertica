@@ -26,7 +26,7 @@ and cloned from:
 
 ### Connecting
 
-    c = Vertica.connect({
+    vertica = Vertica.connect({
       :user     => 'user',
       :password => 'password',
       :host     => 'db_server',
@@ -39,39 +39,40 @@ and cloned from:
 All rows will first be fetched and buffered into a result object. Probably shouldn't use
 this for large result sets.
 
-    r = c.query("SELECT id, name FROM my_table")
-    r.each_row |row|
-      puts row # {:id => 123, :name => "Jim Bob"}
+    result = vertica.query("SELECT id, name FROM my_table")
+    result.each_row |row|
+      puts row # => {:id => 123, :name => "Jim Bob"}
     end
 
-    r.rows => [{:id => 123, :name => "Jim Bob"}, {:id => 456, :name => "Joe Jack"}]
+    result.rows # => [{:id => 123, :name => "Jim Bob"}, {:id => 456, :name => "Joe Jack"}]
+    result.row_count # => 2
 
-    c.close
+    vertica.close
 
 ### Unbuffered Rows
 
 The vertica gem will not buffer incoming results. The gem will read a result off the
 socket and pass it to the provided block.
 
-    c.query("SELECT id, name FROM my_table") do |row
-      puts row # {:id => 123, :name => "Jim Bob"}
+    vertica.query("SELECT id, name FROM my_table") do |row|
+      puts row # => {:id => 123, :name => "Jim Bob"}
     end
-    c.close
+    vertica.close
 
 ### Example Prepared Statement
 
 This is flaky at best right now and needs some work. This will probably fail and destroy
-your connection. You'll need to throw the current connection away and start over.
+your connection. You'll need to throw the connection away and start over.
 
-    c.prepare("my_prepared_statement", "SELECT * FROM my_table WHERE id = ?", 1)
-    r = c.execute_prepared("my_prepared_statement", 13)
-    r.each_rows |row|
-      puts row # {:id => 123, :name => "Jim Bob"}
+    vertica.prepare("my_prepared_statement", "SELECT * FROM my_table WHERE id = ?", 1)
+    result = vertica.execute_prepared("my_prepared_statement", 13)
+    result.each_rows |row|
+      puts row # => {:id => 123, :name => "Jim Bob"}
     end
-    r.rows => [{:id => 123, :name => "Jim Bob"}, {:id => 456, :name => "Joe Jack"}]
-    c.close
+    result.rows # => [{:id => 123, :name => "Jim Bob"}, {:id => 456, :name => "Joe Jack"}]
+    vertica.close
 
-# Todo
+# TODO
 
  * Tests.
  * Lots of tests.
