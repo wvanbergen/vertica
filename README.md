@@ -1,5 +1,7 @@
 # Vertica
 
+**WARNING:** This is not well tested software (yet) use at your own risk.
+
 ## Description
 
 Vertica is a pure Ruby library for connecting to Vertica databases.  You can learn more
