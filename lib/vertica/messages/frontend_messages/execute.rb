@@ -9,15 +9,10 @@ module Vertica
       end
 
       def to_bytes
-        size = LENGTH_SIZE
-        size += @portal_name.length + 1
-        size += 4
-
-        [ message_id.to_byte,
-          size.to_network_int32,
+        message_string([ 
           @portal_name.to_cstring,
           @max_rows.to_network_int32
-        ].join
+        ])
       end
 
     end

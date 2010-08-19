@@ -27,12 +27,7 @@ module Vertica
       end
 
       def to_bytes
-        size = LENGTH_SIZE
-        size += @password.length + 1
-        [ message_id.to_byte,
-          size.to_network_int32,
-          password.to_cstring
-        ].join
+        message_string password.to_cstring
       end
 
     end

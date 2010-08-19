@@ -13,15 +13,10 @@ module Vertica
       end
 
       def to_bytes
-        size = LENGTH_SIZE
-        size += 1
-        size += @describe_name.length + 1
-
-        [ message_id.to_byte,
-          size.to_network_int32,
+        message_string([
           @describe_type.to_byte,
           @describe_name.to_cstring
-        ].join
+        ])
       end
 
     end

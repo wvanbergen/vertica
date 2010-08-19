@@ -4,9 +4,7 @@ module Vertica
       message_id nil
 
       def to_bytes
-        [ (LENGTH_SIZE + 4).to_network_int32,
-          80877103.to_network_int32
-        ].join
+        message_string 80877103.to_network_int32
       end
 
     end

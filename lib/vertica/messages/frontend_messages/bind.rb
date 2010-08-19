@@ -10,17 +10,7 @@ module Vertica
       end
 
       def to_bytes
-        size = LENGTH_SIZE
-        size += @portal_name.length + 1
-        size += @prepared_statement_name.length + 1
-        size += 2 # parameter format code (0)
-        size += 2 # number of parameter values
-        size += @parameter_values.inject(0) { |sum, e| sum += (e.length + 4) }
-        size += 2
-
         bytes = [
-          message_id.to_byte,
-          size.to_network_int32,                      # size
           @portal_name.to_cstring,                    # portal name ("")
           @prepared_statement_name.to_cstring,        # prep
           0.to_network_int16,                         # format codes (0 - default text format)
@@ -30,7 +20,7 @@ module Vertica
           bytes << parameter_value.length.to_network_int32  # parameter value (which is represented as a string) length
           bytes << parameter_value                          # parameter value written out in text representation
         end
-        bytes.join
+        message_string bytes
       end
 
     end

@@ -9,16 +9,11 @@ module Vertica
       end
 
       def to_bytes
-        size = LENGTH_SIZE
-        size += 4
-        size += 4
-        size += 4
-
-        [ size.to_network_int32,
+        message_string([
           80877102.to_network_int32,
           @backend_pid.to_network_int32,
           @backend_key.to_network_int32
-        ].join
+        ])
       end
 
     end

@@ -1,10 +1,15 @@
 module Vertica
   module Messages
-    class Message
-      LENGTH_SIZE   = 4
 
+    class Message
       def self.message_id(message_id)
         self.send(:define_method, :message_id) { message_id }
+      end
+
+      def message_string(msg)
+        msg = msg.join if msg.is_a?(Array)
+        size = (0.to_network_int32.size + msg.size).to_network_int32
+        "#{(message_id || '').to_byte}#{size}#{msg}"
       end
     end
 
@@ -32,14 +37,11 @@ module Vertica
       def initialize(stream, size)
         @size = size
       end
-
     end
 
     class FrontendMessage < Message
       def to_bytes
-        [ message_id.to_byte,
-          LENGTH_SIZE.to_network_int32
-        ].join
+        message_string ''
       end
     end
 
