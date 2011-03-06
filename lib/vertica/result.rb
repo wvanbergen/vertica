@@ -29,7 +29,7 @@ module Vertica
     end
 
     def row_count
-      @rows.count
+      @rows.size
     end
 
   end
