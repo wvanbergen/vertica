@@ -8,6 +8,8 @@ Vertica is a pure Ruby library for connecting to Vertica databases.  You can lea
 about Vertica at http://www.vertica.com.  This library currently supports queries. Prepared
 statements still need a bit of work.
 
+You should probably be using sprsquish's version of this, I just forked it to add some 1.9 compatibility which I think will get added back into his branch soon
+
 # Install
 
     $ gem install vertica
@@ -16,11 +18,11 @@ statements still need a bit of work.
 
 Vertica's git repo is available on GitHub, which can be browsed at:
 
-    http://github.com/sprsquish/vertica
+    http://github.com/dangcalvert/vertica
 
 and cloned from:
 
-    git://github.com/sprsquish/vertica.git
+    git://github.com/dangcalvert/vertica.git
 
 # Usage
 
@@ -78,8 +80,10 @@ your connection. You'll need to throw the connection away and start over.
 
  * Tests.
  * Lots of tests.
+ * Make sure all messages are compatible with ruby 1.8 and 1.9 (so far I've tried connect, authenticate w/ password, query, close, and the associated responses.)
 
 # Authors
 
  * [Matt Bauer](http://github.com/mattbauer) all the hard work
- * [Jeff Smick](http://github.com/sprsquish) current maintainer
+ * [Jeff Smick](http://github.com/sprsquish) current maintainer of the upstream project, which you should be using
+ * [Dan Calvert](http://github.com/dangcalvert) a few tweaks for ruby 1.9
