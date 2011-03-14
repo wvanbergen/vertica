@@ -1,5 +1,7 @@
 module Vertica
 
+  require 'vertica/notice'
+
   class Connection
 
     STATUSES = {
@@ -19,6 +21,7 @@ module Vertica
       reset_values
 
       @options = options
+      @notices = []
 
       unless options[:skip_startup]
         connection.write Messages::Startup.new(@options[:user], @options[:database]).to_bytes
@@ -71,6 +74,10 @@ module Vertica
 
     def options
       @options.dup
+    end
+
+    def notices
+      @notices.dup
     end
 
     def transaction_status
