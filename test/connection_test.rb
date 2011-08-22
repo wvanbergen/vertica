@@ -1,6 +1,23 @@
-require File.join(File.dirname(__FILE__), "test_helper")
+require 'test_helper'
 
 class ConnectionTest < Test::Unit::TestCase  
+  
+  
+  
+  def setup
+    sqls = File.readlines(File.expand_path('../setup.sql', __FILE__))
+    c = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    sqls.each { |sql| c.query(sql) }
+    c.close    
+  end
+
+  def teardown
+    sqls = File.readlines(File.expand_path('../teardown.sql', __FILE__))
+    c = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    sqls.each { |sql| c.query(sql) }
+    c.close
+  end
+  
   
   def test_new
     c = Vertica::Connection.new(TEST_CONNECTION_HASH)
