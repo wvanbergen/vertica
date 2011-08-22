@@ -1,5 +1,2 @@
-ext/Makefile
-ext/mkmf.log
-ext/*.o
-ext/*.so
 pkg
+.DS_Store
