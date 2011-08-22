@@ -15,7 +15,7 @@ module Vertica
         bytes +=  ['user'.to_cstring, @user.to_cstring] if @user
         bytes +=  ['database'.to_cstring, @database.to_cstring] if @database
         bytes +=  ['options'.to_cstring, @options.to_cstring] if @options
-        bytes << 0
+        bytes << 0.chr
 
         message_string bytes
       end

@@ -13,7 +13,7 @@ module Vertica
         bytes = [
           @portal_name.to_cstring,                    # portal name ("")
           @prepared_statement_name.to_cstring,        # prep
-          0.to_network_int16,                         # format codes (0 - default text format)
+          0x00.to_network_int16,                         # format codes (0 - default text format)
           @parameter_values.length.to_network_int16,  # number of parameters
         ]
         @parameter_values.each do |parameter_value|
