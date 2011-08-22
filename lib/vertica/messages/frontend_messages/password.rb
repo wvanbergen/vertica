@@ -15,11 +15,11 @@ module Vertica
         when Authentication::CLEARTEXT_PASSWORD
           @password
         when Authentication::CRYPT_PASSWORD
-          @password.crypt(options[:salt])
+          @password.crypt(@options[:salt])
         when Authentication::MD5_PASSWORD
           require 'digest/md5'
           @password = Digest::MD5.hexdigest(@password + @options[:user])
-          @password = Digest::MD5.hexdigest(m + @options[:salt])
+          @password = Digest::MD5.hexdigest(@password + @options[:salt])
           @password = 'md5' + @password
         else
           raise ArgumentError.new("unsupported authentication method: #{@auth_method}")
