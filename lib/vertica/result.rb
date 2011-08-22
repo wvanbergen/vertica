@@ -37,5 +37,7 @@ module Vertica
       @rows.size
     end
 
+    alias_method :size, :row_count
+    alias_method :length, :row_count
   end
 end
