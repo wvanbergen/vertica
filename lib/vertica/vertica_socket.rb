@@ -1,5 +1,5 @@
 module Vertica
-  class VerticaSocket < TCPSocket
+  module SocketInstanceMethods
     include BitHelper
 
     def read_message
@@ -14,6 +14,5 @@ module Vertica
       raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
       write message.to_bytes
     end
-
   end
 end

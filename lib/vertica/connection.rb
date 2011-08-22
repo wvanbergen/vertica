@@ -1,3 +1,6 @@
+OpenSSL::SSL::SSLSocket.send :include, Vertica::SocketInstanceMethods
+TCPSocket.send :include, Vertica::SocketInstanceMethods
+
 module Vertica
 
   require 'vertica/notice'
@@ -24,17 +27,17 @@ module Vertica
       @notices = []
 
       unless options[:skip_startup]
-        connection.write Messages::Startup.new(@options[:user], @options[:database]).to_bytes
+        connection.write msg = Messages::Startup.new(@options[:user], @options[:database]).to_bytes
         process
       end
     end
 
     def connection
       @connection ||= begin
-        conn = VerticaSocket.new(@options[:host], @options[:port].to_s)
+        conn = TCPSocket.new(@options[:host], @options[:port].to_s)
         if @options[:ssl]
           conn.write Messages::SslRequest.new.to_bytes
-          if conn.read_byte == ?S
+          if conn.read_byte == 83 #?S
             conn = OpenSSL::SSL::SSLSocket.new(conn, OpenSSL::SSL::SSLContext.new)
             conn.sync = true
             conn.connect
