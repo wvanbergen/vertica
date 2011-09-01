@@ -63,7 +63,7 @@ module Vertica
 
     def close
       write Messages::Terminate.new
-      connection.shutdown
+      connection.close
       @connection = nil
     rescue Errno::ENOTCONN # the backend closed the connection already
     ensure
