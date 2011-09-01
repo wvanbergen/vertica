@@ -1,3 +1,4 @@
+# FIXME
 OpenSSL::SSL::SSLSocket.send :include, Vertica::SocketInstanceMethods
 TCPSocket.send :include, Vertica::SocketInstanceMethods
 
@@ -186,7 +187,7 @@ module Vertica
           @parameters[message.name] = message.value
 
         when Messages::ReadyForQuery
-          @transaction_status = STATUSES[message.transaction_status]
+          @transaction_status = STATUSES[message.transaction_status.chr]
           break unless return_result
 
         when Messages::RowDescription
