@@ -13,7 +13,7 @@ module Vertica
       end
 
       def to_bytes
-        message_string [@describe_type, @describe_name].pack('CZ*')
+        message_string [@describe_type, @describe_name].pack('AZ*')
       end
     end
   end

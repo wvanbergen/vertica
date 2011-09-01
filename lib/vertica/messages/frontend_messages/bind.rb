@@ -11,7 +11,7 @@ module Vertica
 
       def to_bytes
         bytes = [@portal_name, @prepared_statement_name, 0, @parameter_values.length].pack('Z*Z*nn')
-        bytes << @parameter_values.map { |val| [val.length, val].pack('Na*') }.join('')
+        bytes << @parameter_values.map { |val| [val.length, val].pack('Na*') }.join('') << [0].pack('n')
         message_string bytes
       end
     end
