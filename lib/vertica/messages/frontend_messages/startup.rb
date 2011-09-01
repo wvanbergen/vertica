@@ -11,15 +11,13 @@ module Vertica
       end
 
       def to_bytes
-        bytes =   [Vertica::PROTOCOL_VERSION.to_network_int32]
-        bytes +=  ['user'.to_cstring, @user.to_cstring] if @user
-        bytes +=  ['database'.to_cstring, @database.to_cstring] if @database
-        bytes +=  ['options'.to_cstring, @options.to_cstring] if @options
-        bytes << 0.chr
-
-        message_string bytes
+        str =  [Vertica::PROTOCOL_VERSION].pack('N')
+        str << ["user", @user].pack('Z*Z*')         if @user
+        str << ["database", @database].pack('Z*Z*') if @database
+        str << ["options", @options].pack('Z*Z*')   if @options
+        str << [].pack('x')
+        message_string str
       end
-
     end
   end
 end

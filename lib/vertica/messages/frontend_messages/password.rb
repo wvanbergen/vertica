@@ -10,7 +10,7 @@ module Vertica
         @options = options
       end
 
-      def password
+      def encoded_password
         case @auth_method
         when Authentication::CLEARTEXT_PASSWORD
           @password
@@ -27,9 +27,8 @@ module Vertica
       end
 
       def to_bytes
-        message_string password.to_cstring
+        message_string [encoded_password].pack('Z*')
       end
-
     end
   end
 end

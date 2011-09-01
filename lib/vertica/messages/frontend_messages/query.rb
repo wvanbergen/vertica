@@ -9,9 +9,8 @@ module Vertica
       end
 
       def to_bytes
-        message_string @query_string.to_cstring
+        message_string [@query_string].pack('Z*')
       end
     end
-
   end
 end

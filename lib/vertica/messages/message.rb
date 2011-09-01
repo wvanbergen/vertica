@@ -8,12 +8,9 @@ module Vertica
 
       def message_string(msg)
         msg = msg.join if msg.is_a?(Array)
-        size = (0.to_network_int32.size + msg.size).to_network_int32
-        m_id = ''.to_byte             #in 1.9 it seems to write out message ids as numbers, handle this here
-        if (message_id)
-          m_id = message_id.chr
-        end
-        "#{m_id}#{size}#{msg}"
+        bytesize = msg.respond_to?(:bytesize) ? 4 + msg.bytesize : 4 + msg.size
+        message_size = [bytesize].pack('N')
+        message_id ? "#{message_id.chr}#{message_size}#{msg}" : "#{message_size}#{msg}"
       end
     end
 
