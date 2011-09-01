@@ -29,6 +29,9 @@ module Vertica
       unless options[:skip_startup]
         connection.write msg = Messages::Startup.new(@options[:user], @options[:database]).to_bytes
         process
+        
+        query("SET SEARCH_PATH TO #{options[:search_path]}") if options[:search_path]
+        query("SET ROLE #{options[:role]}") if options[:role]
       end
     end
 
