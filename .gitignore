@@ -1,5 +1,4 @@
-ext/Makefile
-ext/mkmf.log
-ext/*.o
-ext/*.so
 pkg
+.DS_Store
+Gemfile.lock
+test/connection.yml

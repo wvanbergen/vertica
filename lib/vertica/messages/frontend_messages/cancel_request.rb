@@ -9,11 +9,7 @@ module Vertica
       end
 
       def to_bytes
-        message_string([
-          80877102.to_network_int32,
-          @backend_pid.to_network_int32,
-          @backend_key.to_network_int32
-        ])
+        message_string [80877102, @backend_pid, @backend_key].pack('N3')
       end
 
     end

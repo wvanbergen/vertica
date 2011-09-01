@@ -15,7 +15,10 @@ begin
     gem.files = FileList["[A-Z]*", 'lib/**/*.rb'].to_a
 
     gem.test_files = FileList['test/**/*.rb']
-
+    
+    gem.add_development_dependency 'jeweler'
+    gem.add_development_dependency 'rake'
+    
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
 
@@ -23,14 +26,14 @@ begin
 rescue LoadError
   puts "Jeweler (or a dependency) not available. Install it with: sudo gem install jeweler"
 end
-#
-# require 'rake/testtask'
-# Rake::TestTask.new(:test) do |test|
-#   test.libs << 'lib' << 'spec'
-#   test.pattern = 'spec/**/*_spec.rb'
-#   test.verbose = true
-# end
-#
+
+require 'rake/testtask'
+Rake::TestTask.new(:test) do |test|
+  test.libs << 'lib' << 'test'
+  test.pattern = 'test/**/*_test.rb'
+  test.verbose = true
+end
+
 # begin
 #   require 'rcov/rcovtask'
 #   Rcov::RcovTask.new do |test|

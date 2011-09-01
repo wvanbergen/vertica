@@ -1,16 +1,10 @@
-require "test/unit"
+require 'rubygems'
+require 'bundler/setup'
 
-$:.unshift(File.dirname(__FILE__) + '/../lib')
-require "vertica"
+require 'yaml'
+require 'test/unit'
 
-class Test::Unit::TestCase
+require 'vertica'
 
-  TEST_CONNECTION_HASH = {
-    :user     => '',
-    :password => '',
-    :host     => '',
-    :port     => '',
-    :database => ''
-  }
-
-end
+hash = YAML.load(File.read(File.expand_path("../connection.yml", __FILE__)))
+TEST_CONNECTION_HASH = hash.inject(Hash.new) { |carry, (k, v)| carry[k.to_sym] = v; carry }

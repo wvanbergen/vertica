@@ -1,7 +1,7 @@
 module Vertica
   module Messages
     class ParameterStatus < BackendMessage
-      message_id ?S
+      message_id 'S'
       
       attr_reader :name
       attr_reader :value

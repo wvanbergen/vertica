@@ -20,10 +20,6 @@ end
   bigdecimal/util
   date
 
-  vertica/core_ext/numeric
-  vertica/core_ext/string
-
-  vertica/bit_helper
   vertica/vertica_socket
 
   vertica/column
