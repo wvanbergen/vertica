@@ -1,7 +1,7 @@
 module Vertica
   module Messages
     class NotificationResponse < BackendMessage
-      message_id ?A
+      message_id 'A'
       
       attr_reader :pid
       attr_reader :condition

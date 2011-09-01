@@ -2,7 +2,7 @@
 module Vertica
   module Messages
     class Password < FrontendMessage
-      message_id ?p
+      message_id 'p'
 
       def initialize(password, auth_method = nil, options = {})
         @password = password

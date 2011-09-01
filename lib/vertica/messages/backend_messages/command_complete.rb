@@ -1,7 +1,7 @@
 module Vertica
   module Messages
     class CommandComplete < BackendMessage
-      message_id ?C
+      message_id 'C'
 
       attr_reader :tag
       attr_reader :rows

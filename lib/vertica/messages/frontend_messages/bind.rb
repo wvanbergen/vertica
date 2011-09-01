@@ -1,7 +1,7 @@
 module Vertica
   module Messages
     class Bind < FrontendMessage
-      message_id ?B
+      message_id 'B'
 
       def initialize(portal_name, prepared_statement_name, parameter_values)
         @portal_name = portal_name

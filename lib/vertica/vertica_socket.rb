@@ -24,7 +24,7 @@ module Vertica
     end
 
     def read_message
-      type = read_byte
+      type = [read_byte].pack('C')
       size = read_network_int32
 
       raise Vertica::Error::MessageError.new("Bad message size: #{size}") unless size >= 4

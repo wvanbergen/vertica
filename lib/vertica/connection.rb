@@ -9,9 +9,9 @@ module Vertica
   class Connection
 
     STATUSES = {
-      ?I => :no_transaction,
-      ?T => :in_transaction,
-      ?E => :failed_transaction
+      'I' => :no_transaction,
+      'T' => :in_transaction,
+      'E' => :failed_transaction
     }
 
     def self.cancel(existing_conn)
@@ -41,7 +41,7 @@ module Vertica
         conn = TCPSocket.new(@options[:host], @options[:port].to_s)
         if @options[:ssl]
           conn.write Messages::SslRequest.new.to_bytes
-          if conn.read_byte == 83 #?S
+          if [conn.read_byte].pack('C') == 'S'
             conn = OpenSSL::SSL::SSLSocket.new(conn, OpenSSL::SSL::SSLContext.new)
             conn.sync = true
             conn.connect
@@ -187,7 +187,7 @@ module Vertica
           @parameters[message.name] = message.value
 
         when Messages::ReadyForQuery
-          @transaction_status = STATUSES[message.transaction_status.chr]
+          @transaction_status = STATUSES[message.transaction_status]
           break unless return_result
 
         when Messages::RowDescription

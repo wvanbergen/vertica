@@ -3,4 +3,6 @@ password:
 host: 
 port: 5433
 database: 
-ssl: false
+# ssl: true
+# search_path:
+# role

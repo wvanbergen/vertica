@@ -1,7 +1,7 @@
 module Vertica
   module Messages
     class RowDescription < BackendMessage
-      message_id ?T
+      message_id 'T'
 
       attr_reader :field_count
       attr_reader :fields

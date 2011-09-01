@@ -1,7 +1,7 @@
 module Vertica
   module Messages
     class Parse < FrontendMessage
-      message_id ?P
+      message_id 'P'
 
       def initialize(name, query, param_types)
         @name         = name

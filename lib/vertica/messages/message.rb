@@ -10,7 +10,7 @@ module Vertica
         msg = msg.join if msg.is_a?(Array)
         bytesize = msg.respond_to?(:bytesize) ? 4 + msg.bytesize : 4 + msg.size
         message_size = [bytesize].pack('N')
-        message_id ? "#{message_id.chr}#{message_size}#{msg}" : "#{message_size}#{msg}"
+        message_id ? "#{message_id}#{message_size}#{msg}" : "#{message_size}#{msg}"
       end
     end
 
@@ -21,7 +21,7 @@ module Vertica
 
       def self.factory(type, stream, size)
         #puts "factory reading message #{type} #{size} #{type.class}"
-        if klass = MessageIdMap[type.chr]           #explicitly use the char value, for 1.9 compat
+        if klass = MessageIdMap[type]           #explicitly use the char value, for 1.9 compat
           klass.new stream, size
         else
           Messages::Unknown.new stream, size
@@ -30,7 +30,7 @@ module Vertica
 
       def self.message_id(message_id)
         super
-        MessageIdMap[message_id.chr] = self          #explicitly use the char value, for 1.9 compat
+        MessageIdMap[message_id] = self          #explicitly use the char value, for 1.9 compat
       end
 
       def self.read(stream)
