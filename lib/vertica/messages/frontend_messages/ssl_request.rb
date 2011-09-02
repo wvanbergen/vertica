@@ -4,9 +4,8 @@ module Vertica
       message_id nil
 
       def to_bytes
-        message_string 80877103.to_network_int32
+        message_string [80877103].pack('N')
       end
-
     end
   end
 end

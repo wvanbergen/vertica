@@ -1,7 +1,7 @@
 module Vertica
   module Messages
     class NoticeResponse < BackendMessage
-      message_id ?N
+      message_id 'N'
 
       attr_reader :notices
 

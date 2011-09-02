@@ -1,3 +1,7 @@
+# FIXME
+OpenSSL::SSL::SSLSocket.send :include, Vertica::SocketInstanceMethods
+TCPSocket.send :include, Vertica::SocketInstanceMethods
+
 module Vertica
 
   require 'vertica/notice'
@@ -5,9 +9,9 @@ module Vertica
   class Connection
 
     STATUSES = {
-      ?I => :no_transaction,
-      ?T => :in_transaction,
-      ?E => :failed_transaction
+      'I' => :no_transaction,
+      'T' => :in_transaction,
+      'E' => :failed_transaction
     }
 
     def self.cancel(existing_conn)
@@ -24,17 +28,20 @@ module Vertica
       @notices = []
 
       unless options[:skip_startup]
-        connection.write Messages::Startup.new(@options[:user], @options[:database]).to_bytes
+        connection.write msg = Messages::Startup.new(@options[:user], @options[:database]).to_bytes
         process
+        
+        query("SET SEARCH_PATH TO #{options[:search_path]}") if options[:search_path]
+        query("SET ROLE #{options[:role]}") if options[:role]
       end
     end
 
     def connection
       @connection ||= begin
-        conn = VerticaSocket.new(@options[:host], @options[:port].to_s)
+        conn = TCPSocket.new(@options[:host], @options[:port].to_s)
         if @options[:ssl]
           conn.write Messages::SslRequest.new.to_bytes
-          if conn.read_byte == ?S
+          if [conn.read_byte].pack('C') == 'S'
             conn = OpenSSL::SSL::SSLSocket.new(conn, OpenSSL::SSL::SSLContext.new)
             conn.sync = true
             conn.connect
@@ -60,7 +67,7 @@ module Vertica
 
     def close
       write Messages::Terminate.new
-      connection.shutdown
+      connection.close
       @connection = nil
     rescue Errno::ENOTCONN # the backend closed the connection already
     ensure

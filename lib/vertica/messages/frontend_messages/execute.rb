@@ -1,7 +1,7 @@
 module Vertica
   module Messages
     class Execute < FrontendMessage
-      message_id ?E
+      message_id 'E'
 
       def initialize(portal_name, max_rows)
         @portal_name = portal_name
@@ -9,12 +9,8 @@ module Vertica
       end
 
       def to_bytes
-        message_string([ 
-          @portal_name.to_cstring,
-          @max_rows.to_network_int32
-        ])
+        message_string [@portal_name, @max_rows].pack('Z*N')
       end
-
     end
   end
 end

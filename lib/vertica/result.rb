@@ -1,5 +1,8 @@
 module Vertica
   class Result
+    
+    include Enumerable
+    
     attr_reader :columns
     attr_reader :rows
 
@@ -27,10 +30,14 @@ module Vertica
     def each_row(&block)
       @rows.each(&block)
     end
+    
+    alias_method :each, :each_row
 
     def row_count
       @rows.size
     end
 
+    alias_method :size, :row_count
+    alias_method :length, :row_count
   end
 end

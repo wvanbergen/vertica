@@ -1,7 +1,7 @@
 module Vertica
   module Messages
     class BackendKeyData < BackendMessage
-      message_id ?K
+      message_id 'K'
 
       attr_reader :pid
       attr_reader :key

@@ -2,7 +2,7 @@
 module Vertica
   module Messages
     class Password < FrontendMessage
-      message_id ?p
+      message_id 'p'
 
       def initialize(password, auth_method = nil, options = {})
         @password = password
@@ -10,16 +10,16 @@ module Vertica
         @options = options
       end
 
-      def password
+      def encoded_password
         case @auth_method
         when Authentication::CLEARTEXT_PASSWORD
           @password
         when Authentication::CRYPT_PASSWORD
-          @password.crypt(options[:salt])
+          @password.crypt(@options[:salt])
         when Authentication::MD5_PASSWORD
           require 'digest/md5'
           @password = Digest::MD5.hexdigest(@password + @options[:user])
-          @password = Digest::MD5.hexdigest(m + @options[:salt])
+          @password = Digest::MD5.hexdigest(@password + @options[:salt])
           @password = 'md5' + @password
         else
           raise ArgumentError.new("unsupported authentication method: #{@auth_method}")
@@ -27,9 +27,8 @@ module Vertica
       end
 
       def to_bytes
-        message_string password.to_cstring
+        message_string [encoded_password].pack('Z*')
       end
-
     end
   end
 end

@@ -1,13 +1,13 @@
 module Vertica
   module Messages
     class ReadyForQuery < BackendMessage
-      message_id ?Z
+      message_id 'Z'
 
       attr_reader :transaction_status
 
       def initialize(stream, size)
         super
-        @transaction_status = stream.read_byte
+        @transaction_status = [stream.read_byte].pack('C')
       end
     end
   end
