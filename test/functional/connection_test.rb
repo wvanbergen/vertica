@@ -38,7 +38,7 @@ class ConnectionTest < Test::Unit::TestCase
   def test_connection_with_ssl
     @connection = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:ssl => true))
 
-    assert @connection.connection.kind_of?(OpenSSL::SSL::SSLSocket)
+    assert @connection.ssl?
     assert !@connection.parameters.empty?
     assert @connection.backend_pid
     assert @connection.backend_key

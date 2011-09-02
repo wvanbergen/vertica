@@ -16,7 +16,7 @@ module Vertica
 
     def format_row(row_data)
       row = {}
-      row_data.fields.each_with_index do |field, idx|
+      row_data.values.each_with_index do |field, idx|
         col = columns[idx]
         row[col.name] = col.convert(field)
       end

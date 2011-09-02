@@ -3,15 +3,11 @@ module Vertica
     class ParameterStatus < BackendMessage
       message_id 'S'
       
-      attr_reader :name
-      attr_reader :value
+      attr_reader :name, :value
       
-      def initialize(stream, size)
-        super
-        @name  = stream.read_cstring
-        @value = stream.read_cstring
+      def initialize(data)
+        @name, @value = data.unpack('Z*Z*')
       end
-
     end
   end
 end

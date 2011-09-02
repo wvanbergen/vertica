@@ -3,16 +3,12 @@ module Vertica
     class ParameterDescription < BackendMessage
       message_id 't'
 
-      attr_reader :parameter_count
       attr_reader :parameter_types
       
-      def initialize(stream, size)
-        super
-        @parameter_types = []
-        @parameter_count = stream.read_network_int16
-        @parameter_count.times do
-          @parameter_types << Vertica::Column::DATA_TYPES[stream.read_network_int32]
-        end
+      def initialize(data)
+        parameter_count    = data.unpack('n').first
+        parameter_type_ids = data.unpack("@2N#{parameter_count}")
+        @parameter_types   = parameter_type_ids.map { |id| Vertica::Column::DATA_TYPES[id] }
       end
     end
   end

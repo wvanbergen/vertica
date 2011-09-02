@@ -3,15 +3,10 @@ module Vertica
     class NotificationResponse < BackendMessage
       message_id 'A'
       
-      attr_reader :pid
-      attr_reader :condition
-      attr_reader :addition_info
+      attr_reader :pid, :condition, :addition_info
       
-      def initialize(stream, size)
-        super
-        @pid           = stream.read_network_int32
-        @condition     = stream.read_cstring
-        @addition_info = stream.read_cstring
+      def initialize(data)
+        @pid, @condition, @addition_info = data.unpack('NZ*Z*')
       end
     end
   end

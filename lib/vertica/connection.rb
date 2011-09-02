@@ -1,11 +1,4 @@
-# FIXME
-OpenSSL::SSL::SSLSocket.send :include, Vertica::SocketInstanceMethods
-TCPSocket.send :include, Vertica::SocketInstanceMethods
-
 module Vertica
-
-  require 'vertica/notice'
-
   class Connection
 
     STATUSES = {
@@ -18,7 +11,7 @@ module Vertica
       conn = self.new(existing_conn.options.merge(:skip_startup => true))
       conn.write Messages::CancelRequest.new(existing_conn.backend_pid, existing_conn.backend_key)
       conn.write Messages::Flush.new
-      conn.connection.close
+      conn.socket.close
     end
 
     def initialize(options = {})
@@ -28,7 +21,7 @@ module Vertica
       @notices = []
 
       unless options[:skip_startup]
-        connection.write msg = Messages::Startup.new(@options[:user], @options[:database]).to_bytes
+        write Messages::Startup.new(@options[:user], @options[:database])
         process
         
         query("SET SEARCH_PATH TO #{options[:search_path]}") if options[:search_path]
@@ -36,12 +29,12 @@ module Vertica
       end
     end
 
-    def connection
-      @connection ||= begin
+    def socket
+      @socket ||= begin
         conn = TCPSocket.new(@options[:host], @options[:port].to_s)
         if @options[:ssl]
           conn.write Messages::SslRequest.new.to_bytes
-          if [conn.read_byte].pack('C') == 'S'
+          if conn.read(1) == 'S'
             conn = OpenSSL::SSL::SSLSocket.new(conn, OpenSSL::SSL::SSLContext.new)
             conn.sync = true
             conn.connect
@@ -49,12 +42,17 @@ module Vertica
             raise Error::ConnectionError.new("SSL requested but server doesn't support it.")
           end
         end
+        
         conn
       end
     end
 
+    def ssl?
+      socket.kind_of?(OpenSSL::SSL::SSLSocket)
+    end
+
     def opened?
-      @connection && @backend_pid && @transaction_status
+      @socket && @backend_pid && @transaction_status
     end
 
     def closed?
@@ -62,14 +60,15 @@ module Vertica
     end
 
     def write(message)
-      connection.write_message message
+      raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
+      socket.write message.to_bytes
     end
 
     def close
       write Messages::Terminate.new
-      connection.close
-      @connection = nil
-    rescue Errno::ENOTCONN # the backend closed the connection already
+      socket.close
+      @socket = nil
+    rescue Errno::ENOTCONN # the backend closed the socket already
     ensure
       reset_values
     end
@@ -155,10 +154,25 @@ module Vertica
 
     protected
 
+
+    def read_bytes(n)
+      s = socket.read(n)
+      raise "couldn't read #{n} characters" if s.nil? or s.size != n # TODO make into a Vertica Exception
+      s
+    end
+    
+    def read_message
+      type = read_bytes(1)
+      size = read_bytes(4).unpack('N').first
+      raise Vertica::Error::MessageError.new("Bad message size: #{size}") unless size >= 4
+      Messages::BackendMessage.factory type, read_bytes(size - 4)
+    end
+
+
     def process(return_result = false)
       result = return_result ? Result.new : nil
       loop do
-        case message = connection.read_message
+        case message = read_message
         when Messages::Authentication
           if message.code != Messages::Authentication::OK
             write Messages::Password.new(@options[:password], message.code, {:user => @options[:user], :salt => message.salt})
@@ -173,12 +187,10 @@ module Vertica
           result.add_row(message) if result && !@process_row
 
         when Messages::ErrorResponse
-          raise Error::MessageError.new(message.error)
+          raise Error::MessageError.new(message.error_message)
 
         when Messages::NoticeResponse
-          message.notices.each do |notice|
-            @notices << Notice.new(notice[0], notice[1])
-          end
+          @notices << message.values
 
         when Messages::NotificationResponse
           @notifications << Notification.new(message.pid, message.condition, message.additional_info)
@@ -228,7 +240,7 @@ module Vertica
       @backend_pid        = nil
       @backend_key        = nil
       @transaction_status = nil
-      @connection         = nil
+      @socket             = nil
       @process_row        = nil
     end
 

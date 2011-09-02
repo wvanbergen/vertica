@@ -20,8 +20,6 @@ end
   bigdecimal/util
   date
 
-  vertica/vertica_socket
-
   vertica/column
   vertica/result
   vertica/connection
@@ -35,9 +33,9 @@ end
   vertica/messages/backend_messages/command_complete
   vertica/messages/backend_messages/data_row
   vertica/messages/backend_messages/empty_query_response
+  vertica/messages/backend_messages/notice_response
   vertica/messages/backend_messages/error_response
   vertica/messages/backend_messages/no_data
-  vertica/messages/backend_messages/notice_response
   vertica/messages/backend_messages/notification_response
   vertica/messages/backend_messages/parameter_description
   vertica/messages/backend_messages/parameter_status

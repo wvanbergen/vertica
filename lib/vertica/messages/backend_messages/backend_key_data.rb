@@ -3,13 +3,10 @@ module Vertica
     class BackendKeyData < BackendMessage
       message_id 'K'
 
-      attr_reader :pid
-      attr_reader :key
+      attr_reader :pid, :key
 
-      def initialize(stream, size)
-        super
-        @pid = stream.read_network_int32
-        @key = stream.read_network_int32
+      def initialize(data)
+        @pid, @key = data.unpack('NN')
       end
     end
   end

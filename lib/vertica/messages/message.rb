@@ -17,14 +17,12 @@ module Vertica
     class BackendMessage < Message
       MessageIdMap = {}
 
-      attr_reader :size
-
-      def self.factory(type, stream, size)
+      def self.factory(type, data)
         #puts "factory reading message #{type} #{size} #{type.class}"
         if klass = MessageIdMap[type]           #explicitly use the char value, for 1.9 compat
-          klass.new stream, size
+          klass.new data
         else
-          Messages::Unknown.new stream, size
+          Messages::Unknown.new type, data
         end
       end
 
@@ -33,11 +31,7 @@ module Vertica
         MessageIdMap[message_id] = self          #explicitly use the char value, for 1.9 compat
       end
 
-      def self.read(stream)
-      end
-
-      def initialize(stream, size)
-        @size = size
+      def initialize(data)
       end
     end
 

@@ -5,9 +5,8 @@ module Vertica
 
       attr_reader :transaction_status
 
-      def initialize(stream, size)
-        super
-        @transaction_status = [stream.read_byte].pack('C')
+      def initialize(data)
+        @transaction_status = data.unpack('a').first
       end
     end
   end

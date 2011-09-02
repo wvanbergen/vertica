@@ -3,14 +3,20 @@ module Vertica
     class CommandComplete < BackendMessage
       message_id 'C'
 
-      attr_reader :tag
-      attr_reader :rows
+      attr_reader :tag, :rows, :oid
 
-      def initialize(stream, size)
-        @tag = stream.read_cstring
-        @rows = @tag.split[-1].to_i
+      def initialize(data)
+        case data = data.unpack('Z*').first
+          when /^INSERT /
+            @tag, oid, rows = data.split(' ', 3)
+            @oid, @rows = oid.to_i, rows.to_i
+          when /^DELETE /, /^UPDATE /, /^MOVE /, /^FETCH /, /^COPY /
+            @tag, @rows = data.split(' ', 2)
+            @rows = rows.to_i
+          else
+            @tag = data
+        end
       end
-
     end
   end
 end

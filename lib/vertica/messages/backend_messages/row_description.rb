@@ -3,25 +3,25 @@ module Vertica
     class RowDescription < BackendMessage
       message_id 'T'
 
-      attr_reader :field_count
       attr_reader :fields
 
-      def initialize(stream, size)
-        super
-
+      def initialize(data)
         @fields = []
-
-        @field_count = stream.read_network_int16
-        @field_count.times do |field_index|
+        field_count = data.unpack('n').first
+        pos = 2
+        field_count.times do |field_index|
+          field_info = data.unpack("@#{pos}Z*NnNnNn")
           @fields << {
-            :name             => stream.read_cstring,
-            :table_oid        => stream.read_network_int32,
-            :attribute_number => stream.read_network_int16,
-            :data_type_oid    => stream.read_network_int32,
-            :data_type_size   => stream.read_network_int16,
-            :type_modifier    => stream.read_network_int32,
-            :format_code      => stream.read_network_int16
+            :name             => field_info[0],
+            :table_oid        => field_info[1],
+            :attribute_number => field_info[2],
+            :data_type_oid    => field_info[3],
+            :data_type_size   => field_info[4],
+            :type_modifier    => field_info[5],
+            :format_code      => field_info[6],
           }
+          
+          pos += 19 + field_info[0].size
         end
       end
     end
