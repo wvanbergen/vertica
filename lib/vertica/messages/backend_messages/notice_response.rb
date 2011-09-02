@@ -3,20 +3,22 @@ module Vertica
     class NoticeResponse < BackendMessage
       message_id 'N'
       
-      FIELDS = {
-        'q' => [0, "Internal Query"],
-        'S' => [1, "Severity"],
-        'M' => [2, "Message"],
-        'C' => [3, "Sqlstate"],
-        'D' => [4, "Detail"],
-        'H' => [5, "Hint"],
-        'P' => [6, "Position"],
-        'W' => [7, "Where"],
-        'p' => [8, "Internal Position"],
-        'R' => [10, "Routine"],
-        'F' => [11, "File"],
-        'L' => [12, "Line"],
-      }
+      FIELDS_DEFINITIONS = [
+        { :type => 'q', :name => "Internal Query" },
+        { :type => 'S', :name => "Severity" },
+        { :type => 'M', :name => "Message" },
+        { :type => 'C', :name => "Sqlstate" },
+        { :type => 'D', :name => "Detail" },
+        { :type => 'H', :name => "Hint" },
+        { :type => 'P', :name => "Position" },
+        { :type => 'W', :name => "Where" },
+        { :type => 'p', :name => "Internal Position" },
+        { :type => 'R', :name => "Routine" },
+        { :type => 'F', :name => "File" },
+        { :type => 'L', :name => "Line" }
+      ]
+      
+      FIELDS = Hash[*FIELDS_DEFINITIONS.map { |f| [f[:type], f[:name]] }.flatten]
       
       attr_reader :values
 
@@ -24,16 +26,16 @@ module Vertica
         @values, pos = {}, 0
         while pos < data.size - 1
           key, value = data.unpack("@#{pos}aZ*")
-          @values[FIELDS[key][1]] = value
+          @values[FIELDS[key]] = value
           pos += value.size + 2
         end
       end
 
       def error_message
-        @values.map { |type, msg| [(FIELDS[type] || [FIELDS.size, type.to_s]), msg].flatten }.
-                sort_by { |e| e.first }.
-                map { |e| "#{e[1]}: #{e[2]}" }.
-                join(', ')
+        ordered_values = FIELDS_DEFINITIONS.map do |field| 
+          "#{field[:name]}: #{@values[field[:name]]}" if @values[field[:name]]
+        end
+        ordered_values.compact.join(', ')
       end
     end
   end

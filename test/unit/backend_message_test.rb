@@ -38,7 +38,7 @@ class BackendMessageTest < Test::Unit::TestCase
       "Routine"  => "ClientAuthentication"
     }
     
-    assert_equal "Severity: FATAL, Sqlstate: 3D000, Message: database \"nonexistant_db\" does not exist, File: /scratch_a/release/vbuild/vertica/Basics/ClientAuthentication.cpp, Line: 1496, Routine: ClientAuthentication", msg.error_message
+    assert_equal "Severity: FATAL, Message: database \"nonexistant_db\" does not exist, Sqlstate: 3D000, Routine: ClientAuthentication, File: /scratch_a/release/vbuild/vertica/Basics/ClientAuthentication.cpp, Line: 1496", msg.error_message
   end
   
   def test_notice_response_message
