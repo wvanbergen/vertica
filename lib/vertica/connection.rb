@@ -7,6 +7,8 @@ module Vertica
       'E' => :failed_transaction
     }
 
+    attr_reader :options, :notices, :transaction_status, :backend_pid, :backend_key, :notifications, :parameters
+
     def self.cancel(existing_conn)
       conn = self.new(existing_conn.options.merge(:skip_startup => true))
       conn.write Messages::CancelRequest.new(existing_conn.backend_pid, existing_conn.backend_key)
@@ -78,38 +80,6 @@ module Vertica
       reset_values
     end
 
-    def options
-      @options.dup
-    end
-
-    def notices
-      @notices.dup
-    end
-
-    def transaction_status
-      @transaction_status
-    end
-
-    def backend_pid
-      @backend_pid
-    end
-
-    def backend_key
-      @backend_key
-    end
-
-    def notifications
-      @notifications
-    end
-
-    def parameters
-      @parameters.dup
-    end
-
-    def put_copy_data; raise NotImplementedError.new; end
-    def put_copy_end;  raise NotImplementedError.new; end
-    def get_copy_data; raise NotImplementedError.new; end
-
     def query(query_string, &block)
       raise ArgumentError.new("Query string cannot be blank or empty.") if query_string.nil? || query_string.empty?
       reset_result
@@ -156,15 +126,15 @@ module Vertica
 
 
     def read_bytes(n)
-      s = socket.read(n)
-      raise "couldn't read #{n} characters" if s.nil? or s.size != n # TODO make into a Vertica Exception
-      s
+      bytes = socket.read(n)
+      raise Vertica::Error::ConnectionError.new("Couldn't read #{n} characters from socket.") if bytes.nil? || bytes.size != n
+      return bytes
     end
     
     def read_message
       type = read_bytes(1)
       size = read_bytes(4).unpack('N').first
-      raise Vertica::Error::MessageError.new("Bad message size: #{size}") unless size >= 4
+      raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
       Messages::BackendMessage.factory type, read_bytes(size - 4)
     end
 
@@ -187,7 +157,9 @@ module Vertica
           result.add_row(message) if result && !@process_row
 
         when Messages::ErrorResponse
-          raise Error::MessageError.new(message.error_message)
+          error_class = result ? Vertica::Error::QueryError : Vertica::Error::ConnectionError
+          raise error_class.new(message.error_message)
+  
 
         when Messages::NoticeResponse
           @notices << message.values
@@ -219,14 +191,6 @@ module Vertica
               Messages::ParseComplete,
               Messages::PortalSuspended
           break
-        # when Messages::CopyData
-        #   # nothing
-        # when Messages::CopyDone
-        #   # nothing
-        # when Messages::CopyInResponse
-        #   raise 'not done'
-        # when Messages::CopyOutResponse
-        #   raise 'not done'
         end
       end
 

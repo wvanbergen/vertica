@@ -83,10 +83,10 @@ class QueryTest < Test::Unit::TestCase
   # end
   
   def test_sql_error
-    assert_raises Vertica::Error::MessageError do 
+    assert_raises Vertica::Error::QueryError do 
       @connection.query("SELECT * FROM nonexisting")
     end
-    assert_raises Vertica::Error::MessageError do 
+    assert_raises Vertica::Error::QueryError do 
       @connection.query("BLAH")
     end
   end

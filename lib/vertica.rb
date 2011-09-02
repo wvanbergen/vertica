@@ -2,6 +2,7 @@ module Vertica
   class Error < StandardError
     class ConnectionError < Error; end
     class MessageError < Error; end
+    class QueryError < Error; end
   end
 
   PROTOCOL_VERSION = 3 << 16

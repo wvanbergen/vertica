@@ -66,7 +66,7 @@ class ConnectionTest < Test::Unit::TestCase
   end
 
   def test_new_with_error_response
-    assert_raises Vertica::Error::MessageError do
+    assert_raises Vertica::Error::ConnectionError do
       Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:database => 'nonexistant_db'))
     end
   end
