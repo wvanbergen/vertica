@@ -2,3 +2,4 @@ pkg
 .DS_Store
 Gemfile.lock
 test/connection.yml
+*.rbc
