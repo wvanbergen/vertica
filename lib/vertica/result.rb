@@ -6,7 +6,10 @@ module Vertica
     attr_reader :columns
     attr_reader :rows
 
-    def initialize
+    attr_accessor
+
+    def initialize(row_style = :hash)
+      @row_style = row_style
       @rows = []
     end
 
@@ -14,11 +17,23 @@ module Vertica
       @columns = message.fields.map { |fd| Column.new(fd) }
     end
 
-    def format_row(row_data)
+    def format_row_as_hash(row_data)
       row = {}
-      row_data.values.each_with_index do |field, idx|
+      row_data.values.each_with_index do |value, idx|
         col = columns[idx]
-        row[col.name] = col.convert(field)
+        row[col.name] = col.convert(value)
+      end
+      row
+    end
+    
+    def format_row(row_data)
+      send("format_row_as_#{@row_style}", row_data)
+    end
+    
+    def format_row_as_array(row_data)
+      row = []
+      row_data.values.each_with_index do |value, idx|
+        row << columns[idx].convert(value)
       end
       row
     end

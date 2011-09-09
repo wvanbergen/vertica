@@ -9,6 +9,8 @@ module Vertica
 
     attr_reader :options, :notices, :transaction_status, :backend_pid, :backend_key, :notifications, :parameters
 
+    attr_accessor :row_style
+
     def self.cancel(existing_conn)
       conn = self.new(existing_conn.options.merge(:skip_startup => true))
       conn.write Messages::CancelRequest.new(existing_conn.backend_pid, existing_conn.backend_key)
@@ -21,6 +23,8 @@ module Vertica
 
       @options = options
       @notices = []
+      
+      @row_style = @options[:row_style] ? @options[:row_style] : :hash
 
       unless options[:skip_startup]
         write Messages::Startup.new(@options[:user], @options[:database])
@@ -140,7 +144,7 @@ module Vertica
 
 
     def process(return_result = false)
-      result = return_result ? Result.new : nil
+      result = return_result ? Result.new(row_style) : nil
       loop do
         case message = read_message
         when Messages::Authentication
