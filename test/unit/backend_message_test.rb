@@ -95,6 +95,9 @@ class BackendMessageTest < Test::Unit::TestCase
     
     msg = Vertica::Messages::DataRow.new("\x00\x02\x00\x00\x00\x011\x00\x00\x00\x04matt")
     assert_equal ['1', 'matt'], msg.values
+    
+    msg = Vertica::Messages::DataRow.new("\x00\a\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF")
+    assert_equal [nil,nil,nil,nil,nil,nil,nil], msg.values
   end
   
   def test_command_complete_message
