@@ -18,11 +18,11 @@ module Vertica
       [:char,         nil],
       [:varchar,      nil],
       [:date,         lambda { |s| Date.new(*s.split("-").map{|x| x.to_i}) }],
-      [:time,         lambda { |s| Time.parse(s) }],
+      [:time,         nil],
       [:timestamp,    lambda { |s| DateTime.parse(s, true) }],
       [:timestamp_tz, lambda { |s| DateTime.parse(s, true) }],
       [:interval,     nil],
-      [:time_tz,      lambda { |s| Time.parse(s) }],
+      [:time_tz,      nil],
       [:numeric,      lambda { |s| s.to_d }],
       [:bytea,        nil],
       [:rle_tuple,    nil]
