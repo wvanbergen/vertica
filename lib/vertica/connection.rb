@@ -9,7 +9,7 @@ module Vertica
 
     attr_reader :options, :notices, :transaction_status, :backend_pid, :backend_key, :notifications, :parameters
 
-    attr_accessor :row_style
+    attr_accessor :row_style, :debug
 
     def self.cancel(existing_conn)
       conn = self.new(existing_conn.options.merge(:skip_startup => true))
@@ -67,6 +67,7 @@ module Vertica
 
     def write(message)
       raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
+      puts "=> #{message.inspect}" if @debug
       socket.write message.to_bytes
     end
 
@@ -139,7 +140,9 @@ module Vertica
       type = read_bytes(1)
       size = read_bytes(4).unpack('N').first
       raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
-      Messages::BackendMessage.factory type, read_bytes(size - 4)
+      msg = Messages::BackendMessage.factory type, read_bytes(size - 4)
+      puts "<= #{msg.inspect}" if @debug
+      return msg
     end
 
 
