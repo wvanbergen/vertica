@@ -25,7 +25,6 @@ class QueryTest < Test::Unit::TestCase
     assert_equal :varchar, r.columns[1].data_type
     assert_equal :name, r.columns[1].name
     
-    # assert_equal [[1, 'matt']], r.rows
     assert_equal [{:id => 1, :name => "matt"}], r.rows
   end
 
@@ -107,50 +106,6 @@ class QueryTest < Test::Unit::TestCase
   
   def test_cancel
     Vertica::Connection.cancel(@connection)
-  end
-  
-  def test_value_conversions
-    @connection.row_style = :array
-    @connection.query <<-SQL
-      CREATE TABLE IF NOT EXISTS conversions_table (
-        "int_field" int, 
-        "string_field" varchar(100),
-        "date_field" date,
-        "timestamp_field" timestamp,
-        "time_field" time,
-        "interval_field" interval,
-        "boolean_field" boolean
-      )
-    SQL
-    
-    @connection.query "INSERT INTO conversions_table VALUES (123, 'hello world', '2010-01-01', '2010-01-01 12:00:00', '12:00:00', INTERVAL '1 DAY', TRUE)"
-    result = @connection.query "SELECT * FROM conversions_table LIMIT 1"
-    assert_equal result.rows.length, 1
-    assert_equal [
-      123, 'hello world', Date.parse('2010-01-01'), DateTime.parse('2010-01-01 12:00:00'), nil, nil, true], result.rows.first
-
-    @connection.query "DROP TABLE IF EXISTS conversions_table"
-  end
-  
-  def test_nil_conversions
-    @connection.row_style = :array
-    @connection.query <<-SQL
-      CREATE TABLE IF NOT EXISTS conversions_table (
-        "int_field" int, 
-        "string_field" varchar(100),
-        "date_field" date,
-        "timestamp_field" timestamp,
-        "time_field" time,
-        "interval_field" interval,
-        "boolean_field" boolean
-      )
-    SQL
-    
-    @connection.query "INSERT INTO conversions_table VALUES (NULL, NULL, NULL, NULL, NULL, NULL, NULL)"
-    result = @connection.query "SELECT * FROM conversions_table LIMIT 1"
-    assert_equal result.rows.length, 1
-    assert_equal [nil,nil,nil,nil,nil,nil,nil], result.rows.first
-    @connection.query "DROP TABLE IF EXISTS conversions_table"
   end
 
   # def test_prepared_statement_with_no_params

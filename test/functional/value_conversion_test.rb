@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class QueryTest < Test::Unit::TestCase
+class ValueConversionTest < Test::Unit::TestCase
   
   def setup
     @connection = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:row_style => :array))
