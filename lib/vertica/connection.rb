@@ -23,7 +23,9 @@ module Vertica
     def initialize(options = {})
       reset_values
 
-      @options = options
+      @options = {}
+      options.each { |key, value| @options[key.to_s.to_sym] = value }
+      
       @notices = []
       
       @row_style = @options[:row_style] ? @options[:row_style] : :hash
