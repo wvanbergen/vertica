@@ -13,7 +13,7 @@ module Vertica
       [:record,       nil],
       [:unknown,      nil],
       [:bool,         lambda { |s| s == 't' }],
-      [:in,           lambda { |s| s.to_i }],
+      [:integer,      lambda { |s| s.to_i }],
       [:float,        lambda { |s| s.to_f }],
       [:char,         nil],
       [:varchar,      nil],
@@ -23,7 +23,7 @@ module Vertica
       [:timestamp_tz, lambda { |s| DateTime.parse(s, true) }],
       [:interval,     nil],
       [:time_tz,      nil],
-      [:numeric,      lambda { |s| s.to_d }],
+      [:numeric,      lambda { |s| BigDecimal.new(s) }],
       [:bytea,        nil],
       [:rle_tuple,    nil]
     ]

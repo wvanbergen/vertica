@@ -1,3 +1,5 @@
+require 'socket'
+
 module Vertica
   class Connection
 
@@ -37,19 +39,20 @@ module Vertica
 
     def socket
       @socket ||= begin
-        conn = TCPSocket.new(@options[:host], @options[:port].to_s)
+        raw_socket = TCPSocket.new(@options[:host], @options[:port].to_s)
         if @options[:ssl]
-          conn.write Messages::SslRequest.new.to_bytes
-          if conn.read(1) == 'S'
-            conn = OpenSSL::SSL::SSLSocket.new(conn, OpenSSL::SSL::SSLContext.new)
-            conn.sync = true
-            conn.connect
+          require 'openssl/ssl'
+          raw_socket.write Messages::SslRequest.new.to_bytes
+          if raw_socket.read(1) == 'S'
+            raw_socket = OpenSSL::SSL::SSLSocket.new(raw_socket, OpenSSL::SSL::SSLContext.new)
+            raw_socket.sync = true
+            raw_socket.connect
           else
             raise Error::ConnectionError.new("SSL requested but server doesn't support it.")
           end
         end
         
-        conn
+        raw_socket
       end
     end
 
@@ -223,6 +226,9 @@ module Vertica
       @field_descriptions = []
       @field_values       = []
     end
-
   end
 end
+
+require 'vertica/column'
+require 'vertica/result'
+require 'vertica/messages/message'

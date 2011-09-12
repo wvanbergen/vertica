@@ -20,7 +20,7 @@ class QueryTest < Test::Unit::TestCase
     r = @connection.query("SELECT * FROM test_table")
     assert_equal 1, r.row_count
     assert_equal 2, r.columns.length
-    assert_equal :in, r.columns[0].data_type
+    assert_equal :integer, r.columns[0].data_type
     assert_equal :id, r.columns[0].name
     assert_equal :varchar, r.columns[1].data_type
     assert_equal :name, r.columns[1].name
@@ -33,7 +33,7 @@ class QueryTest < Test::Unit::TestCase
     r = @connection.query("SELECT * FROM test_table")
     assert_equal 1, r.row_count
     assert_equal 2, r.columns.length
-    assert_equal :in, r.columns[0].data_type
+    assert_equal :integer, r.columns[0].data_type
     assert_equal :id, r.columns[0].name
     assert_equal :varchar, r.columns[1].data_type
     assert_equal :name, r.columns[1].name
@@ -46,7 +46,7 @@ class QueryTest < Test::Unit::TestCase
     r = @connection.query("SELECT * FROM test_table WHERE 1 != 1")
     assert_equal 0, r.row_count
     assert_equal 2, r.columns.length
-    assert_equal :in, r.columns[0].data_type
+    assert_equal :integer, r.columns[0].data_type
     assert_equal :id, r.columns[0].name
     assert_equal :varchar, r.columns[1].data_type
     assert_equal :name, r.columns[1].name
@@ -57,7 +57,7 @@ class QueryTest < Test::Unit::TestCase
     r = @connection.query("INSERT INTO test_table VALUES (2, 'stefanie')")
     assert_equal 1, r.row_count
     assert_equal 1, r.columns.length
-    assert_equal :in, r.columns[0].data_type
+    assert_equal :integer, r.columns[0].data_type
     assert_equal :OUTPUT, r.columns[0].name
     assert_equal [{:OUTPUT => 1}], r.rows
   end
@@ -67,7 +67,7 @@ class QueryTest < Test::Unit::TestCase
     r = @connection.query("DELETE FROM test_table WHERE 1 != 1")
     assert_equal 1, r.row_count
     assert_equal 1, r.columns.length
-    assert_equal :in, r.columns[0].data_type
+    assert_equal :integer, r.columns[0].data_type
     assert_equal :OUTPUT, r.columns[0].name
     assert_equal [{:OUTPUT => 0}], r.rows
   end
@@ -76,7 +76,7 @@ class QueryTest < Test::Unit::TestCase
     r = @connection.query("DELETE FROM test_table WHERE id = 1")
     assert_equal 1, r.row_count
     assert_equal 1, r.columns.length
-    assert_equal :in, r.columns[0].data_type
+    assert_equal :integer, r.columns[0].data_type
     assert_equal :OUTPUT, r.columns[0].name
     assert_equal [{:OUTPUT => 1}], r.rows
   end
@@ -113,7 +113,7 @@ class QueryTest < Test::Unit::TestCase
   #   r = @connection.execute_prepared("my_ps")
   #   assert_equal 1, r.row_count
   #   assert_equal 2, r.columns.length
-  #   assert_equal :in, r.columns[0].data_type
+  #   assert_equal :integer, r.columns[0].data_type
   #   assert_equal :id, r.columns[0].name
   #   assert_equal :varchar, r.columns[1].data_type
   #   assert_equal :name, r.columns[1].name
@@ -126,7 +126,7 @@ class QueryTest < Test::Unit::TestCase
   #   r = c.execute_prepared("my_ps", 1)
   #   assert_equal 1, r.row_count
   #   assert_equal 2, r.columns.length
-  #   assert_equal :in, r.columns[0].data_type
+  #   assert_equal :integer, r.columns[0].data_type
   #   assert_equal 'id', r.columns[0].name
   #   assert_equal :varchar, r.columns[1].data_type
   #   assert_equal 'name', r.columns[1].name
@@ -140,7 +140,7 @@ class QueryTest < Test::Unit::TestCase
   #   r = c.execute_prepared("my_ps", 1, 3)
   #   assert_equal 1, r.row_count
   #   assert_equal 2, r.columns.length
-  #   assert_equal :in, r.columns[0].data_type
+  #   assert_equal :integer, r.columns[0].data_type
   #   assert_equal 'id', r.columns[0].name
   #   assert_equal :varchar, r.columns[1].data_type
   #   assert_equal 'name', r.columns[1].name
@@ -153,7 +153,7 @@ class QueryTest < Test::Unit::TestCase
       r = @connection.query("SELECT * FROM test_table")
       assert_equal 1, r.row_count
       assert_equal 2, r.columns.length
-      assert_equal :in, r.columns[0].data_type
+      assert_equal :integer, r.columns[0].data_type
       assert_equal :id, r.columns[0].name
       assert_equal :varchar, r.columns[1].data_type
       assert_equal :name, r.columns[1].name
