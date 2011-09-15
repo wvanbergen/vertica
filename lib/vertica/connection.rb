@@ -20,6 +20,7 @@ class Vertica::Connection
 
     @options = {}
     options.each { |key, value| @options[key.to_s.to_sym] = value }
+    @options[:port] ||= 5433
 
     @notices = []
 
@@ -36,7 +37,7 @@ class Vertica::Connection
 
   def socket
     @socket ||= begin
-      raw_socket = TCPSocket.new(@options[:host], @options[:port].to_s)
+      raw_socket = TCPSocket.new(@options[:host], @options[:port].to_i)
       if @options[:ssl]
         require 'openssl/ssl'
         raw_socket.write Vertica::Messages::SslRequest.new.to_bytes
