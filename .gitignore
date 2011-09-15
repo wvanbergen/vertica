@@ -3,3 +3,4 @@ pkg
 Gemfile.lock
 test/connection.yml
 *.rbc
+.yardoc/
