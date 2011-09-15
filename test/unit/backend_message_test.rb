@@ -23,7 +23,7 @@ class BackendMessageTest < Test::Unit::TestCase
   
   def test_ready_for_query_message
     msg = Vertica::Messages::ReadyForQuery.new("I")
-    assert_equal 'I', msg.transaction_status
+    assert_equal :no_transaction, msg.transaction_status
   end
   
   def test_error_response_message
