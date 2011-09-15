@@ -20,7 +20,7 @@ class ConnectionTest < Test::Unit::TestCase
     assert @connection.parameters.kind_of?(Hash)
     assert @connection.parameters.include?('server_version')
     
-    assert_equal [], @connection.notifications
+    assert_equal [], @connection.notices
   end
   
   def test_close_connection

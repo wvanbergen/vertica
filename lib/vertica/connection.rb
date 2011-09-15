@@ -2,7 +2,7 @@ require 'socket'
 
 class Vertica::Connection
 
-  attr_reader :options, :notices, :transaction_status, :backend_pid, :backend_key, :notifications, :parameters
+  attr_reader :options, :notices, :transaction_status, :backend_pid, :backend_key, :parameters
 
   attr_accessor :row_style, :debug
 
@@ -13,6 +13,7 @@ class Vertica::Connection
     conn.socket.close
   end
 
+  # Opens a connectio the a Vertica server
   # @param [Hash] options The connection options to use.
   def initialize(options = {})
     reset_values
@@ -170,9 +171,6 @@ class Vertica::Connection
       when Vertica::Messages::NoticeResponse
         @notices << message.values
 
-      when Vertica::Messages::NotificationResponse
-        @notifications << Notification.new(message.pid, message.condition, message.additional_info)
-
       when Vertica::Messages::ParameterStatus
         @parameters[message.name] = message.value
 
@@ -204,7 +202,6 @@ class Vertica::Connection
   end
 
   def reset_values
-    reset_notifications
     reset_result
     @parameters         = {}
     @backend_pid        = nil
@@ -212,10 +209,6 @@ class Vertica::Connection
     @transaction_status = nil
     @socket             = nil
     @process_row        = nil
-  end
-
-  def reset_notifications
-    @notifications      = []
   end
 
   def reset_result
