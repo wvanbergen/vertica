@@ -27,7 +27,7 @@ class QueryTest < Test::Unit::TestCase
     
     assert_equal [{:id => 1, :name => "matt"}], r.rows
   end
-
+  
   def test_select_query_with_results_as_array
     @connection.row_style = :array
     r = @connection.query("SELECT * FROM test_table")
@@ -40,7 +40,7 @@ class QueryTest < Test::Unit::TestCase
     
     assert_equal [[1, "matt"]], r.rows
   end
-
+  
   
   def test_select_query_with_no_results
     r = @connection.query("SELECT * FROM test_table WHERE 1 != 1")
@@ -82,74 +82,19 @@ class QueryTest < Test::Unit::TestCase
   end
   
   def test_empty_query
-    assert_raises ArgumentError do
+    assert_raises Vertica::Error::QueryError do
       @connection.query("")
     end
-    assert_raises ArgumentError do
+    assert_raises Vertica::Error::QueryError do
       @connection.query(nil)
     end
-  end
-
-  # FIXME: now hangs forever
-  # def test_non_query
-  #   @connection.query("--just a comment")
-  # end
-  
-  def test_sql_error
     assert_raises Vertica::Error::QueryError do 
-      @connection.query("SELECT * FROM nonexisting")
-    end
-    assert_raises Vertica::Error::QueryError do 
-      @connection.query("BLAH")
+      @connection.query("-- just a SQL comment")
     end
   end
   
-  def test_cancel
-    Vertica::Connection.cancel(@connection)
-  end
-
-  # def test_prepared_statement_with_no_params
-  #   @connection.prepare("my_ps", "SELECT * FROM test_table")
-  #   r = @connection.execute_prepared("my_ps")
-  #   assert_equal 1, r.row_count
-  #   assert_equal 2, r.columns.length
-  #   assert_equal :integer, r.columns[0].data_type
-  #   assert_equal :id, r.columns[0].name
-  #   assert_equal :varchar, r.columns[1].data_type
-  #   assert_equal :name, r.columns[1].name
-  #   assert_equal [{:id => 1, :name => "matt"}], r.rows
-  # end
-  #
-  # def test_prepared_statement_with_one_param
-  #   c = Vertica::Connection.new(TEST_CONNECTION_HASH)
-  #   c.prepare("my_ps", "SELECT * FROM test_table WHERE id = ?", 1)
-  #   r = c.execute_prepared("my_ps", 1)
-  #   assert_equal 1, r.row_count
-  #   assert_equal 2, r.columns.length
-  #   assert_equal :integer, r.columns[0].data_type
-  #   assert_equal 'id', r.columns[0].name
-  #   assert_equal :varchar, r.columns[1].data_type
-  #   assert_equal 'name', r.columns[1].name
-  #   assert_equal [[1, 'matt']], r.rows
-  #   c.close    
-  # end
-  # 
-  # def test_prepared_statement_with_two_params
-  #   c = Vertica::Connection.new(TEST_CONNECTION_HASH)
-  #   c.prepare("my_ps", "SELECT * FROM test_table WHERE id = ? OR id = ?", 2)
-  #   r = c.execute_prepared("my_ps", 1, 3)
-  #   assert_equal 1, r.row_count
-  #   assert_equal 2, r.columns.length
-  #   assert_equal :integer, r.columns[0].data_type
-  #   assert_equal 'id', r.columns[0].name
-  #   assert_equal :varchar, r.columns[1].data_type
-  #   assert_equal 'name', r.columns[1].name
-  #   assert_equal [[1, 'matt']], r.rows
-  #   c.close
-  # end
-
   def test_cleanup_after_select
-    5.times do
+    3.times do
       r = @connection.query("SELECT * FROM test_table")
       assert_equal 1, r.row_count
       assert_equal 2, r.columns.length
@@ -159,5 +104,18 @@ class QueryTest < Test::Unit::TestCase
       assert_equal :name, r.columns[1].name
       assert_equal [{:id => 1, :name => "matt"}], r.rows
     end
+  end  
+  
+  def test_sql_error
+    assert_raises Vertica::Error::QueryError do 
+      @connection.query("SELECT * FROM nonexistingfdg")
+    end
+    assert_raises Vertica::Error::QueryError do 
+      @connection.query("BLAH")
+    end
+  end
+  
+  def test_cancel
+    Vertica::Connection.cancel(@connection)
   end
 end

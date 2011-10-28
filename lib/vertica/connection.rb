@@ -27,14 +27,11 @@ class Vertica::Connection
     @row_style = @options[:row_style] ? @options[:row_style] : :hash
 
     unless options[:skip_startup]
-      write Vertica::Messages::Startup.new(@options[:user], @options[:database])
-      process
-
-      query("SET SEARCH_PATH TO #{options[:search_path]}") if options[:search_path]
-      query("SET ROLE #{options[:role]}") if options[:role]
+      startup_connection
+      initialize_connection
     end
   end
-
+  
   def socket
     @socket ||= begin
       raw_socket = TCPSocket.new(@options[:host], @options[:port].to_i)
@@ -85,49 +82,39 @@ class Vertica::Connection
     close if opened?
     reset_values
   end
-
-  def query(query_string, &block)
-    raise ArgumentError.new("Query string cannot be blank or empty.") if query_string.nil? || query_string.empty?
-    reset_result
-    write Vertica::Messages::Query.new(query_string)
-    @process_row = block
-    result = process(true)
-    result unless @process_row
+  
+  def read_message
+    type = read_bytes(1)
+    size = read_bytes(4).unpack('N').first
+    raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
+    message = Vertica::Messages::BackendMessage.factory type, read_bytes(size - 4)
+    puts "<= #{message.inspect}" if @debug
+    return message
   end
-
-  def prepare(name, query, params_count = 0)
-    param_types = Array.new(params_count).fill(0)
-
-    write Vertica::Messages::Parse.new(name, query, param_types)
-    write Vertica::Messages::Describe.new(:prepared_statement, name)
-    write Vertica::Messages::Sync.new
-    write Vertica::Messages::Flush.new
-
-    process
+  
+  def process_message(message)
+    case message
+    when Vertica::Messages::BackendKeyData
+      @backend_pid = message.pid
+      @backend_key = message.key
+    when Vertica::Messages::ParameterStatus
+      @parameters[message.name] = message.value
+    when Vertica::Messages::ReadyForQuery
+      @transaction_status = message.transaction_status
+    when Vertica::Messages::ErrorResponse
+      raise Vertica::Error::ConnectionError.new(message.error_message)
+    else
+      raise Vertica::Error::MessageError, "Unhandled message: #{message.inspect}"
+    end
   end
+  
 
-  def execute_prepared(name, *param_values)
-    portal_name = "" # use the unnamed portal
-    max_rows    = 0  # return all rows
-
-    reset_result
-
-    write Vertica::Messages::Bind.new(portal_name, name, param_values)
-    write Vertica::Messages::Execute.new(portal_name, max_rows)
-    write Vertica::Messages::Sync.new
-
-    result = process(true)
-
-    # Close the portal
-    write Vertica::Messages::Close.new(:portal, portal_name)
-    write Vertica::Messages::Flush.new
-
-    process
-
-    # Return the result from the prepared statement
-    result
+  def query(sql, &block)
+    job = Vertica::Query.new(self, sql, :row_style => @row_style)
+    job.row_handler = block if block_given?
+    return job.run
   end
-
+  
   protected
 
 
@@ -137,73 +124,27 @@ class Vertica::Connection
     return bytes
   end
   
-  def read_message
-    type = read_bytes(1)
-    size = read_bytes(4).unpack('N').first
-    raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
-    msg = Vertica::Messages::BackendMessage.factory type, read_bytes(size - 4)
-    puts "<= #{msg.inspect}" if @debug
-    return msg
-  end
-
-
-  def process(return_result = false)
-    result = return_result ? Vertica::Result.new(row_style) : nil
-    loop do
+  def startup_connection
+    write Vertica::Messages::Startup.new(@options[:user], @options[:database])
+    message = nil
+    begin 
       case message = read_message
       when Vertica::Messages::Authentication
         if message.code != Vertica::Messages::Authentication::OK
           write Vertica::Messages::Password.new(@options[:password], message.code, {:user => @options[:user], :salt => message.salt})
         end
-
-      when Vertica::Messages::BackendKeyData
-        @backend_pid = message.pid
-        @backend_key = message.key
-
-      when Vertica::Messages::DataRow
-        @process_row.call(result.format_row(message)) if @process_row && result
-        result.add_row(message) if result && !@process_row
-
-      when Vertica::Messages::ErrorResponse
-        error_class = result ? Vertica::Error::QueryError : Vertica::Error::ConnectionError
-        raise error_class.new(message.error_message)
-
-
-      when Vertica::Messages::NoticeResponse
-        @notices << message.values
-
-      when Vertica::Messages::ParameterStatus
-        @parameters[message.name] = message.value
-
-      when Vertica::Messages::ReadyForQuery
-        @transaction_status = message.transaction_status
-        break unless return_result
-
-      when Vertica::Messages::RowDescription
-        result.descriptions = message if result
-
-      when Vertica::Messages::Unknown
-        raise Error::MessageError.new("Unknown message type: #{message.message_id}")
-
-      when  Vertica::Messages::BindComplete,
-            Vertica::Messages::NoData,
-            Vertica::Messages::EmptyQueryResponse,
-            Vertica::Messages::ParameterDescription
-        :nothing
-
-      when  Vertica::Messages::CloseComplete,
-            Vertica::Messages::CommandComplete,
-            Vertica::Messages::ParseComplete,
-            Vertica::Messages::PortalSuspended
-        break
+      else
+        process_message(message)
       end
-    end
-
-    result
+    end until message.kind_of?(Vertica::Messages::ReadyForQuery)
+  end
+  
+  def initialize_connection
+    query("SET SEARCH_PATH TO #{options[:search_path]}") if options[:search_path]
+    query("SET ROLE #{options[:role]}") if options[:role]
   end
 
   def reset_values
-    reset_result
     @parameters         = {}
     @backend_pid        = nil
     @backend_key        = nil
@@ -211,13 +152,9 @@ class Vertica::Connection
     @socket             = nil
     @process_row        = nil
   end
-
-  def reset_result
-    @field_descriptions = []
-    @field_values       = []
-  end
 end
 
+require 'vertica/query'
 require 'vertica/column'
 require 'vertica/result'
 require 'vertica/messages/message'
