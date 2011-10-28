@@ -117,5 +117,13 @@ class QueryTest < Test::Unit::TestCase
   
   def test_cancel
     Vertica::Connection.cancel(@connection)
+    # TODO: actually test whether this works.
+  end
+  
+  def test_notice_handler
+    notice_received = false
+    @connection.on_notice { |notice| notice_received = true }
+    @connection.query('COMMIT')
+    assert notice_received
   end
 end

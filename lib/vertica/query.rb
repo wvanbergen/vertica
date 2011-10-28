@@ -21,7 +21,7 @@ class Vertica::Query
         error = message.error_message
       when Vertica::Messages::EmptyQueryResponse
         error = "The provided query was empty."
-      when Vertica::Messages::RowDescription, Vertica::Messages::CommandComplete, Vertica::Messages::NoticeResponse
+      when Vertica::Messages::RowDescription, Vertica::Messages::CommandComplete
         result = retreive_result(message, Vertica::Result.new(row_style))
       else
         @connection.process_message(message)
@@ -41,8 +41,6 @@ class Vertica::Query
         record = result.format_row(message)
         result.add_row(record) if buffer_rows?
         @row_handler.call(record) if @row_handler
-      when Vertica::Messages::NoticeResponse
-        result.notice = message.error_message
       else
         raise "Unexpected message: #{message}"
       end

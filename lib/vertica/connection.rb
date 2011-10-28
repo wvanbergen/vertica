@@ -2,7 +2,7 @@ require 'socket'
 
 class Vertica::Connection
 
-  attr_reader :options, :notices, :transaction_status, :backend_pid, :backend_key, :parameters
+  attr_reader :options, :notices, :transaction_status, :backend_pid, :backend_key, :parameters, :notice_handler
 
   attr_accessor :row_style, :debug
 
@@ -22,14 +22,15 @@ class Vertica::Connection
     options.each { |key, value| @options[key.to_s.to_sym] = value }
     @options[:port] ||= 5433
 
-    @notices = []
-
     @row_style = @options[:row_style] ? @options[:row_style] : :hash
-
     unless options[:skip_startup]
       startup_connection
       initialize_connection
     end
+  end
+  
+  def on_notice(&block)
+    @notice_handler = block
   end
   
   def socket
@@ -94,6 +95,10 @@ class Vertica::Connection
   
   def process_message(message)
     case message
+    when Vertica::Messages::ErrorResponse
+      raise Vertica::Error::ConnectionError.new(message.error_message)
+    when Vertica::Messages::NoticeResponse
+      @notice_handler.call(message) if @notice_handler
     when Vertica::Messages::BackendKeyData
       @backend_pid = message.pid
       @backend_key = message.key
@@ -101,8 +106,6 @@ class Vertica::Connection
       @parameters[message.name] = message.value
     when Vertica::Messages::ReadyForQuery
       @transaction_status = message.transaction_status
-    when Vertica::Messages::ErrorResponse
-      raise Vertica::Error::ConnectionError.new(message.error_message)
     else
       raise Vertica::Error::MessageError, "Unhandled message: #{message.inspect}"
     end

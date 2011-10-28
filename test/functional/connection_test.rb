@@ -5,7 +5,7 @@ class ConnectionTest < Test::Unit::TestCase
   def teardown
     @connection.close if @connection
   end
-  
+
   def test_new_connection
     @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
 
@@ -19,8 +19,6 @@ class ConnectionTest < Test::Unit::TestCase
     # parameters
     assert @connection.parameters.kind_of?(Hash)
     assert @connection.parameters.include?('server_version')
-    
-    assert_equal [], @connection.notices
   end
   
   def test_close_connection
