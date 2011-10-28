@@ -8,7 +8,7 @@ module Vertica
       end
       
       def to_bytes
-        message_string [@data].pack('Z*')
+        message_string [@data].pack('a*')
       end      
     end
   end

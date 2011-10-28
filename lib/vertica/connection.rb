@@ -112,14 +112,39 @@ class Vertica::Connection
   end
   
 
-  def query(sql, &block)
-    job = Vertica::Query.new(self, sql, :row_style => @row_style)
+  def query(sql, options = {}, &block)
+    job = Vertica::Query.new(self, sql, { :row_style => @row_style }.merge(options))
     job.row_handler = block if block_given?
     return job.run
   end
   
+  def copy(sql, source = nil, &block)
+    job = Vertica::Query.new(self, sql, :row_style => @row_style)
+    if block_given?
+      job.copy_handler = block 
+    elsif source && File.exists?(source.to_s)
+      job.copy_handler = lambda { |data| file_copy_handler(source, data) }
+    elsif source.respond_to?(:read) && source.respond_to?(:eof?)
+      job.copy_handler = lambda { |data| io_copy_handler(source, data) }
+    end
+    return job.run
+  end
+  
   protected
-
+  
+  def file_copy_handler(input_file, output)
+    File.open(input_file, 'r') do |input|
+      while data = input.read(4096)
+        output << data
+      end
+    end
+  end
+  
+  def io_copy_handler(input, output)
+    until input.eof?
+      output << input.read(4096) 
+    end
+  end
 
   def read_bytes(n)
     bytes = socket.read(n)

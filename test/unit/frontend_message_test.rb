@@ -9,11 +9,11 @@ class FrontendMessageTest < Test::Unit::TestCase
   
   def test_copy_fail_message
     message = Vertica::Messages::CopyFail.new('sad panda')
-    assert_equal message.to_bytes, ['f', 0, 0, 0, 14, 'sad panda'].pack('AC4Z*')
+    assert_equal message.to_bytes, ['f', 0, 0, 0, 14, "sad panda"].pack('AC4Z*')
   end
   
   def test_copy_data_message
-    message = Vertica::Messages::CopyData.new('foo bar')
-    assert_equal message.to_bytes, ['d', 0, 0, 0, 12, 'foo bar'].pack('AC4Z*')
+    message = Vertica::Messages::CopyData.new("foo|bar\n")
+    assert_equal message.to_bytes, ['d', 0, 0, 0, 12, "foo|bar\n"].pack('AC4A*')
   end
 end

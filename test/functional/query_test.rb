@@ -115,6 +115,33 @@ class QueryTest < Test::Unit::TestCase
     end
   end
   
+  def test_copy_in_with_customer_handler
+    @connection.copy "COPY test_table FROM STDIN" do |data|
+      data.copy_data "11|Stuff\r\n"
+      data << "12|More stuff\n13|Fin" << "al stuff\n"
+    end
+    
+    result = @connection.query("SELECT * FROM test_table ORDER BY id", :row_style => :array)
+    assert_equal 4, result.length
+    assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.rows
+  end
+  
+  def test_copy_in_with_file
+    filename = File.expand_path('../../resources/test_table.csv', __FILE__)
+    @connection.copy "COPY test_table FROM STDIN", filename
+    result = @connection.query("SELECT * FROM test_table ORDER BY id", :row_style => :array)
+    assert_equal 4, result.length
+    assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.rows
+  end
+  
+  def test_copy_in_with_io
+    io = StringIO.new("11|Stuff\r\n12|More stuff\n13|Final stuff\n")
+    @connection.copy "COPY test_table FROM STDIN", io
+    result = @connection.query("SELECT * FROM test_table ORDER BY id", :row_style => :array)
+    assert_equal 4, result.length
+    assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.rows
+  end
+  
   def test_cancel
     Vertica::Connection.cancel(@connection)
     # TODO: actually test whether this works.

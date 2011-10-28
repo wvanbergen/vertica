@@ -59,6 +59,7 @@ require 'vertica/messages/backend_messages/parse_complete'
 require 'vertica/messages/backend_messages/portal_suspended'
 require 'vertica/messages/backend_messages/ready_for_query'
 require 'vertica/messages/backend_messages/row_description'
+require 'vertica/messages/backend_messages/copy_in_response'
 require 'vertica/messages/backend_messages/unknown'
 
 require 'vertica/messages/frontend_messages/bind'
