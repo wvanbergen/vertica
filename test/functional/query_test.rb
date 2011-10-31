@@ -12,7 +12,6 @@ class QueryTest < Test::Unit::TestCase
   
   def teardown
     @connection.query("DROP TABLE IF EXISTS test_table CASCADE;")
-    @connection.query("COMMIT")
     @connection.close
   end
   
