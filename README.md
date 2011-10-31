@@ -1,12 +1,11 @@
 # Vertica
 
-**WARNING:** This is not well tested software (yet) use at your own risk.
+Vertica is a pure Ruby library for connecting to Vertica databases. You can learn more
+about Vertica at http://www.vertica.com.  
 
-## Description
-
-Vertica is a pure Ruby library for connecting to Vertica databases.  You can learn more
-about Vertica at http://www.vertica.com.  This library currently supports queries. Prepared
-statements still need a bit of work.
+This library currently supports simple queries. Prepared statements are currently not supported
+but are being worked on. The gem is tested against Vertica version 5.0 and should work in both 
+Ruby 1.8 and Ruby 1.9.
 
 # Install
 
@@ -24,24 +23,25 @@ and cloned from:
 
 # Usage
 
-## Example Query
+## Connecting
 
-### Connecting
-
-    vertica = Vertica.connect({
+    connection = Vertica.connect({
+      :host     => 'db_server',
       :user     => 'user',
       :password => 'password',
-      :host     => 'db_server',
-      :port     => '5433',
-      :database => 'db
+      # :ssl         => true,  # use SSL for the connection
+      # :port        => 5433,  # default 5433
+      # :database    => 'db',  # there is only one database
+      # :role        => '...', # the (additional) role(s) to enable for the user.
+      # :search_path => '...'  # default: <user>,public,v_catalog
     })
 
-### Buffered Rows
+## Buffered result
 
 All rows will first be fetched and buffered into a result object. Probably shouldn't use
 this for large result sets.
 
-    result = vertica.query("SELECT id, name FROM my_table")
+    result = vertica.connection("SELECT id, name FROM my_table")
     result.each_row |row|
       puts row # => {:id => 123, :name => "Jim Bob"}
     end
@@ -49,37 +49,25 @@ this for large result sets.
     result.rows # => [{:id => 123, :name => "Jim Bob"}, {:id => 456, :name => "Joe Jack"}]
     result.row_count # => 2
 
-    vertica.close
+    connection.close
 
-### Unbuffered Rows
+## Unbuffered result
 
 The vertica gem will not buffer incoming results. The gem will read a result off the
 socket and pass it to the provided block.
 
-    vertica.query("SELECT id, name FROM my_table") do |row|
+    vertica.connection("SELECT id, name FROM my_table") do |row|
       puts row # => {:id => 123, :name => "Jim Bob"}
     end
-    vertica.close
-
-### Example Prepared Statement
-
-This is flaky at best right now and needs some work. This will probably fail and destroy
-your connection. You'll need to throw the connection away and start over.
-
-    vertica.prepare("my_prepared_statement", "SELECT * FROM my_table WHERE id = ?", 1)
-    result = vertica.execute_prepared("my_prepared_statement", 13)
-    result.each_rows |row|
-      puts row # => {:id => 123, :name => "Jim Bob"}
-    end
-    result.rows # => [{:id => 123, :name => "Jim Bob"}, {:id => 456, :name => "Joe Jack"}]
-    vertica.close
+    connection.close
 
 # TODO
 
- * Tests.
- * Lots of tests.
+ * Prepared statements
+ * More tests
 
 # Authors
 
  * [Matt Bauer](http://github.com/mattbauer) all the hard work
  * [Jeff Smick](http://github.com/sprsquish) current maintainer
+ * [Willem van Bergen](http://github.com/wvanbergen) contributor
