@@ -44,7 +44,7 @@ class Vertica::Connection
           raw_socket.sync = true
           raw_socket.connect
         else
-          raise Error::ConnectionError.new("SSL requested but server doesn't support it.")
+          raise Vertica::Error::ConnectionError.new("SSL requested but server doesn't support it.")
         end
       end
       
