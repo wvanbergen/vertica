@@ -53,7 +53,6 @@ class Vertica::Query
         else
           @connection.write Vertica::Messages::CopyDone.new
         end
-        
       rescue => e
         @connection.write Vertica::Messages::CopyFail.new(e.message)
         raise
@@ -71,7 +70,7 @@ class Vertica::Query
         result.add_row(record) if buffer_rows?
         @row_handler.call(record) if @row_handler
       else
-        raise "Unexpected message: #{message}"
+        @connection.process_message(message)
       end
       message = @connection.read_message
     end
