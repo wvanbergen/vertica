@@ -36,32 +36,40 @@ and cloned from:
       # :search_path => '...'  # default: <user>,public,v_catalog
     })
 
-## Buffered result
+## Querying
 
-All rows will first be fetched and buffered into a result object. Probably shouldn't use
-this for large result sets.
+You can run simple queries using the <code>query</code> method, either in buffered and 
+unbuffered mode. For large result sets, you probably do not want to use buffered results.
 
-    result = connection.query("SELECT id, name FROM my_table")
-    result.each_row |row|
-      puts row # => {:id => 123, :name => "Jim Bob"}
-    end
+### Unbuffered result
 
-    result.rows # => [{:id => 123, :name => "Jim Bob"}, {:id => 456, :name => "Joe Jack"}]
-    result.row_count # => 2
-
-    connection.close
-
-## Unbuffered result
-
-The vertica gem will not buffer incoming results. The gem will read a result off the
-socket and pass it to the provided block.
+Get all the result rows without buffering by providing a block:
 
     connection.query("SELECT id, name FROM my_table") do |row|
       puts row # => {:id => 123, :name => "Jim Bob"}
     end
+    
     connection.close
+    
+### Buffered result
 
-Rows can also be returned as arrays by providing a row_style:
+Store the result of the query method as a variable to get a buffered resultset:
+
+    result = connection.query("SELECT id, name FROM my_table")
+    connection.close
+    
+    result.rows # => [{:id => 123, :name => "Jim Bob"}, {:id => 456, :name => "Joe Jack"}]
+    result.row_count # => 2
+    
+    result.each do |row|
+      puts row # => {:id => 123, :name => "Jim Bob"}
+    end
+
+
+### Row format
+
+By default, rows are returned as hashes, using symbols for the column names. Rows can also 
+be returned as arrays by providing a row_style:
 
     connection.query("SELECT id, name FROM my_table", :row_style => :array) do |row|
       puts row # => [123, "Jim Bob"]
