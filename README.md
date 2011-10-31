@@ -85,11 +85,11 @@ returned as array.
 
 # About
 
-This package is MIT licensed.
+This package is MIT licensed. See the LICENSE file for more information.
 
-# Development
+## Development
 
-The gem comes with a test suite. The unit tests in <tt>/test/unit</tt> do not need a database
+This project comes with a test suite. The unit tests in <tt>/test/unit</tt> do not need a database
 connection to run, the functional tests in <tt>/test/functional</tt> do need a working
 database connection. You can specify the connection parameters by copying the file
 <tt>/test/connection.yml.example</tt> to <tt>/test/connection.yml</tt> and filling out the 
@@ -99,7 +99,7 @@ Note that the test suite requires write access to the default schema of the prov
 although it tries to be as little invasive as possible: all tables it creates (and drops) are 
 prefixed with <tt>test_ruby_vertica_</tt>.
 
-## TODO
+### TODO
 
  * Prepared statements
  * More tests
