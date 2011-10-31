@@ -83,12 +83,28 @@ be returned as arrays by providing a row_style:
 By adding <code>:row_style => :array</code> to the connection hash, all results will be 
 returned as array.
 
-# TODO
+# About
+
+This package is MIT licensed.
+
+# Development
+
+The gem comes with a test suite. The unit tests in <tt>/test/unit</tt> do not need a database
+connection to run, the functional tests in <tt>/test/functional</tt> do need a working
+database connection. You can specify the connection parameters by copying the file
+<tt>/test/connection.yml.example</tt> to <tt>/test/connection.yml</tt> and filling out the 
+necessary fields. 
+
+Note that the test suite requires write access to the default schema of the provided connection, 
+although it tries to be as little invasive as possible: all tables it creates (and drops) are 
+prefixed with <tt>test_ruby_vertica_</tt>.
+
+## TODO
 
  * Prepared statements
  * More tests
 
-# Authors
+## Authors
 
  * [Matt Bauer](http://github.com/mattbauer) all the hard work
  * [Jeff Smick](http://github.com/sprsquish) current maintainer
