@@ -178,7 +178,6 @@ class Vertica::Connection
     @backend_key        = nil
     @transaction_status = nil
     @socket             = nil
-    @process_row        = nil
   end
 end
 
