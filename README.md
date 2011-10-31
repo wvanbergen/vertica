@@ -25,16 +25,22 @@ and cloned from:
 
 ## Connecting
 
+The <code>Vertica.connect</code> methods takes a connection parameter hash and returns a 
+connection object. For most options, the gem will use a default value if no value is provided.
+
     connection = Vertica.connect({
       :host     => 'db_server',
       :user     => 'user',
       :password => 'password',
-      # :ssl         => true,  # use SSL for the connection
-      # :port        => 5433,  # default 5433
+      # :ssl         => false, # use SSL for the connection
+      # :port        => 5433,  # default Vertica port: 5433
       # :database    => 'db',  # there is only one database
-      # :role        => '...', # the (additional) role(s) to enable for the user.
-      # :search_path => '...'  # default: <user>,public,v_catalog
+      # :role        => nil,   # the (additional) role(s) to enable for the user.
+      # :search_path => nil,   # default: <user>,public,v_catalog
+      # :row_style   => :hash  # can also be :array (see below)
     })
+    
+To close the connection when you're done with it, run <code>connection.close</code>.
 
 ## Querying
 
@@ -65,7 +71,6 @@ Store the result of the query method as a variable to get a buffered resultset:
       puts row # => {:id => 123, :name => "Jim Bob"}
     end
 
-
 ### Row format
 
 By default, rows are returned as hashes, using symbols for the column names. Rows can also 
@@ -77,7 +82,6 @@ be returned as arrays by providing a row_style:
     
 By adding <code>:row_style => :array</code> to the connection hash, all results will be 
 returned as array.
-
 
 # TODO
 
