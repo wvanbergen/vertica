@@ -41,7 +41,7 @@ and cloned from:
 All rows will first be fetched and buffered into a result object. Probably shouldn't use
 this for large result sets.
 
-    result = vertica.connection("SELECT id, name FROM my_table")
+    result = connection.query("SELECT id, name FROM my_table")
     result.each_row |row|
       puts row # => {:id => 123, :name => "Jim Bob"}
     end
@@ -56,10 +56,20 @@ this for large result sets.
 The vertica gem will not buffer incoming results. The gem will read a result off the
 socket and pass it to the provided block.
 
-    vertica.connection("SELECT id, name FROM my_table") do |row|
+    connection.query("SELECT id, name FROM my_table") do |row|
       puts row # => {:id => 123, :name => "Jim Bob"}
     end
     connection.close
+
+Rows can also be returned as arrays by providing a row_style:
+
+    connection.query("SELECT id, name FROM my_table", :row_style => :array) do |row|
+      puts row # => [123, "Jim Bob"]
+    end
+    
+By adding <code>:row_style => :array</code> to the connection hash, all results will be 
+returned as array.
+
 
 # TODO
 
