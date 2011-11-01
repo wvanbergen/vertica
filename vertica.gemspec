@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{vertica}
-  s.version = "0.9.0.beta3"
+  s.version = "0.9.0.beta4"
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jeff Smick", "Matt Bauer", "Willem van Bergen"]
-  s.date = %q{2011-09-12}
+  s.date = %q{2011-11-01}
   s.description = %q{Query Vertica with ruby}
   s.email = %q{sprsquish@gmail.com}
   s.extra_rdoc_files = [
@@ -31,12 +31,12 @@ Gem::Specification.new do |s|
     "lib/vertica/messages/backend_messages/bind_complete.rb",
     "lib/vertica/messages/backend_messages/close_complete.rb",
     "lib/vertica/messages/backend_messages/command_complete.rb",
+    "lib/vertica/messages/backend_messages/copy_in_response.rb",
     "lib/vertica/messages/backend_messages/data_row.rb",
     "lib/vertica/messages/backend_messages/empty_query_response.rb",
     "lib/vertica/messages/backend_messages/error_response.rb",
     "lib/vertica/messages/backend_messages/no_data.rb",
     "lib/vertica/messages/backend_messages/notice_response.rb",
-    "lib/vertica/messages/backend_messages/notification_response.rb",
     "lib/vertica/messages/backend_messages/parameter_description.rb",
     "lib/vertica/messages/backend_messages/parameter_status.rb",
     "lib/vertica/messages/backend_messages/parse_complete.rb",
@@ -47,6 +47,9 @@ Gem::Specification.new do |s|
     "lib/vertica/messages/frontend_messages/bind.rb",
     "lib/vertica/messages/frontend_messages/cancel_request.rb",
     "lib/vertica/messages/frontend_messages/close.rb",
+    "lib/vertica/messages/frontend_messages/copy_data.rb",
+    "lib/vertica/messages/frontend_messages/copy_done.rb",
+    "lib/vertica/messages/frontend_messages/copy_fail.rb",
     "lib/vertica/messages/frontend_messages/describe.rb",
     "lib/vertica/messages/frontend_messages/execute.rb",
     "lib/vertica/messages/frontend_messages/flush.rb",
@@ -58,14 +61,14 @@ Gem::Specification.new do |s|
     "lib/vertica/messages/frontend_messages/sync.rb",
     "lib/vertica/messages/frontend_messages/terminate.rb",
     "lib/vertica/messages/message.rb",
-    "lib/vertica/notification.rb",
+    "lib/vertica/query.rb",
     "lib/vertica/result.rb"
   ]
   s.homepage = %q{http://github.com/sprsquish/vertica}
   s.require_paths = ["lib"]
   s.rubygems_version = %q{1.6.2}
   s.summary = %q{Pure ruby library for interacting with Vertica}
-  s.test_files = ["test/functional/connection_test.rb", "test/functional/query_test.rb", "test/functional/value_conversion_test.rb", "test/test_helper.rb", "test/unit/backend_message_test.rb", "test/unit/quoting_test.rb"]
+  s.test_files = ["test/functional/connection_test.rb", "test/functional/query_test.rb", "test/functional/value_conversion_test.rb", "test/test_helper.rb", "test/unit/backend_message_test.rb", "test/unit/frontend_message_test.rb", "test/unit/quoting_test.rb"]
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
