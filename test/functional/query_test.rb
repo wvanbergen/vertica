@@ -116,7 +116,7 @@ class QueryTest < Test::Unit::TestCase
   
   def test_copy_in_with_customer_handler
     @connection.copy "COPY test_ruby_vertica_table FROM STDIN" do |data|
-      data.copy_data "11|Stuff\r\n"
+      data.write "11|Stuff\r\n"
       data << "12|More stuff\n13|Fin" << "al stuff\n"
     end
     
@@ -124,6 +124,18 @@ class QueryTest < Test::Unit::TestCase
     assert_equal 4, result.length
     assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.rows
   end
+  
+  def test_copy_in_with_gzip
+    @connection.copy "COPY test_ruby_vertica_table FROM STDIN GZIP" do |data|
+       gz = Zlib::GzipWriter.new(data)
+       gz << "11|Stuff\n12|More stuff\n13|Final stuff\n"
+       gz.close
+    end
+    
+    result = @connection.query("SELECT * FROM test_ruby_vertica_table ORDER BY id", :row_style => :array)
+    assert_equal 4, result.length
+    assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.rows
+  end  
   
   def test_copy_in_with_file
     filename = File.expand_path('../../resources/test_ruby_vertica_table.csv', __FILE__)

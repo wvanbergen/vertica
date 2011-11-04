@@ -34,12 +34,12 @@ class Vertica::Query
     return result
   end
   
-  def copy_data(data)
+  def write(data)
     @connection.write Vertica::Messages::CopyData.new(data)
     return self
   end
   
-  alias_method :<<, :copy_data  
+  alias_method :<<, :write
   
   protected
   
