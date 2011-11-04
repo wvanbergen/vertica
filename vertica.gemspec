@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{vertica}
-  s.version = "0.9.0.beta4"
+  s.version = "0.9.0.beta5"
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jeff Smick", "Matt Bauer", "Willem van Bergen"]
-  s.date = %q{2011-11-01}
+  s.date = %q{2011-11-04}
   s.description = %q{Query Vertica with ruby}
   s.email = %q{sprsquish@gmail.com}
   s.extra_rdoc_files = [
