@@ -43,6 +43,10 @@ class Vertica::Result
     @rows.each(&block)
   end
   
+  def empty?
+    @rows.empty?
+  end
+  
   alias_method :each, :each_row
 
   def row_count
