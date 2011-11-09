@@ -37,7 +37,7 @@ class Vertica::Connection
     @socket ||= begin
       raw_socket = TCPSocket.new(@options[:host], @options[:port].to_i)
       if @options[:ssl]
-        require 'openssl/ssl'
+        require 'openssl'
         raw_socket.write Vertica::Messages::SslRequest.new.to_bytes
         if raw_socket.read(1) == 'S'
           raw_socket = OpenSSL::SSL::SSLSocket.new(raw_socket, OpenSSL::SSL::SSLContext.new)
