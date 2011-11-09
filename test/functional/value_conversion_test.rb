@@ -1,3 +1,4 @@
+# encoding : UTF-8
 require 'test_helper'
 
 class ValueConversionTest < Test::Unit::TestCase
@@ -43,5 +44,9 @@ class ValueConversionTest < Test::Unit::TestCase
     result = @connection.query "SELECT * FROM conversions_table LIMIT 1"
     assert_equal result.rows.length, 1
     assert_equal [nil, nil, nil, nil, nil, nil, nil], result.rows.first
+  end
+  
+  def test_string_encoding
+    assert_equal 'åßç∂ë', @connection.query("SELECT 'åßç∂ë'").the_value
   end
 end

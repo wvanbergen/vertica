@@ -6,6 +6,8 @@ module Vertica
     attr_reader :size
     attr_reader :data_type
 
+    STRING_CONVERTER = String.new.respond_to?(:force_encoding) ? lambda { |s| s.force_encoding('utf-8') } : nil
+
     DATA_TYPE_CONVERSIONS = [
       [:unspecified,  nil],
       [:tuple,        nil],
@@ -15,8 +17,8 @@ module Vertica
       [:bool,         lambda { |s| s == 't' }],
       [:integer,      lambda { |s| s.to_i }],
       [:float,        lambda { |s| s.to_f }],
-      [:char,         nil],
-      [:varchar,      nil],
+      [:char,         STRING_CONVERTER],
+      [:varchar,      STRING_CONVERTER],
       [:date,         lambda { |s| Date.new(*s.split("-").map{|x| x.to_i}) }],
       [:time,         nil],
       [:timestamp,    lambda { |s| DateTime.parse(s, true) }],
