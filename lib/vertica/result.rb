@@ -47,6 +47,14 @@ class Vertica::Result
     @rows.empty?
   end
   
+  def the_value
+    if empty?
+      nil
+    else
+      @row_style == :array ? rows[0][0] : rows[0][columns[0].name]
+    end
+  end
+  
   alias_method :each, :each_row
 
   def row_count
