@@ -153,7 +153,7 @@ class Vertica::Connection
   end
   
   def startup_connection
-    write Vertica::Messages::Startup.new(@options[:user], @options[:database])
+    write Vertica::Messages::Startup.new(@options[:user] || @options[:username], @options[:database])
     message = nil
     begin 
       case message = read_message
