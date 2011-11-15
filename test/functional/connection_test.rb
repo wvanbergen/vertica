@@ -68,4 +68,10 @@ class ConnectionTest < Test::Unit::TestCase
       Vertica::Connection.new(TEST_CONNECTION_HASH.merge('database' => 'nonexistant_db'))
     end
   end
+
+  def test_connection_inspect_should_not_print_password
+    @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    inspected_string = @connection.inspect
+    assert_no_match /:password=>#{TEST_CONNECTION_HASH[:password]}/, inspected_string
+  end
 end

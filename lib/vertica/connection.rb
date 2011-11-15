@@ -129,6 +129,11 @@ class Vertica::Connection
     end
     return job.run
   end
+
+  def inspect
+    safe_options = @options.reject{ |name, _| name == :password }
+    "#<Vertica::Connection:#{object_id} @parameters=#{@parameters.inspect} @backend_pid=#{@backend_pid}, @backend_key=#{@backend_key}, @transaction_status=#{@transaction_status}, @socket=#{@socket}, @options=#{safe_options.inspect}, @row_style=#{@row_style}>"
+  end
   
   protected
   
