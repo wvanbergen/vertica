@@ -4,15 +4,19 @@ class QueryTest < Test::Unit::TestCase
   
   def setup
     @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
-    @connection.query("CREATE TABLE IF NOT EXISTS test_ruby_vertica_table (id int, name varchar(100))")
+    @connection.query("DROP TABLE IF EXISTS test_ruby_vertica_table CASCADE;")    
+    @connection.query("CREATE TABLE test_ruby_vertica_table (id int, name varchar(100))")
     @connection.query("CREATE PROJECTION IF NOT EXISTS test_ruby_vertica_table_p (id, name) AS SELECT * FROM test_ruby_vertica_table SEGMENTED BY HASH(id) ALL NODES OFFSET 1")
     @connection.query("INSERT INTO test_ruby_vertica_table VALUES (1, 'matt')")
     @connection.query("COMMIT")
   end
   
   def teardown
-    @connection.query("DROP TABLE IF EXISTS test_ruby_vertica_table CASCADE;")
-    @connection.close
+    if @connection.ready_for_query?
+      @connection.close
+    elsif @connection.interruptable?
+      @connection.interrupt
+    end
   end
   
   def test_select_query_with_results_as_hash
@@ -153,15 +157,65 @@ class QueryTest < Test::Unit::TestCase
     assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.rows
   end
   
-  def test_cancel
-    Vertica::Connection.cancel(@connection)
-    # TODO: actually test whether this works.
-  end
-  
   def test_notice_handler
     notice_received = false
     @connection.on_notice { |notice| notice_received = true }
     @connection.query('COMMIT')
     assert notice_received
+  end
+  
+  def test_query_mutex
+    mutex = Mutex.new
+    values = []
+    t1 = Thread.new do
+      mutex.synchronize do
+        3.times { values << @connection.query("SELECT 1").the_value }
+      end
+    end
+    t2 = Thread.new do
+      mutex.synchronize do
+        3.times { values << @connection.query("SELECT 2").the_value }
+      end
+    end
+    t3 = Thread.new do
+      mutex.synchronize do
+        3.times { values << @connection.query("SELECT 3").the_value }
+      end
+    end
+
+    t1.join
+    t2.join
+    t3.join
+
+    assert_equal values.sort, [1,1,1,2,2,2,3,3,3]
+  end
+  
+  def test_raise_on_synchronisity_problems
+    assert_raise(Vertica::Error::SynchronizeError) do
+      @connection.query("SELECT 1 UNION SELECT 2") do |record|
+        @connection.query("SELECT 3")
+      end
+    end
+  end
+  
+  def test_interrupting_connections
+    before = @connection.query("SELECT COUNT(1) FROM test_ruby_vertica_table").the_value
+    interruptable = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:interruptable => true))
+    assert interruptable.interruptable?
+    t = Thread.new do
+      Thread.current[:error_occurred] = false
+      begin
+        10.times { |n| interruptable.query("INSERT INTO test_ruby_vertica_table VALUES (#{n}, 'interrupt test')") } 
+        interruptable.query("COMMIT")
+      rescue Vertica::Error::ConnectionError
+        Thread.current[:error_occurred] = true
+      end
+    end
+    
+    interruptable.interrupt
+    t.join
+    
+    assert t[:error_occurred], "Expected an exception to occur"
+    assert_equal before, @connection.query("SELECT COUNT(1) FROM test_ruby_vertica_table").the_value
   end
 end

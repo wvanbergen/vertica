@@ -64,6 +64,14 @@ class Vertica::Connection
     !opened?
   end
 
+  def busy?
+    !ready_for_query?
+  end
+
+  def ready_for_query?
+    @ready_for_query == true
+  end
+
   def write(message)
     raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
     puts "=> #{message.inspect}" if @debug
@@ -106,28 +114,38 @@ class Vertica::Connection
       @parameters[message.name] = message.value
     when Vertica::Messages::ReadyForQuery
       @transaction_status = message.transaction_status
+      @ready_for_query = true
     else
       raise Vertica::Error::MessageError, "Unhandled message: #{message.inspect}"
     end
   end
   
+  def with_lock(&block)
+    raise Vertica::Error::SynchronizeError, "The connection is in use!" if busy?
+    @ready_for_query = false
+    yield
+  end
 
   def query(sql, options = {}, &block)
-    job = Vertica::Query.new(self, sql, { :row_style => @row_style }.merge(options))
-    job.row_handler = block if block_given?
-    return job.run
+    with_lock do
+      job = Vertica::Query.new(self, sql, { :row_style => @row_style }.merge(options))
+      job.row_handler = block if block_given?
+      job.run
+    end
   end
   
   def copy(sql, source = nil, &block)
-    job = Vertica::Query.new(self, sql, :row_style => @row_style)
-    if block_given?
-      job.copy_handler = block 
-    elsif source && File.exists?(source.to_s)
-      job.copy_handler = lambda { |data| file_copy_handler(source, data) }
-    elsif source.respond_to?(:read) && source.respond_to?(:eof?)
-      job.copy_handler = lambda { |data| io_copy_handler(source, data) }
+    with_lock do
+      job = Vertica::Query.new(self, sql, :row_style => @row_style)
+      if block_given?
+        job.copy_handler = block
+      elsif source && File.exists?(source.to_s)
+        job.copy_handler = lambda { |data| file_copy_handler(source, data) }
+      elsif source.respond_to?(:read) && source.respond_to?(:eof?)
+        job.copy_handler = lambda { |data| io_copy_handler(source, data) }
+      end
+      job.run
     end
-    return job.run
   end
 
   def inspect
@@ -183,6 +201,7 @@ class Vertica::Connection
     @backend_key        = nil
     @transaction_status = nil
     @socket             = nil
+    @ready_for_query    = false
   end
 end
 

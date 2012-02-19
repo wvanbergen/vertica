@@ -11,6 +11,7 @@ module Vertica
     class ConnectionError < Error; end
     class MessageError < Error; end
     class QueryError < Error; end
+    class SynchronizeError < Error; end
   end
 
   # The version number of this library.
