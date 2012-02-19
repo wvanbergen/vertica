@@ -2,15 +2,12 @@ require 'socket'
 
 class Vertica::Connection
 
-  attr_reader :options, :notices, :transaction_status, :backend_pid, :backend_key, :parameters, :notice_handler
+  attr_reader :options, :notices, :transaction_status, :backend_pid, :backend_key, :parameters, :notice_handler, :session_id
 
   attr_accessor :row_style, :debug
 
   def self.cancel(existing_conn)
-    conn = self.new(existing_conn.options.merge(:skip_startup => true))
-    conn.write Vertica::Messages::CancelRequest.new(existing_conn.backend_pid, existing_conn.backend_key)
-    conn.write Vertica::Messages::Flush.new
-    conn.socket.close
+    existing_conn.cancel
   end
 
   # Opens a connectio the a Vertica server
@@ -92,6 +89,25 @@ class Vertica::Connection
     reset_values
   end
   
+  def cancel
+    conn = self.class.new(options.merge(:skip_startup => true))
+    conn.write Vertica::Messages::CancelRequest.new(backend_pid, backend_key)
+    conn.write Vertica::Messages::Flush.new
+    conn.socket.close
+  end
+
+  def interrupt
+    raise Vertica::Error::ConnectionError, "Session cannopt be interrupted because the session ID is not known!" if session_id.nil?
+    conn = self.class.new(options.merge(:interruptable => false, :role => nil, :search_path => nil))
+    response = conn.query("SELECT CLOSE_SESSION(#{Vertica.quote(session_id)})").the_value
+    conn.close
+    return response
+  end
+
+  def interruptable?
+    !session_id.nil?
+  end
+
   def read_message
     type = read_bytes(1)
     size = read_bytes(4).unpack('N').first
@@ -193,10 +209,12 @@ class Vertica::Connection
   def initialize_connection
     query("SET SEARCH_PATH TO #{options[:search_path]}") if options[:search_path]
     query("SET ROLE #{options[:role]}") if options[:role]
+    @session_id = query("SELECT session_id FROM v_monitor.current_session").the_value if options[:interruptable]
   end
 
   def reset_values
     @parameters         = {}
+    @session_id         = nil
     @backend_pid        = nil
     @backend_key        = nil
     @transaction_status = nil
