@@ -170,10 +170,12 @@ class Vertica::Connection
   end
   
   protected
-  
+
+  COPY_FROM_IO_BLOCK_SIZE = 1024 * 4096
+
   def file_copy_handler(input_file, output)
     File.open(input_file, 'r') do |input|
-      while data = input.read(4096)
+      while data = input.read(COPY_FROM_IO_BLOCK_SIZE)
         output << data
       end
     end
@@ -181,7 +183,7 @@ class Vertica::Connection
   
   def io_copy_handler(input, output)
     until input.eof?
-      output << input.read(4096) 
+      output << input.read(COPY_FROM_IO_BLOCK_SIZE)
     end
   end
 
