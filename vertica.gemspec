@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "vertica"
-  s.version = "0.9.0.beta8"
+  s.version = "0.9.0.beta9"
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jeff Smick", "Matt Bauer", "Willem van Bergen"]
