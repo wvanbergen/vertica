@@ -1,5 +1,4 @@
 require 'socket'
-require 'ruby-debug'
 
 class Vertica::Connection
 
