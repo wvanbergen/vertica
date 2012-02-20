@@ -84,9 +84,11 @@ class Vertica::Connection
     reset_values
   end
 
-  def reset
-    close if opened?
-    reset_values
+  def reset_connection
+    close
+
+    startup_connection
+    initialize_connection
   end
   
   def cancel
