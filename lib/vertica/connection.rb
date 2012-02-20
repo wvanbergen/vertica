@@ -50,7 +50,7 @@ class Vertica::Connection
   end
 
   def ssl?
-    socket.kind_of?(OpenSSL::SSL::SSLSocket)
+    Object.const_defined?('OpenSSL') && socket.kind_of?(OpenSSL::SSL::SSLSocket)
   end
 
   def opened?
