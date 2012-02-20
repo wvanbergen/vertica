@@ -5,6 +5,7 @@ class Vertica::Error < StandardError
   class MessageError < Vertica::Error; end
   class SynchronizeError < Vertica::Error; end
   class EmptyQueryError < Vertica::Error; end
+  class ReadTimeout < Vertica::Error; end
     
   class QueryError < Vertica::Error
     

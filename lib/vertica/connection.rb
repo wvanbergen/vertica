@@ -191,7 +191,7 @@ class Vertica::Connection
   def read_bytes(n)
     io_object = socket.respond_to?(:io) ? socket.io : socket
     ready = IO.select([io_object], [io_object], [io_object], @read_timeout)
-    raise 'Timeout' if ready.nil? 
+    raise Vertica::Error::ReadTimeout if ready.nil? 
     bytes = socket.read(n)
     raise Vertica::Error::ConnectionError.new("Couldn't read #{n} characters from socket.") if bytes.nil? || bytes.size != n
     return bytes
