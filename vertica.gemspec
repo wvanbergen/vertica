@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{vertica}
-  s.version = "0.9.0.beta7"
+  s.name = "vertica"
+  s.version = "0.9.0.beta8"
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jeff Smick", "Matt Bauer", "Willem van Bergen"]
-  s.date = %q{2011-11-15}
-  s.description = %q{Query Vertica with ruby}
-  s.email = %q{sprsquish@gmail.com}
+  s.date = "2012-02-20"
+  s.description = "Query Vertica with ruby"
+  s.email = "sprsquish@gmail.com"
   s.extra_rdoc_files = [
     "LICENSE",
     "README.md"
@@ -26,6 +26,7 @@ Gem::Specification.new do |s|
     "lib/vertica.rb",
     "lib/vertica/column.rb",
     "lib/vertica/connection.rb",
+    "lib/vertica/error.rb",
     "lib/vertica/messages/backend_messages/authentication.rb",
     "lib/vertica/messages/backend_messages/backend_key_data.rb",
     "lib/vertica/messages/backend_messages/bind_complete.rb",
@@ -64,10 +65,10 @@ Gem::Specification.new do |s|
     "lib/vertica/query.rb",
     "lib/vertica/result.rb"
   ]
-  s.homepage = %q{http://github.com/sprsquish/vertica}
+  s.homepage = "http://github.com/sprsquish/vertica"
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.6.2}
-  s.summary = %q{Pure ruby library for interacting with Vertica}
+  s.rubygems_version = "1.8.10"
+  s.summary = "Pure ruby library for interacting with Vertica"
   s.test_files = ["test/functional/connection_test.rb", "test/functional/query_test.rb", "test/functional/value_conversion_test.rb", "test/test_helper.rb", "test/unit/backend_message_test.rb", "test/unit/frontend_message_test.rb", "test/unit/quoting_test.rb"]
 
   if s.respond_to? :specification_version then
