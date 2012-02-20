@@ -1,4 +1,5 @@
 require 'socket'
+require 'ruby-debug'
 
 class Vertica::Connection
 
@@ -18,6 +19,7 @@ class Vertica::Connection
     @options = {}
     options.each { |key, value| @options[key.to_s.to_sym] = value }
     @options[:port] ||= 5433
+    @read_timeout = options[:read_timeout]
 
     @row_style = @options[:row_style] ? @options[:row_style] : :hash
     unless options[:skip_startup]
@@ -188,6 +190,9 @@ class Vertica::Connection
   end
 
   def read_bytes(n)
+    io_object = socket.respond_to?(:io) ? socket.io : socket
+    ready = IO.select([io_object], [io_object], [io_object], @read_timeout)
+    raise 'Timeout' if ready.nil? 
     bytes = socket.read(n)
     raise Vertica::Error::ConnectionError.new("Couldn't read #{n} characters from socket.") if bytes.nil? || bytes.size != n
     return bytes
