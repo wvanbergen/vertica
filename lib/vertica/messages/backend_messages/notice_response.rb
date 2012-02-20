@@ -4,18 +4,18 @@ module Vertica
       message_id 'N'
       
       FIELDS_DEFINITIONS = [
-        { :type => 'q', :name => "Internal Query" },
-        { :type => 'S', :name => "Severity" },
-        { :type => 'M', :name => "Message" },
-        { :type => 'C', :name => "Sqlstate" },
-        { :type => 'D', :name => "Detail" },
-        { :type => 'H', :name => "Hint" },
-        { :type => 'P', :name => "Position" },
-        { :type => 'W', :name => "Where" },
-        { :type => 'p', :name => "Internal Position" },
-        { :type => 'R', :name => "Routine" },
-        { :type => 'F', :name => "File" },
-        { :type => 'L', :name => "Line" }
+        { :type => 'q', :name => "Internal Query", :method => :internal_query },
+        { :type => 'S', :name => "Severity", :method => :severity },
+        { :type => 'M', :name => "Message", :method => :message },
+        { :type => 'C', :name => "Sqlstate", :method => :sqlstate },
+        { :type => 'D', :name => "Detail", :method => :detail },
+        { :type => 'H', :name => "Hint", :method => :hint },
+        { :type => 'P', :name => "Position", :method => :position },
+        { :type => 'W', :name => "Where", :method => :where },
+        { :type => 'p', :name => "Internal Position", :method => :internal_position },
+        { :type => 'R', :name => "Routine", :method => :routine },
+        { :type => 'F', :name => "File", :method => :file },
+        { :type => 'L', :name => "Line", :method => :line }
       ]
       
       FIELDS = Hash[*FIELDS_DEFINITIONS.map { |f| [f[:type], f[:name]] }.flatten]
@@ -36,6 +36,12 @@ module Vertica
           "#{field[:name]}: #{@values[field[:name]]}" if @values[field[:name]]
         end
         ordered_values.compact.join(', ')
+      end
+      
+      FIELDS_DEFINITIONS.each do |field_def|
+        define_method(field_def[:method]) do
+          @values[field_def[:name]]
+        end
       end
     end
   end

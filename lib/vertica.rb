@@ -7,13 +7,6 @@ require 'bigdecimal'
 # prevent SQL injection.
 module Vertica
   
-  class Error < StandardError
-    class ConnectionError < Error; end
-    class MessageError < Error; end
-    class QueryError < Error; end
-    class SynchronizeError < Error; end
-  end
-
   # The version number of this library.
   VERSION = File.read(File.join(File.dirname(__FILE__), *%w[.. VERSION])).strip
 
@@ -58,4 +51,5 @@ module Vertica
   end
 end
 
+require 'vertica/error'
 require 'vertica/connection'

@@ -85,13 +85,13 @@ class QueryTest < Test::Unit::TestCase
   end
   
   def test_empty_query
-    assert_raises Vertica::Error::QueryError do
+    assert_raises Vertica::Error::EmptyQueryError do
       @connection.query("")
     end
-    assert_raises Vertica::Error::QueryError do
+    assert_raises Vertica::Error::EmptyQueryError do
       @connection.query(nil)
     end
-    assert_raises Vertica::Error::QueryError do 
+    assert_raises Vertica::Error::EmptyQueryError do 
       @connection.query("-- just a SQL comment")
     end
   end
@@ -110,10 +110,13 @@ class QueryTest < Test::Unit::TestCase
   end  
   
   def test_sql_error
-    assert_raises Vertica::Error::QueryError do 
-      @connection.query("SELECT * FROM nonexistingfdg")
+    assert_raises Vertica::Error::MissingColumn do 
+      @connection.query("SELECT asad FROM test_ruby_vertica_table")
     end
-    assert_raises Vertica::Error::QueryError do 
+    assert_raises Vertica::Error::MissingRelation do 
+      @connection.query("SELECT * FROM nonexisting_dsfdfsdfsdfs")
+    end
+    assert_raises Vertica::Error::SyntaxError do 
       @connection.query("BLAH")
     end
   end

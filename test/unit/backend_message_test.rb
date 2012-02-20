@@ -41,7 +41,16 @@ class BackendMessageTest < Test::Unit::TestCase
     assert_equal "Severity: FATAL, Message: database \"nonexistant_db\" does not exist, Sqlstate: 3D000, Routine: ClientAuthentication, File: /scratch_a/release/vbuild/vertica/Basics/ClientAuthentication.cpp, Line: 1496", msg.error_message
   end
   
-  def test_notice_response_message
+  def test_error_response_fields
+    data = "SFATAL\x00C3D000\x00Mdatabase \"nonexistant_db\" does not exist\x00F/scratch_a/release/vbuild/vertica/Basics/ClientAuthentication.cpp\x00L1496\x00RClientAuthentication\x00\x00"
+    msg = Vertica::Messages::ErrorResponse.new(data)
+
+    assert_equal "FATAL", msg.severity
+    assert_equal "ClientAuthentication", msg.routine
+  end
+  
+  
+  def test_notice_response_values
     data = "SINFO\x00C00000\x00Mcannot commit; no transaction in progress\x00F/scratch_a/release/vbuild/vertica/Commands/PGCall.cpp\x00L3502\x00Rprocess_vertica_transaction\x00\x00"
     msg = Vertica::Messages::NoticeResponse.new(data)
     
