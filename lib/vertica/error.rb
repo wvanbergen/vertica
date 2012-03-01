@@ -8,16 +8,20 @@ class Vertica::Error < StandardError
     
   class QueryError < Vertica::Error
     
-    attr_reader :error_response
+    attr_reader :error_response, :sql
     
-    def initialize(error_response)
-      @error_response = error_response
-      super(error_response.error_message)
+    def initialize(error_response, sql)
+      @error_response, @sql = error_response, sql
+      super("#{error_response.error_message}, SQL: #{one_line_sql.inspect}" )
     end
     
-    def self.from_error_response(error_response)
+    def one_line_sql
+      @sql.gsub(/[\r\n]+/, ' ')
+    end
+    
+    def self.from_error_response(error_response, sql)
       klass = QUERY_ERROR_CLASSES[error_response.sqlstate] || self
-      klass.new(error_response)
+      klass.new(error_response, sql)
     end
   end
   

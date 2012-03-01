@@ -18,7 +18,7 @@ class Vertica::Query
     begin
       case message = @connection.read_message
       when Vertica::Messages::ErrorResponse
-        error = Vertica::Error::QueryError.from_error_response(message)
+        error = Vertica::Error::QueryError.from_error_response(message, @sql)
       when Vertica::Messages::EmptyQueryResponse
         error = Vertica::Error::EmptyQueryError.new("A SQL string was expected, but the given string was blank or only contained SQL comments.")
       when Vertica::Messages::CopyInResponse
