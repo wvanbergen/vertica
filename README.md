@@ -1,11 +1,11 @@
 # Vertica
 
 Vertica is a pure Ruby library for connecting to Vertica databases. You can learn more
-about Vertica at http://www.vertica.com.  
+about Vertica at http://www.vertica.com.
 
-This library currently supports simple queries. Prepared statements are currently not supported
-but are being worked on. The gem is tested against Vertica version 5.0 and should work in both 
-Ruby 1.8 and Ruby 1.9.
+This library currently supports connecting, executing SQL queries, and transferring data
+for a "COPY table FROM STDIN" statement. The gem is tested against Vertica version 4.1, 
+5.0, and 5.1, and Ruby version 1.8 and 1.9.
 
 # Install
 
@@ -101,8 +101,7 @@ prefixed with <tt>test_ruby_vertica_</tt>.
 
 ### TODO
 
- * Prepared statements
- * More tests
+ * Asynchronous / EventMachine version
 
 ## Authors
 
