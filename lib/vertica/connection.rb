@@ -2,15 +2,12 @@ require 'socket'
 
 class Vertica::Connection
 
-  attr_reader :options, :notices, :transaction_status, :backend_pid, :backend_key, :parameters, :notice_handler
+  attr_reader :options, :notices, :transaction_status, :backend_pid, :backend_key, :parameters, :notice_handler, :session_id
 
   attr_accessor :row_style, :debug
 
   def self.cancel(existing_conn)
-    conn = self.new(existing_conn.options.merge(:skip_startup => true))
-    conn.write Vertica::Messages::CancelRequest.new(existing_conn.backend_pid, existing_conn.backend_key)
-    conn.write Vertica::Messages::Flush.new
-    conn.socket.close
+    existing_conn.cancel
   end
 
   # Opens a connectio the a Vertica server
@@ -53,7 +50,7 @@ class Vertica::Connection
   end
 
   def ssl?
-    socket.kind_of?(OpenSSL::SSL::SSLSocket)
+    Object.const_defined?('OpenSSL') && socket.kind_of?(OpenSSL::SSL::SSLSocket)
   end
 
   def opened?
@@ -62,6 +59,14 @@ class Vertica::Connection
 
   def closed?
     !opened?
+  end
+
+  def busy?
+    !ready_for_query?
+  end
+
+  def ready_for_query?
+    @ready_for_query == true
   end
 
   def write(message)
@@ -79,11 +84,32 @@ class Vertica::Connection
     reset_values
   end
 
-  def reset
-    close if opened?
-    reset_values
+  def reset_connection
+    close
+
+    startup_connection
+    initialize_connection
   end
   
+  def cancel
+    conn = self.class.new(options.merge(:skip_startup => true))
+    conn.write Vertica::Messages::CancelRequest.new(backend_pid, backend_key)
+    conn.write Vertica::Messages::Flush.new
+    conn.socket.close
+  end
+
+  def interrupt
+    raise Vertica::Error::ConnectionError, "Session cannopt be interrupted because the session ID is not known!" if session_id.nil?
+    conn = self.class.new(options.merge(:interruptable => false, :role => nil, :search_path => nil))
+    response = conn.query("SELECT CLOSE_SESSION(#{Vertica.quote(session_id)})").the_value
+    conn.close
+    return response
+  end
+
+  def interruptable?
+    !session_id.nil?
+  end
+
   def read_message
     type = read_bytes(1)
     size = read_bytes(4).unpack('N').first
@@ -106,28 +132,38 @@ class Vertica::Connection
       @parameters[message.name] = message.value
     when Vertica::Messages::ReadyForQuery
       @transaction_status = message.transaction_status
+      @ready_for_query = true
     else
       raise Vertica::Error::MessageError, "Unhandled message: #{message.inspect}"
     end
   end
   
+  def with_lock(&block)
+    raise Vertica::Error::SynchronizeError, "The connection is in use!" if busy?
+    @ready_for_query = false
+    yield
+  end
 
   def query(sql, options = {}, &block)
-    job = Vertica::Query.new(self, sql, { :row_style => @row_style }.merge(options))
-    job.row_handler = block if block_given?
-    return job.run
+    with_lock do
+      job = Vertica::Query.new(self, sql, { :row_style => @row_style }.merge(options))
+      job.row_handler = block if block_given?
+      job.run
+    end
   end
   
   def copy(sql, source = nil, &block)
-    job = Vertica::Query.new(self, sql, :row_style => @row_style)
-    if block_given?
-      job.copy_handler = block 
-    elsif source && File.exists?(source.to_s)
-      job.copy_handler = lambda { |data| file_copy_handler(source, data) }
-    elsif source.respond_to?(:read) && source.respond_to?(:eof?)
-      job.copy_handler = lambda { |data| io_copy_handler(source, data) }
+    with_lock do
+      job = Vertica::Query.new(self, sql, :row_style => @row_style)
+      if block_given?
+        job.copy_handler = block
+      elsif source && File.exists?(source.to_s)
+        job.copy_handler = lambda { |data| file_copy_handler(source, data) }
+      elsif source.respond_to?(:read) && source.respond_to?(:eof?)
+        job.copy_handler = lambda { |data| io_copy_handler(source, data) }
+      end
+      job.run
     end
-    return job.run
   end
 
   def inspect
@@ -136,10 +172,12 @@ class Vertica::Connection
   end
   
   protected
-  
+
+  COPY_FROM_IO_BLOCK_SIZE = 1024 * 4096
+
   def file_copy_handler(input_file, output)
     File.open(input_file, 'r') do |input|
-      while data = input.read(4096)
+      while data = input.read(COPY_FROM_IO_BLOCK_SIZE)
         output << data
       end
     end
@@ -147,7 +185,7 @@ class Vertica::Connection
   
   def io_copy_handler(input, output)
     until input.eof?
-      output << input.read(4096) 
+      output << input.read(COPY_FROM_IO_BLOCK_SIZE)
     end
   end
 
@@ -175,14 +213,17 @@ class Vertica::Connection
   def initialize_connection
     query("SET SEARCH_PATH TO #{options[:search_path]}") if options[:search_path]
     query("SET ROLE #{options[:role]}") if options[:role]
+    @session_id = query("SELECT session_id FROM v_monitor.current_session").the_value if options[:interruptable]
   end
 
   def reset_values
     @parameters         = {}
+    @session_id         = nil
     @backend_pid        = nil
     @backend_key        = nil
     @transaction_status = nil
     @socket             = nil
+    @ready_for_query    = false
   end
 end
 

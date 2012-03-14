@@ -50,17 +50,21 @@ class ConnectionTest < Test::Unit::TestCase
     assert_nil @connection.transaction_status
   end
 
-  def test_reset
+  def test_reset_connection
     @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
-    assert !@connection.parameters.empty?
-    assert @connection.backend_pid
-    assert @connection.backend_key
-    assert @connection.transaction_status
-    @connection.reset
-    assert_equal({}, @connection.parameters)
-    assert_nil @connection.backend_pid
-    assert_nil @connection.backend_key
-    assert_nil @connection.transaction_status
+    original_backend_pid = @connection.backend_pid
+    original_backend_key = @connection.backend_key
+
+    @connection.reset_connection
+
+    assert_not_equal original_backend_pid, @connection.backend_pid
+    assert_not_equal original_backend_key, @connection.backend_key
+    assert_equal :no_transaction, @connection.transaction_status
+  end
+  
+  def test_interrupt_connection
+    @connection = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:interruptable => true))
+    assert @connection.interruptable?
   end
 
   def test_new_with_error_response
@@ -68,7 +72,7 @@ class ConnectionTest < Test::Unit::TestCase
       Vertica::Connection.new(TEST_CONNECTION_HASH.merge('database' => 'nonexistant_db'))
     end
   end
-
+  
   def test_connection_inspect_should_not_print_password
     @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     inspected_string = @connection.inspect
