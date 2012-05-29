@@ -26,10 +26,11 @@ class Vertica::Error < StandardError
   end
   
   QUERY_ERROR_CLASSES = {
-    '55V03' => (LockFailure     = Class.new(Vertica::Error::QueryError)),
-    '53200' => (OutOfMemory     = Class.new(Vertica::Error::QueryError)),
-    '42601' => (SyntaxError     = Class.new(Vertica::Error::QueryError)),
-    '42V01' => (MissingRelation = Class.new(Vertica::Error::QueryError)),
-    '42703' => (MissingColumn   = Class.new(Vertica::Error::QueryError))
+    '55V03' => (LockFailure           = Class.new(Vertica::Error::QueryError)),
+    '53000' => (InsufficientResources = Class.new(Vertica::Error::QueryError)),
+    '53200' => (OutOfMemory           = Class.new(Vertica::Error::QueryError)),
+    '42601' => (SyntaxError           = Class.new(Vertica::Error::QueryError)),
+    '42V01' => (MissingRelation       = Class.new(Vertica::Error::QueryError)),
+    '42703' => (MissingColumn         = Class.new(Vertica::Error::QueryError))
   }
 end
