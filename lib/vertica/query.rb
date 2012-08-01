@@ -24,12 +24,12 @@ class Vertica::Query
       when Vertica::Messages::CopyInResponse
         handle_copy_from_stdin
       when Vertica::Messages::RowDescription, Vertica::Messages::CommandComplete
-        result = retreive_result(message, Vertica::Result.new(row_style))
+        result, error = retreive_result(message, Vertica::Result.new(row_style))
       else
         @connection.process_message(message)
       end
     end until message.kind_of?(Vertica::Messages::ReadyForQuery)
-    
+
     raise error unless error.nil?
     return result
   end
@@ -61,8 +61,11 @@ class Vertica::Query
   end
   
   def retreive_result(message, result)
+    error = nil
     until message.kind_of?(Vertica::Messages::CommandComplete)
       case message
+      when Vertica::Messages::ErrorResponse
+        error = Vertica::Error::QueryError.from_error_response(message, @sql)
       when Vertica::Messages::RowDescription
         result.descriptions = message
       when Vertica::Messages::DataRow
@@ -75,7 +78,7 @@ class Vertica::Query
       message = @connection.read_message
     end
     result.tag = message.tag
-    return result
+    return [result, error]
   end
   
   def buffer_rows?
