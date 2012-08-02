@@ -64,7 +64,7 @@ class ConnectionTest < Test::Unit::TestCase
   
   def test_interrupt_connection
     @connection = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:interruptable => true))
-    assert @connection.interruptable?
+    assert @connection.interruptable?, "The connection should be interruptable!"
   end
 
   def test_new_with_error_response
