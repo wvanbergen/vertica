@@ -31,6 +31,7 @@ class Vertica::Error < StandardError
     '53200' => (OutOfMemory           = Class.new(Vertica::Error::QueryError)),
     '42601' => (SyntaxError           = Class.new(Vertica::Error::QueryError)),
     '42V01' => (MissingRelation       = Class.new(Vertica::Error::QueryError)),
-    '42703' => (MissingColumn         = Class.new(Vertica::Error::QueryError))
+    '42703' => (MissingColumn         = Class.new(Vertica::Error::QueryError)),
+    '22V04' => (CopyRejected)         = Class.new(Vertica::Error::QueryError))
   }
 end
