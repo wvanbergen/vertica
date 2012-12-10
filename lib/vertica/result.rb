@@ -54,6 +54,10 @@ class Vertica::Result
       @row_style == :array ? rows[0][0] : rows[0][columns[0].name]
     end
   end
+
+  def [](row, col = nil)
+    col.nil? ? row[row] : rows[row][col]
+  end
   
   alias_method :each, :each_row
 
