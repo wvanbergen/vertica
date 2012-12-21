@@ -56,7 +56,12 @@ Get all the result rows without buffering by providing a block:
     end
     
     connection.close
-    
+
+Note: you can only use the connection for one query at the time. If you try to run another 
+query when the connection is still busy delivering the results of a previous query, a
+`Vertica::Error::SynchronizeError` will be raised. Use buffered resultsets to prevent this
+problem.
+
 ### Buffered result
 
 Store the result of the query method as a variable to get a buffered resultset:
@@ -108,3 +113,4 @@ prefixed with <tt>test_ruby_vertica_</tt>.
  * [Matt Bauer](http://github.com/mattbauer) all the hard work
  * [Jeff Smick](http://github.com/sprsquish) current maintainer
  * [Willem van Bergen](http://github.com/wvanbergen) contributor
+ * [Camilo Lopez](http://github.com/camilo) contributor
