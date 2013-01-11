@@ -5,7 +5,7 @@ about Vertica at http://www.vertica.com.
 
 This library currently supports connecting, executing SQL queries, and transferring data
 for a "COPY table FROM STDIN" statement. The gem is tested against Vertica version 4.1, 
-5.0, and 5.1, and Ruby version 1.8 and 1.9.
+5.0, 5.1, and 6.1, and Ruby version 1.8 and 1.9.
 
 # Install
 
