@@ -2,6 +2,8 @@
 class Vertica::Error < StandardError
   
   class ConnectionError < Vertica::Error; end
+  class SSLNotSupported < ConnectionError; end
+  class InterruptImpossible < Vertica::Error; end
   class MessageError < Vertica::Error; end
   class SynchronizeError < Vertica::Error; end
   class EmptyQueryError < Vertica::Error; end

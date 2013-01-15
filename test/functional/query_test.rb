@@ -193,7 +193,7 @@ class QueryTest < Test::Unit::TestCase
     assert_equal values.sort, [1,1,1,2,2,2,3,3,3]
   end
   
-  def test_raise_on_synchronisity_problems
+  def test_raise_when_connection_is_in_use
     assert_raise(Vertica::Error::SynchronizeError) do
       @connection.query("SELECT 1 UNION SELECT 2") do |record|
         @connection.query("SELECT 3")

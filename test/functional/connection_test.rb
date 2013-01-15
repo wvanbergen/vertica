@@ -6,65 +6,65 @@ class ConnectionTest < Test::Unit::TestCase
     @connection.close if @connection
   end
 
-  def test_new_connection
-    @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
+  def assert_valid_open_connection(connection)
+    assert connection.opened?
+    assert !connection.closed?
 
-    assert !@connection.parameters.empty?
-    assert @connection.backend_pid
-    assert @connection.backend_key
-    assert @connection.transaction_status
-    assert @connection.opened?
-    assert !@connection.closed?
+    # connection variables
+    assert connection.backend_pid
+    assert connection.backend_key
+    assert connection.transaction_status
     
     # parameters
-    assert @connection.parameters.kind_of?(Hash)
-    assert @connection.parameters.include?('server_version')
+    assert connection.parameters.kind_of?(Hash)
+    assert connection.parameters.include?('server_version')
   end
-  
-  def test_close_connection
-    @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
-    @connection.close
 
-    assert !@connection.opened?
-    assert @connection.closed?
-    assert_equal({}, @connection.parameters)
-    assert_nil @connection.backend_pid
-    assert_nil @connection.backend_key
-    assert_nil @connection.transaction_status
+  def assert_valid_closed_connection(connection)
+    assert !connection.opened?
+    assert connection.closed?
+    assert_equal({}, connection.parameters)
+    assert_nil connection.backend_pid
+    assert_nil connection.backend_key
+    assert_nil connection.transaction_status
+  end
+
+  def test_opening_and_closing_connection
+    connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    assert_valid_open_connection(connection)
+
+    connection.close
+    assert_valid_closed_connection(connection)    
   end
   
   def test_connection_with_ssl
-    @connection = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:ssl => true))
+    connection = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:ssl => true))
+    assert_valid_open_connection(connection)
+    assert connection.ssl?
 
-    assert @connection.ssl?
-    assert !@connection.parameters.empty?
-    assert @connection.backend_pid
-    assert @connection.backend_key
-    assert @connection.transaction_status
-
-    @connection.close
+    connection.close
+    assert_valid_closed_connection(connection)
+    assert !connection.ssl?
     
-    assert_equal({}, @connection.parameters)
-    assert_nil @connection.backend_pid
-    assert_nil @connection.backend_key
-    assert_nil @connection.transaction_status
+  rescue Vertica::Error::SSLNotSupported => e
+    puts "\nThe test server doesn't support SSL, so SSL connections could not be tested."
   end
 
   def test_reset_connection
-    @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
-    original_backend_pid = @connection.backend_pid
-    original_backend_key = @connection.backend_key
+    connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    original_backend_pid, original_backend_key = connection.backend_pid, connection.backend_key
 
-    @connection.reset_connection
+    connection.reset_connection
 
-    assert_not_equal original_backend_pid, @connection.backend_pid
-    assert_not_equal original_backend_key, @connection.backend_key
-    assert_equal :no_transaction, @connection.transaction_status
+    assert_valid_open_connection(connection)
+    assert_not_equal original_backend_pid, connection.backend_pid
+    assert_not_equal original_backend_key, connection.backend_key
+    assert_equal :no_transaction, connection.transaction_status
   end
   
-  def test_interrupt_connection
-    @connection = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:interruptable => true))
-    assert @connection.interruptable?, "The connection should be interruptable!"
+  def test_interruptable_connection
+    connection = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:interruptable => true))
+    assert connection.interruptable?, "The connection should be interruptable!"
   end
 
   def test_new_with_error_response

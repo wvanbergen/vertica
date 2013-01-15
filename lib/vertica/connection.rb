@@ -41,7 +41,7 @@ class Vertica::Connection
           raw_socket.sync = true
           raw_socket.connect
         else
-          raise Vertica::Error::ConnectionError.new("SSL requested but server doesn't support it.")
+          raise Vertica::Error::SSLNotSupported.new("SSL requested but server doesn't support it.")
         end
       end
       
@@ -99,7 +99,7 @@ class Vertica::Connection
   end
 
   def interrupt
-    raise Vertica::Error::ConnectionError, "Session cannopt be interrupted because the session ID is not known!" if session_id.nil?
+    raise Vertica::Error::InterruptImpossible, "Session cannopt be interrupted because the session ID is not known!" if session_id.nil?
     conn = self.class.new(options.merge(:interruptable => false, :role => nil, :search_path => nil))
     response = conn.query("SELECT CLOSE_SESSION(#{Vertica.quote(session_id)})").the_value
     conn.close
