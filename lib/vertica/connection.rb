@@ -16,7 +16,8 @@ class Vertica::Connection
     reset_values
 
     @options = {}
-    options.each { |key, value| @options[key.to_s.to_sym] = value }
+
+    options.each { |key, value| @options[key.to_s.to_sym] = value if value}
     @options[:port] ||= 5433
 
     @row_style = @options[:row_style] ? @options[:row_style] : :hash
@@ -146,7 +147,11 @@ class Vertica::Connection
 
   def query(sql, options = {}, &block)
     with_lock do
-      job = Vertica::Query.new(self, sql, { :row_style => @row_style }.merge(options))
+      job = Vertica::Query.new(self, sql, {
+        :row_style => @row_style,
+        :read_timeout => @options[:read_timeout],
+        :write_timeout => @options[:write_timeout]
+      }.merge(options))
       job.row_handler = block if block_given?
       job.run
     end

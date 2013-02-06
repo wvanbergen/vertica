@@ -1,3 +1,5 @@
+require "timeout"
+
 class Vertica::Query
 
   attr_reader :connection, :sql, :result, :error
@@ -9,6 +11,8 @@ class Vertica::Query
     @row_style    = options[:row_style] || @connection.row_style || :hash
     @row_handler  = options[:row_handler] 
     @copy_handler = options[:copy_handler]
+    @read_timeout = options[:read_timeout] 
+    @write_timeout = options[:write_timeout]
 
     @error  = nil
     @result = Vertica::Result.new(row_style)
@@ -16,12 +20,15 @@ class Vertica::Query
   
   
   def run
-    @connection.write Vertica::Messages::Query.new(sql)
-    
-    begin
-      process_message(message = @connection.read_message)
-    end until message.kind_of?(Vertica::Messages::ReadyForQuery)
+    Timeout.timeout @write_timeout do
+      @connection.write Vertica::Messages::Query.new(sql)
+    end
 
+    Timeout.timeout @read_timeout do
+      begin
+        process_message(message = @connection.read_message)
+      end until message.kind_of?(Vertica::Messages::ReadyForQuery)
+    end
     raise error unless error.nil?
     return result
   end
