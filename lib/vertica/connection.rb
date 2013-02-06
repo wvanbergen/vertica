@@ -18,7 +18,10 @@ class Vertica::Connection
     @options = {}
 
     options.each { |key, value| @options[key.to_s.to_sym] = value if value}
+    
     @options[:port] ||= 5433
+    @options[:read_timeout] ||= 30
+    @options[:write_timeout] ||= 30
 
     @row_style = @options[:row_style] ? @options[:row_style] : :hash
     unless options[:skip_startup]
@@ -71,9 +74,14 @@ class Vertica::Connection
   end
 
   def write(message)
-    raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
-    puts "=> #{message.inspect}" if @debug
-    socket.write message.to_bytes
+    ready = IO.select([socket], nil, nil, @write_timeout)
+    if ready
+      raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
+      puts "=> #{message.inspect}" if @debug
+      socket.write message.to_bytes
+    else
+      raise Timeout::Error
+    end
   end
 
   def close
@@ -112,12 +120,17 @@ class Vertica::Connection
   end
 
   def read_message
-    type = read_bytes(1)
-    size = read_bytes(4).unpack('N').first
-    raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
-    message = Vertica::Messages::BackendMessage.factory type, read_bytes(size - 4)
-    puts "<= #{message.inspect}" if @debug
-    return message
+    ready = IO.select([socket], nil, nil, @read_timeout)
+    if ready
+      type = read_bytes(1)
+      size = read_bytes(4).unpack('N').first
+      raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
+      message = Vertica::Messages::BackendMessage.factory type, read_bytes(size - 4)
+      puts "<= #{message.inspect}" if @debug
+      return message
+    else
+      raise Timeout::Error
+    end
   end
   
   def process_message(message)
@@ -147,11 +160,7 @@ class Vertica::Connection
 
   def query(sql, options = {}, &block)
     with_lock do
-      job = Vertica::Query.new(self, sql, {
-        :row_style => @row_style,
-        :read_timeout => @options[:read_timeout],
-        :write_timeout => @options[:write_timeout]
-      }.merge(options))
+      job = Vertica::Query.new(self, sql, {:row_style => @row_style}.merge(options))
       job.row_handler = block if block_given?
       job.run
     end
