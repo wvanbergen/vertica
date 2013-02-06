@@ -74,8 +74,8 @@ class Vertica::Connection
   end
 
   def write(message)
-    ready = IO.select([socket], nil, nil, @write_timeout)
-    if ready
+    ready_to_write = IO.select(nil, [socket], nil, @options[:write_timeout])[1]
+    if ready_to_write
       raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
       puts "=> #{message.inspect}" if @debug
       socket.write message.to_bytes
@@ -120,8 +120,8 @@ class Vertica::Connection
   end
 
   def read_message
-    ready = IO.select([socket], nil, nil, @read_timeout)
-    if ready
+    ready_to_read = IO.select([socket], nil, nil, @options[:read_timeout])[0]
+    if ready_to_read
       type = read_bytes(1)
       size = read_bytes(4).unpack('N').first
       raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
