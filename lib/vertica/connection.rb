@@ -160,7 +160,7 @@ class Vertica::Connection
 
   def query(sql, options = {}, &block)
     with_lock do
-      job = Vertica::Query.new(self, sql, {:row_style => @row_style}.merge(options))
+      job = Vertica::Query.new(self, sql, { :row_style => @row_style }.merge(options))
       job.row_handler = block if block_given?
       job.run
     end
