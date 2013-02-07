@@ -5,8 +5,8 @@ class QueryTest < Test::Unit::TestCase
   def setup
     @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     @connection.query("DROP TABLE IF EXISTS test_ruby_vertica_table CASCADE;")    
-    @connection.query("CREATE TABLE test_ruby_vertica_table (id int, name varchar(100)) UNSEGMENTED ALL NODES")
-    # @connection.query("CREATE PROJECTION IF NOT EXISTS test_ruby_vertica_table_p (id, name) AS SELECT * FROM test_ruby_vertica_table SEGMENTED BY HASH(id) ALL NODES OFFSET 1")
+    @connection.query("CREATE TABLE test_ruby_vertica_table (id int, name varchar(100))")
+    @connection.query("CREATE PROJECTION IF NOT EXISTS test_ruby_vertica_table_p (id, name) AS SELECT * FROM test_ruby_vertica_table SEGMENTED BY HASH(id) ALL NODES OFFSET 1")
     @connection.query("INSERT INTO test_ruby_vertica_table VALUES (1, 'matt')")
     @connection.query("COMMIT")
   end
@@ -109,12 +109,12 @@ class QueryTest < Test::Unit::TestCase
     end
   end  
   
-  # def test_read_timeout
-  #   assert_raises(Errno::ETIMEDOUT) do
-  #     @connection.options[:read_timeout] = 0.0001
-  #     @connection.query("SELECT * FROM test_ruby_vertica_table")
-  #   end
-  # end
+  def test_read_timeout
+    assert_raises(Errno::ETIMEDOUT) do
+      @connection.options[:read_timeout] = 0.0001
+      @connection.query("SELECT * FROM test_ruby_vertica_table")
+    end
+  end
 
   def test_sql_error
     assert_raises Vertica::Error::MissingColumn do 
