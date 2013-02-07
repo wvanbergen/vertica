@@ -2,9 +2,9 @@ require 'socket'
 
 class Vertica::Connection
 
-  attr_reader :options, :notices, :transaction_status, :backend_pid, :backend_key, :parameters, :notice_handler, :session_id
+  attr_reader :notices, :transaction_status, :backend_pid, :backend_key, :parameters, :notice_handler, :session_id
 
-  attr_accessor :row_style, :debug
+  attr_accessor :row_style, :debug, :options
 
   def self.cancel(existing_conn)
     existing_conn.cancel
@@ -21,7 +21,6 @@ class Vertica::Connection
     
     @options[:port] ||= 5433
     @options[:read_timeout] ||= 30
-    @options[:write_timeout] ||= 30
 
     @row_style = @options[:row_style] ? @options[:row_style] : :hash
     unless options[:skip_startup]
@@ -74,14 +73,9 @@ class Vertica::Connection
   end
 
   def write(message)
-    ready_to_write = IO.select(nil, [socket], nil, @options[:write_timeout])[1]
-    if ready_to_write
-      raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
-      puts "=> #{message.inspect}" if @debug
-      socket.write message.to_bytes
-    else
-      raise Timeout::Error
-    end
+    raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
+    puts "=> #{message.inspect}" if @debug
+    socket.write message.to_bytes
   end
 
   def close
@@ -120,8 +114,8 @@ class Vertica::Connection
   end
 
   def read_message
-    ready_to_read = IO.select([socket], nil, nil, @options[:read_timeout])[0]
-    if ready_to_read
+    ready = IO.select([socket], nil, nil, @options[:read_timeout])
+    if ready
       type = read_bytes(1)
       size = read_bytes(4).unpack('N').first
       raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
@@ -129,7 +123,7 @@ class Vertica::Connection
       puts "<= #{message.inspect}" if @debug
       return message
     else
-      raise Timeout::Error
+      raise Errno::ETIMEDOUT
     end
   end
   
