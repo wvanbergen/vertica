@@ -109,6 +109,13 @@ class QueryTest < Test::Unit::TestCase
     end
   end  
   
+  def test_read_timeout
+    assert_raises(Errno::ETIMEDOUT) do
+      @connection.options[:read_timeout] = 0.0001
+      @connection.query("SELECT * FROM test_ruby_vertica_table")
+    end
+  end
+
   def test_sql_error
     assert_raises Vertica::Error::MissingColumn do 
       @connection.query("SELECT asad FROM test_ruby_vertica_table")

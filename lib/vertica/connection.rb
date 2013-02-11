@@ -2,9 +2,9 @@ require 'socket'
 
 class Vertica::Connection
 
-  attr_reader :options, :notices, :transaction_status, :backend_pid, :backend_key, :parameters, :notice_handler, :session_id
+  attr_reader :notices, :transaction_status, :backend_pid, :backend_key, :parameters, :notice_handler, :session_id
 
-  attr_accessor :row_style, :debug
+  attr_accessor :row_style, :debug, :options
 
   def self.cancel(existing_conn)
     existing_conn.cancel
@@ -16,8 +16,11 @@ class Vertica::Connection
     reset_values
 
     @options = {}
-    options.each { |key, value| @options[key.to_s.to_sym] = value }
+
+    options.each { |key, value| @options[key.to_s.to_sym] = value if value}
+    
     @options[:port] ||= 5433
+    @options[:read_timeout] ||= 30
 
     @row_style = @options[:row_style] ? @options[:row_style] : :hash
     unless options[:skip_startup]
@@ -111,12 +114,17 @@ class Vertica::Connection
   end
 
   def read_message
-    type = read_bytes(1)
-    size = read_bytes(4).unpack('N').first
-    raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
-    message = Vertica::Messages::BackendMessage.factory type, read_bytes(size - 4)
-    puts "<= #{message.inspect}" if @debug
-    return message
+    ready = IO.select([socket], nil, nil, @options[:read_timeout])
+    if ready
+      type = read_bytes(1)
+      size = read_bytes(4).unpack('N').first
+      raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
+      message = Vertica::Messages::BackendMessage.factory type, read_bytes(size - 4)
+      puts "<= #{message.inspect}" if @debug
+      return message
+    else
+      raise Errno::ETIMEDOUT
+    end
   end
   
   def process_message(message)
