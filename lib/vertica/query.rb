@@ -13,8 +13,7 @@ class Vertica::Query
     @error  = nil
     @result = Vertica::Result.new(row_style)
   end
-  
-  
+
   def run
     @connection.write Vertica::Messages::Query.new(sql)
     
@@ -32,6 +31,10 @@ class Vertica::Query
   end
   
   alias_method :<<, :write
+
+  def to_s
+    @sql
+  end
   
   protected
   

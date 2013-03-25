@@ -5,9 +5,17 @@ class Vertica::Error < StandardError
   class SSLNotSupported < ConnectionError; end
   class InterruptImpossible < Vertica::Error; end
   class MessageError < Vertica::Error; end
-  class SynchronizeError < Vertica::Error; end
   class EmptyQueryError < Vertica::Error; end
     
+  class SynchronizeError < Vertica::Error
+    attr_reader :running_job, :requested_job
+
+    def initialize(running_job, requested_job)
+      @running_job, @requested_job = running_job, requested_job
+      super("Cannot execute #{running_job}, connection is in use for #{requested_job}!")
+    end
+  end
+
   class QueryError < Vertica::Error
     
     attr_reader :error_response, :sql
