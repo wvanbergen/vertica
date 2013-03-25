@@ -12,7 +12,7 @@ class Vertica::Error < StandardError
 
     def initialize(running_job, requested_job)
       @running_job, @requested_job = running_job, requested_job
-      super("Cannot execute #{running_job}, connection is in use for #{requested_job}!")
+      super("Cannot execute #{requested_job}, connection is in use for #{running_job}!")
     end
   end
 
