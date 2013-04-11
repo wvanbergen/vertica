@@ -6,6 +6,7 @@ class Vertica::Error < StandardError
   class InterruptImpossible < Vertica::Error; end
   class MessageError < Vertica::Error; end
   class EmptyQueryError < Vertica::Error; end
+  class TimedOutError < ConnectionError; end
     
   class SynchronizeError < Vertica::Error
     attr_reader :running_job, :requested_job
