@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "vertica"
-  s.version = "0.9.6"
+  s.version = "0.10.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Jeff Smick", "Matt Bauer", "Willem van Bergen"]
-  s.date = "2013-03-25"
+  s.date = "2013-04-11"
   s.description = "Query Vertica with ruby"
   s.email = "sprsquish@gmail.com"
   s.extra_rdoc_files = [
@@ -67,7 +67,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = "http://github.com/sprsquish/vertica"
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.16"
+  s.rubygems_version = "1.8.25"
   s.summary = "Pure ruby library for interacting with Vertica"
   s.test_files = ["test/functional/connection_test.rb", "test/functional/query_test.rb", "test/functional/value_conversion_test.rb", "test/test_helper.rb", "test/unit/backend_message_test.rb", "test/unit/frontend_message_test.rb", "test/unit/quoting_test.rb"]
 
