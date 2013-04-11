@@ -23,10 +23,7 @@ class Vertica::Connection
     @options[:read_timeout] ||= 30
 
     @row_style = @options[:row_style] ? @options[:row_style] : :hash
-    unless options[:skip_startup]
-      startup_connection
-      initialize_connection
-    end
+    boot_connection unless options[:skip_startup]
   end
   
   def on_notice(&block)
@@ -76,24 +73,35 @@ class Vertica::Connection
     raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
     puts "=> #{message.inspect}" if @debug
     socket.write message.to_bytes
+  rescue SystemCallError => e
+    close_socket
+    raise Vertica::Error::ConnectionError.new(e.message)
   end
 
   def close
     write Vertica::Messages::Terminate.new
+  ensure
+    close_socket
+  end
+
+  def close_socket
     socket.close
     @socket = nil
-  rescue Errno::ENOTCONN # the backend closed the socket already
+  rescue SystemCallError
   ensure
     reset_values
   end
 
   def reset_connection
     close
-
+    boot_connection
+  end
+ 
+  def boot_connection
     startup_connection
     initialize_connection
   end
-  
+ 
   def cancel
     conn = self.class.new(options.merge(:skip_startup => true))
     conn.write Vertica::Messages::CancelRequest.new(backend_pid, backend_key)
@@ -123,8 +131,12 @@ class Vertica::Connection
       puts "<= #{message.inspect}" if @debug
       return message
     else
-      raise Errno::ETIMEDOUT
+      close
+      raise Vertica::Error::TimedOutError.new("Connection timed out.")
     end
+  rescue SystemCallError => e
+    close_socket
+    raise Vertica::Error::ConnectionError.new(e.message)
   end
   
   def process_message(message)
@@ -172,6 +184,7 @@ class Vertica::Connection
   protected
 
   def run_with_job_lock(job)
+    boot_connection if closed?
     raise Vertica::Error::SynchronizeError.new(@current_job, job) if busy?
     @current_job = job
     job.run

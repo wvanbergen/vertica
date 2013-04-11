@@ -74,8 +74,45 @@ class ConnectionTest < Test::Unit::TestCase
   end
   
   def test_connection_inspect_should_not_print_password
-    @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
-    inspected_string = @connection.inspect
+    connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    inspected_string = connection.inspect
     assert_no_match /:password=>#{TEST_CONNECTION_HASH[:password]}/, inspected_string
+  end
+
+  def test_connection_timed_out_error
+    connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    connection.options[:read_timeout] = 0.01
+    assert_raises(Vertica::Error::TimedOutError) {connection.query("SELECT SLEEP(1)")}
+    assert connection.closed?
+  end
+
+  def test_automatically_reconnects
+    connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    connection.close
+    assert_equal(1, connection.query("SELECT 1").the_value)
+  end
+
+  def test_socket_write_error
+    connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    class << connection.socket
+      def write(foo)
+        raise Errno::ETIMEDOUT
+      end
+    end
+
+    assert_raises(Vertica::Error::ConnectionError) {connection.query('select 1')}
+    assert connection.closed?
+  end
+
+  def test_socket_read_error
+    connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    class << connection.socket
+      def read(foo)
+        raise Errno::ETIMEDOUT
+      end
+    end
+
+    assert_raises(Vertica::Error::ConnectionError) {connection.query('select 1')}
+    assert connection.closed?
   end
 end

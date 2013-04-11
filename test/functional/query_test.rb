@@ -110,7 +110,7 @@ class QueryTest < Test::Unit::TestCase
   end  
   
   def test_read_timeout
-    assert_raises(Errno::ETIMEDOUT) do
+    assert_raises(Vertica::Error::TimedOutError) do
       @connection.options[:read_timeout] = 0.0001
       @connection.query("SELECT * FROM test_ruby_vertica_table")
     end
