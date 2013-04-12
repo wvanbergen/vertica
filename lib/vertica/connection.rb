@@ -20,7 +20,7 @@ class Vertica::Connection
     options.each { |key, value| @options[key.to_s.to_sym] = value if value}
     
     @options[:port] ||= 5433
-    @options[:read_timeout] ||= 30
+    @options[:read_timeout] ||= 600
 
     @row_style = @options[:row_style] ? @options[:row_style] : :hash
     boot_connection unless options[:skip_startup]
