@@ -18,18 +18,18 @@ class Vertica::Connection
     @options = {}
 
     options.each { |key, value| @options[key.to_s.to_sym] = value if value}
-    
+
     @options[:port] ||= 5433
     @options[:read_timeout] ||= 600
 
     @row_style = @options[:row_style] ? @options[:row_style] : :hash
     boot_connection unless options[:skip_startup]
   end
-  
+
   def on_notice(&block)
     @notice_handler = block
   end
-  
+
   def socket
     @socket ||= begin
       raw_socket = TCPSocket.new(@options[:host], @options[:port].to_i)
@@ -44,7 +44,7 @@ class Vertica::Connection
           raise Vertica::Error::SSLNotSupported.new("SSL requested but server doesn't support it.")
         end
       end
-      
+
       raw_socket
     end
   end
@@ -96,12 +96,12 @@ class Vertica::Connection
     close
     boot_connection
   end
- 
+
   def boot_connection
     startup_connection
     initialize_connection
   end
- 
+
   def cancel
     conn = self.class.new(options.merge(:skip_startup => true))
     conn.write Vertica::Messages::CancelRequest.new(backend_pid, backend_key)
@@ -138,7 +138,7 @@ class Vertica::Connection
     close_socket
     raise Vertica::Error::ConnectionError.new(e.message)
   end
-  
+
   def process_message(message)
     case message
     when Vertica::Messages::ErrorResponse
@@ -157,13 +157,13 @@ class Vertica::Connection
       raise Vertica::Error::MessageError, "Unhandled message: #{message.inspect}"
     end
   end
-  
+
   def query(sql, options = {}, &block)
     job = Vertica::Query.new(self, sql, { :row_style => @row_style }.merge(options))
     job.row_handler = block if block_given?
     run_with_job_lock(job)
   end
-  
+
   def copy(sql, source = nil, &block)
     job = Vertica::Query.new(self, sql, :row_style => @row_style)
     if block_given?
@@ -180,7 +180,7 @@ class Vertica::Connection
     safe_options = @options.reject{ |name, _| name == :password }
     "#<Vertica::Connection:#{object_id} @parameters=#{@parameters.inspect} @backend_pid=#{@backend_pid}, @backend_key=#{@backend_key}, @transaction_status=#{@transaction_status}, @socket=#{@socket}, @options=#{safe_options.inspect}, @row_style=#{@row_style}>"
   end
-  
+
   protected
 
   def run_with_job_lock(job)
@@ -199,7 +199,7 @@ class Vertica::Connection
       end
     end
   end
-  
+
   def io_copy_handler(input, output)
     until input.eof?
       output << input.read(COPY_FROM_IO_BLOCK_SIZE)
@@ -208,14 +208,16 @@ class Vertica::Connection
 
   def read_bytes(n)
     bytes = socket.read(n)
-    raise Vertica::Error::ConnectionError.new("Couldn't read #{n} characters from socket.") if bytes.nil? || bytes.size != n
+
+    raise Errno::EIO if bytes.nil? || bytes.size != n
+
     return bytes
   end
-  
+
   def startup_connection
     write Vertica::Messages::Startup.new(@options[:user] || @options[:username], @options[:database])
     message = nil
-    begin 
+    begin
       case message = read_message
       when Vertica::Messages::Authentication
         if message.code != Vertica::Messages::Authentication::OK
@@ -226,7 +228,7 @@ class Vertica::Connection
       end
     end until message.kind_of?(Vertica::Messages::ReadyForQuery)
   end
-  
+
   def initialize_connection
     query("SET SEARCH_PATH TO #{options[:search_path]}") if options[:search_path]
     query("SET ROLE #{options[:role]}") if options[:role]
