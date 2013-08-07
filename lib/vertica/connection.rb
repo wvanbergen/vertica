@@ -72,7 +72,23 @@ class Vertica::Connection
   def write(message)
     raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
     puts "=> #{message.inspect}" if @debug
-    socket.write message.to_bytes
+    begin
+      socket.write_nonblock message.to_bytes
+    rescue IO::WaitReadable
+      if IO.select([socket], nil, nil, @options[:read_timeout])
+        retry
+      else
+        close
+        raise Vertica::Error::TimedOutError.new("Connection timed out.")
+      end
+    rescue IO::WaitWritable
+      if IO.select(nil, [socket], nil, @options[:read_timeout])
+        retry
+      else
+        close
+        raise Vertica::Error::TimedOutError.new("Connection timed out.")
+      end
+    end
   rescue SystemCallError => e
     close_socket
     raise Vertica::Error::ConnectionError.new(e.message)
@@ -122,18 +138,12 @@ class Vertica::Connection
   end
 
   def read_message
-    ready = IO.select([socket], nil, nil, @options[:read_timeout])
-    if ready
-      type = read_bytes(1)
-      size = read_bytes(4).unpack('N').first
-      raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
-      message = Vertica::Messages::BackendMessage.factory type, read_bytes(size - 4)
-      puts "<= #{message.inspect}" if @debug
-      return message
-    else
-      close
-      raise Vertica::Error::TimedOutError.new("Connection timed out.")
-    end
+    type = read_bytes(1)
+    size = read_bytes(4).unpack('N').first
+    raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
+    message = Vertica::Messages::BackendMessage.factory type, read_bytes(size - 4)
+    puts "<= #{message.inspect}" if @debug
+    return message
   rescue SystemCallError => e
     close_socket
     raise Vertica::Error::ConnectionError.new(e.message)
@@ -207,7 +217,23 @@ class Vertica::Connection
   end
 
   def read_bytes(n)
-    bytes = socket.read(n)
+    begin
+      bytes = socket.read_nonblock(n)
+    rescue IO::WaitReadable
+      if IO.select([socket], nil, nil, @options[:read_timeout])
+        retry
+      else
+        close
+        raise Vertica::Error::TimedOutError.new("Connection timed out.")
+      end
+    rescue IO::WaitWritable
+      if IO.select(nil, [socket], nil, @options[:read_timeout])
+        retry
+      else
+        close
+        raise Vertica::Error::TimedOutError.new("Connection timed out.")
+      end
+    end
 
     raise Errno::EIO if bytes.nil? || bytes.size != n
 
