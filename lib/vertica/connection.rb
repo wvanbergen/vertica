@@ -50,7 +50,7 @@ class Vertica::Connection
   end
 
   def ssl?
-    Object.const_defined?('OpenSSL') && socket.kind_of?(OpenSSL::SSL::SSLSocket)
+    Object.const_defined?('OpenSSL') && @socket.kind_of?(OpenSSL::SSL::SSLSocket)
   end
 
   def opened?
@@ -69,33 +69,22 @@ class Vertica::Connection
     @current_job.nil?
   end
 
-  def write(message)
+  def write_message(message)
     raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
     puts "=> #{message.inspect}" if @debug
     begin
       socket.write_nonblock message.to_bytes
-    rescue IO::WaitReadable
-      if IO.select([socket], nil, nil, @options[:read_timeout])
-        retry
-      else
-        close
-        raise Vertica::Error::TimedOutError.new("Connection timed out.")
-      end
-    rescue IO::WaitWritable
-      if IO.select(nil, [socket], nil, @options[:read_timeout])
-        retry
-      else
-        close
-        raise Vertica::Error::TimedOutError.new("Connection timed out.")
-      end
+    rescue IO::WaitReadable, IO::WaitWritable => wait_error
+      io_select(wait_error)
+      retry
     end
-  rescue SystemCallError => e
+  rescue SystemCallError, IOError => e
     close_socket
     raise Vertica::Error::ConnectionError.new(e.message)
   end
 
   def close
-    write Vertica::Messages::Terminate.new
+    write_message Vertica::Messages::Terminate.new
   ensure
     close_socket
   end
@@ -103,7 +92,7 @@ class Vertica::Connection
   def close_socket
     socket.close
     @socket = nil
-  rescue SystemCallError
+  rescue SystemCallError, IOError
   ensure
     reset_values
   end
@@ -120,8 +109,8 @@ class Vertica::Connection
 
   def cancel
     conn = self.class.new(options.merge(:skip_startup => true))
-    conn.write Vertica::Messages::CancelRequest.new(backend_pid, backend_key)
-    conn.write Vertica::Messages::Flush.new
+    conn.write_message Vertica::Messages::CancelRequest.new(backend_pid, backend_key)
+    conn.write_message Vertica::Messages::Flush.new
     conn.socket.close
   end
 
@@ -144,7 +133,7 @@ class Vertica::Connection
     message = Vertica::Messages::BackendMessage.factory type, read_bytes(size - 4)
     puts "<= #{message.inspect}" if @debug
     return message
-  rescue SystemCallError => e
+  rescue SystemCallError, IOError => e
     close_socket
     raise Vertica::Error::ConnectionError.new(e.message)
   end
@@ -217,37 +206,30 @@ class Vertica::Connection
   end
 
   def read_bytes(n)
-    begin
-      bytes = socket.read_nonblock(n)
-    rescue IO::WaitReadable
-      if IO.select([socket], nil, nil, @options[:read_timeout])
-        retry
-      else
-        close
-        raise Vertica::Error::TimedOutError.new("Connection timed out.")
-      end
-    rescue IO::WaitWritable
-      if IO.select(nil, [socket], nil, @options[:read_timeout])
-        retry
-      else
-        close
-        raise Vertica::Error::TimedOutError.new("Connection timed out.")
-      end
+    socket.read_nonblock(n)
+  rescue IO::WaitReadable, IO::WaitWritable => wait_error
+    io_select(wait_error)
+    retry
+  end
+
+  def io_select(exception)
+    readers, writers = nil, nil
+    readers = [socket] if exception.is_a?(IO::WaitReadable)
+    writers = [socket] if exception.is_a?(IO::WaitWritable)
+    if IO.select(readers, writers, nil, @options[:read_timeout]).nil?
+      close
+      raise Vertica::Error::TimedOutError.new("Connection timed out.")
     end
-
-    raise Errno::EIO if bytes.nil? || bytes.size != n
-
-    return bytes
   end
 
   def startup_connection
-    write Vertica::Messages::Startup.new(@options[:user] || @options[:username], @options[:database])
+    write_message Vertica::Messages::Startup.new(@options[:user] || @options[:username], @options[:database])
     message = nil
     begin
       case message = read_message
       when Vertica::Messages::Authentication
         if message.code != Vertica::Messages::Authentication::OK
-          write Vertica::Messages::Password.new(@options[:password], message.code, {:user => @options[:user], :salt => message.salt})
+          write_message Vertica::Messages::Password.new(@options[:password], message.code, {:user => @options[:user], :salt => message.salt})
         end
       else
         process_message(message)

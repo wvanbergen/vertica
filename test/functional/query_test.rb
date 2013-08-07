@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'zlib'
 
 class QueryTest < Test::Unit::TestCase
   

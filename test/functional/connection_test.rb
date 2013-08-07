@@ -95,7 +95,7 @@ class ConnectionTest < Test::Unit::TestCase
   def test_socket_write_error
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     class << connection.socket
-      def write(foo)
+      def write_nonblock(foo)
         raise Errno::ETIMEDOUT
       end
     end
@@ -107,7 +107,7 @@ class ConnectionTest < Test::Unit::TestCase
   def test_socket_read_error
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     class << connection.socket
-      def read(foo)
+      def read_nonblock(foo)
         raise Errno::ETIMEDOUT
       end
     end

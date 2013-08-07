@@ -15,7 +15,7 @@ class Vertica::Query
   end
 
   def run
-    @connection.write Vertica::Messages::Query.new(sql)
+    @connection.write_message Vertica::Messages::Query.new(sql)
     
     begin
       process_message(message = @connection.read_message)
@@ -26,7 +26,7 @@ class Vertica::Query
   end
   
   def write(data)
-    @connection.write Vertica::Messages::CopyData.new(data)
+    @connection.write_message Vertica::Messages::CopyData.new(data)
     return self
   end
   
@@ -59,16 +59,16 @@ class Vertica::Query
   
   def handle_copy_from_stdin
     if copy_handler.nil?
-      @connection.write Vertica::Messages::CopyFail.new('no handler provided')
+      @connection.write_message Vertica::Messages::CopyFail.new('no handler provided')
     else
       begin
         if copy_handler.call(self) == :rollback
-          @connection.write Vertica::Messages::CopyFail.new("rollback")
+          @connection.write_message Vertica::Messages::CopyFail.new("rollback")
         else
-          @connection.write Vertica::Messages::CopyDone.new
+          @connection.write_message Vertica::Messages::CopyDone.new
         end
       rescue => e
-        @connection.write Vertica::Messages::CopyFail.new(e.message)
+        @connection.write_message Vertica::Messages::CopyFail.new(e.message)
         raise
       end
     end
