@@ -72,12 +72,7 @@ class Vertica::Connection
   def write_message(message)
     raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
     puts "=> #{message.inspect}" if @debug
-    begin
-      socket.write_nonblock message.to_bytes
-    rescue IO::WaitReadable, IO::WaitWritable => wait_error
-      io_select(wait_error)
-      retry
-    end
+    write_bytes message.to_bytes
   rescue SystemCallError, IOError => e
     close_socket
     raise Vertica::Error::ConnectionError.new(e.message)
@@ -206,12 +201,25 @@ class Vertica::Connection
   end
 
   def read_bytes(n)
-    socket.read_nonblock(n)
+    bytes = ""
+    until bytes.length == n
+      begin
+        bytes << socket.read_nonblock(n - bytes.length)
+      rescue IO::WaitReadable, IO::WaitWritable => wait_error
+        io_select(wait_error)
+        retry
+      end
+    end 
+    bytes
+  end
+
+  def write_bytes(bytes)
+    socket.write_nonblock bytes
   rescue IO::WaitReadable, IO::WaitWritable => wait_error
     io_select(wait_error)
     retry
   end
-
+  
   def io_select(exception)
     readers, writers = nil, nil
     readers = [socket] if exception.is_a?(IO::WaitReadable)
