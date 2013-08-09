@@ -214,7 +214,8 @@ class Vertica::Connection
   end
 
   def write_bytes(bytes)
-    socket.write_nonblock bytes
+    bytes_written = socket.write_nonblock(bytes)
+    write_bytes(bytes[bytes_written...bytes.size]) if bytes_written < bytes.size
   rescue IO::WaitReadable, IO::WaitWritable => wait_error
     io_select(wait_error)
     retry
