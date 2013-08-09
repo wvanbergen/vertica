@@ -128,6 +128,15 @@ class QueryTest < Test::Unit::TestCase
       @connection.query("BLAH")
     end
   end
+
+  def test_copy_in_alot_of_data_with_customer_handler
+    @connection.copy "COPY test_ruby_vertica_table FROM STDIN" do |data|
+      data.write "11|#{"a" * 1_000_000}\n"
+    end
+    
+    result = @connection.query("SELECT id FROM test_ruby_vertica_table ORDER BY id", :row_style => :array)
+    assert_equal 2, result.length
+  end
   
   def test_copy_in_with_customer_handler
     @connection.copy "COPY test_ruby_vertica_table FROM STDIN" do |data|
@@ -159,7 +168,7 @@ class QueryTest < Test::Unit::TestCase
     assert_equal 4, result.length
     assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.rows
   end
-  
+
   def test_copy_in_with_io
     io = StringIO.new("11|Stuff\r\n12|More stuff\n13|Final stuff\n")
     @connection.copy "COPY test_ruby_vertica_table FROM STDIN", io
