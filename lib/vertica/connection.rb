@@ -62,11 +62,11 @@ class Vertica::Connection
   end
 
   def busy?
-    !ready_for_query?
+    @mutex.locked?
   end
 
   def ready_for_query?
-    @current_job.nil?
+    !busy?
   end
 
   def write_message(message)
@@ -146,7 +146,7 @@ class Vertica::Connection
       @parameters[message.name] = message.value
     when Vertica::Messages::ReadyForQuery
       @transaction_status = message.transaction_status
-      @current_job = nil
+      @mutex.unlock
     else
       raise Vertica::Error::MessageError, "Unhandled message: #{message.inspect}"
     end
@@ -155,7 +155,7 @@ class Vertica::Connection
   def query(sql, options = {}, &block)
     job = Vertica::Query.new(self, sql, { :row_style => @row_style }.merge(options))
     job.row_handler = block if block_given?
-    run_with_job_lock(job)
+    run_with_mutex(job)
   end
 
   def copy(sql, source = nil, &block)
@@ -167,7 +167,7 @@ class Vertica::Connection
     elsif source.respond_to?(:read) && source.respond_to?(:eof?)
       job.copy_handler = lambda { |data| io_copy_handler(source, data) }
     end
-    run_with_job_lock(job)
+    run_with_mutex(job)
   end
 
   def inspect
@@ -177,11 +177,13 @@ class Vertica::Connection
 
   protected
 
-  def run_with_job_lock(job)
+  def run_with_mutex(job)
     boot_connection if closed?
-    raise Vertica::Error::SynchronizeError.new(@current_job, job) if busy?
-    @current_job = job
-    job.run
+    if @mutex.try_lock
+      job.run
+    else
+      raise Vertica::Error::SynchronizeError.new(job)
+    end
   end
 
   COPY_FROM_IO_BLOCK_SIZE = 1024 * 4096
@@ -259,7 +261,7 @@ class Vertica::Connection
     @backend_key        = nil
     @transaction_status = nil
     @socket             = nil
-    @current_job        = '<initialization>'
+    @mutex              = Mutex.new.lock
   end
 end
 
