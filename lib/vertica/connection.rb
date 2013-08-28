@@ -146,7 +146,7 @@ class Vertica::Connection
       @parameters[message.name] = message.value
     when Vertica::Messages::ReadyForQuery
       @transaction_status = message.transaction_status
-      @mutex.unlock if @mutex.locked?
+      @mutex.unlock
     else
       raise Vertica::Error::MessageError, "Unhandled message: #{message.inspect}"
     end
@@ -155,7 +155,7 @@ class Vertica::Connection
   def query(sql, options = {}, &block)
     job = Vertica::Query.new(self, sql, { :row_style => @row_style }.merge(options))
     job.row_handler = block if block_given?
-    run_with_job_lock(job)
+    run_with_mutex(job)
   end
 
   def copy(sql, source = nil, &block)
@@ -167,7 +167,7 @@ class Vertica::Connection
     elsif source.respond_to?(:read) && source.respond_to?(:eof?)
       job.copy_handler = lambda { |data| io_copy_handler(source, data) }
     end
-    run_with_job_lock(job)
+    run_with_mutex(job)
   end
 
   def inspect
@@ -177,7 +177,7 @@ class Vertica::Connection
 
   protected
 
-  def run_with_job_lock(job)
+  def run_with_mutex(job)
     boot_connection if closed?
     if @mutex.try_lock
       job.run
