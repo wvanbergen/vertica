@@ -11,9 +11,9 @@ class Vertica::Error < StandardError
   class SynchronizeError < Vertica::Error
     attr_reader :running_job, :requested_job
 
-    def initialize(running_job, requested_job)
-      @running_job, @requested_job = running_job, requested_job
-      super("Cannot execute #{requested_job}, connection is in use for #{running_job}!")
+    def initialize(requested_job)
+      @requested_job = requested_job
+      super("Cannot execute #{requested_job}, connection is in use.")
     end
   end
 
