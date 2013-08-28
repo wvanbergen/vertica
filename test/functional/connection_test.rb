@@ -115,4 +115,17 @@ class ConnectionTest < Test::Unit::TestCase
     assert_raises(Vertica::Error::ConnectionError) {connection.query('select 1')}
     assert connection.closed?
   end
+
+  def test_concurrent_access
+    connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    t = Thread.new { connection.query("SELECT 1") }
+    sleep(0.01)
+    
+    assert connection.busy?
+    assert_raises(Vertica::Error::SynchronizeError) { connection.query('SELECT 1') }
+    
+    t.join
+    assert connection.ready_for_query?
+    connection.close
+  end
 end

@@ -62,11 +62,11 @@ class Vertica::Connection
   end
 
   def busy?
-    !ready_for_query?
+    @mutex.locked?
   end
 
   def ready_for_query?
-    @mutex.locked?
+    !busy?
   end
 
   def write_message(message)
