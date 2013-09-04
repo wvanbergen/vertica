@@ -2,7 +2,8 @@ require 'rubygems'
 require 'bundler/setup'
 
 require 'yaml'
-require 'test/unit'
+require 'minitest/autorun'
+require 'minitest/pride'
 
 require 'vertica'
 

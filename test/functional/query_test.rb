@@ -1,7 +1,7 @@
 require 'test_helper'
 require 'zlib'
 
-class QueryTest < Test::Unit::TestCase
+class QueryTest < Minitest::Test
   
   def setup
     @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
@@ -211,7 +211,7 @@ class QueryTest < Test::Unit::TestCase
   end
   
   def test_raise_when_connection_is_in_use
-    assert_raise(Vertica::Error::SynchronizeError) do
+    assert_raises(Vertica::Error::SynchronizeError) do
       @connection.query("SELECT 1 UNION SELECT 2") do |record|
         @connection.query("SELECT 3")
       end

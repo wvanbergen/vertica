@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class ConnectionTest < Test::Unit::TestCase
+class ConnectionTest < Minitest::Test
   
   def teardown
     @connection.close if @connection
@@ -57,8 +57,8 @@ class ConnectionTest < Test::Unit::TestCase
     connection.reset_connection
 
     assert_valid_open_connection(connection)
-    assert_not_equal original_backend_pid, connection.backend_pid
-    assert_not_equal original_backend_key, connection.backend_key
+    assert original_backend_pid != connection.backend_pid
+    assert original_backend_key != connection.backend_key
     assert_equal :no_transaction, connection.transaction_status
   end
   
@@ -76,7 +76,7 @@ class ConnectionTest < Test::Unit::TestCase
   def test_connection_inspect_should_not_print_password
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     inspected_string = connection.inspect
-    assert_no_match /:password=>#{TEST_CONNECTION_HASH[:password]}/, inspected_string
+    assert inspected_string !~ /:password=>#{TEST_CONNECTION_HASH[:password]}/
   end
 
   def test_connection_timed_out_error

@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class FrontendMessageTest < Test::Unit::TestCase
+class FrontendMessageTest < Minitest::Test
 
   def test_copy_done_message
     message = Vertica::Messages::CopyDone.new

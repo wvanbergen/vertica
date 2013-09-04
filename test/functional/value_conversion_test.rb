@@ -1,7 +1,7 @@
 # encoding : UTF-8
 require 'test_helper'
 
-class ValueConversionTest < Test::Unit::TestCase
+class ValueConversionTest < Minitest::Test
   
   def setup
     @connection = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:row_style => :array))

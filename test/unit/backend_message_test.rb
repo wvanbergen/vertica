@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class BackendMessageTest < Test::Unit::TestCase
+class BackendMessageTest < Minitest::Test
   
   def test_cleartext_authentication_message
     msg = Vertica::Messages::Authentication.new("\x00\x00\x00\x03")

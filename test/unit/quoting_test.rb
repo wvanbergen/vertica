@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class QuotingTest < Test::Unit::TestCase
+class QuotingTest < Minitest::Test
 
   def test_quote_identifier
     assert_equal '"test"', Vertica.quote_identifier(:test)
