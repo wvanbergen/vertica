@@ -8,8 +8,7 @@ module Vertica
 
       def message_string(msg)
         msg = msg.join if msg.is_a?(Array)
-        bytesize = msg.respond_to?(:bytesize) ? 4 + msg.bytesize : 4 + msg.size
-        message_size = [bytesize].pack('N')
+        message_size = [4 + msg.bytesize].pack('N')
         message_id ? "#{message_id}#{message_size}#{msg}" : "#{message_size}#{msg}"
       end
     end

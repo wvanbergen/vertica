@@ -6,7 +6,7 @@ module Vertica
     attr_reader :size
     attr_reader :data_type
 
-    STRING_CONVERTER = String.new.respond_to?(:force_encoding) ? lambda { |s| s.force_encoding('utf-8') } : nil
+    STRING_CONVERTER = lambda { |s| s.force_encoding('utf-8') }
 
     DATA_TYPE_CONVERSIONS = [
       [:unspecified,  nil],
