@@ -3,31 +3,31 @@
 Vertica is a pure Ruby library for connecting to Vertica databases. You can learn more
 about Vertica at http://www.vertica.com.
 
-This library currently supports connecting, executing SQL queries, and transferring data
-for a "COPY table FROM STDIN" statement. The gem is tested against Vertica version 6.0, 
-and 6.1, and Ruby version 1.9 and 2.0. 
+- Connecting, including over SSL
+- Executing queries, with results as streaming rows or buffered resultsets.
+- "COPY table FROM STDIN" statement to load data. 
+- Tested against Ruby 1.9 and 2.0, and Vertica version 6.0 and 6.1.
+- The library is thread-safe as of version 0.11. However, you can only run one 
+  statement at the time per connection, because the protocol is stateful.
+
+## Installation
+
+    $ gem install vertica
+
+Or add it to your Gemfile:
+
+    gem 'vertica'
+    # gem 'vertica', git: 'git://github.com/sprsquish/vertica.git' # HEAD version
+
+### Compatiblity
 
 - Ruby 1.8 is no longer supported, but version 0.9.x should still support it.
 - Vertica versions4.1, 5.0, and 5.1 worked with at some point with this gem, but
   compatibility is no longer tested.
 
-# Install
+## Usage
 
-    $ gem install vertica
-
-# Source
-
-Vertica's git repo is available on GitHub, which can be browsed at:
-
-    http://github.com/sprsquish/vertica
-
-and cloned from:
-
-    git://github.com/sprsquish/vertica.git
-
-# Usage
-
-## Connecting
+### Connecting
 
 The <code>Vertica.connect</code> methods takes a connection parameter hash and returns a 
 connection object. For most options, the gem will use a default value if no value is provided.
@@ -46,27 +46,23 @@ connection object. For most options, the gem will use a default value if no valu
     
 To close the connection when you're done with it, run <code>connection.close</code>.
 
-## Querying
+### Querying
+
+### Querying with unbuffered result as streaming rows
 
 You can run simple queries using the <code>query</code> method, either in buffered and 
 unbuffered mode. For large result sets, you probably do not want to use buffered results.
-
-### Unbuffered result
 
 Get all the result rows without buffering by providing a block:
 
     connection.query("SELECT id, name FROM my_table") do |row|
       puts row # => {:id => 123, :name => "Jim Bob"}
     end
-    
-    connection.close
 
 Note: you can only use the connection for one query at the time. If you try to run another 
 query when the connection is still busy delivering the results of a previous query, a
 `Vertica::Error::SynchronizeError` will be raised. Use buffered resultsets to prevent this
 problem.
-
-### Buffered result
 
 Store the result of the query method as a variable to get a buffered resultset:
 
@@ -80,6 +76,24 @@ Store the result of the query method as a variable to get a buffered resultset:
       puts row # => {:id => 123, :name => "Jim Bob"}
     end
 
+### Loading data using COPY
+
+Using the COPY statement, you can load arbitrary data from your ruby script.
+
+    connection.copy("COPY table FROM STDIN ...") do |stdin|
+      File.open('data.tsv', 'r') do |f|
+        begin 
+          stdin << f.gets
+        end until f.eof?
+      end
+    end
+
+You can also provide a filename or an IO object:
+
+    connection.copy("COPY table FROM STDIN ...", "data.csv")
+    connection.copy("COPY table FROM STDIN ...", io)
+
+
 ### Row format
 
 By default, rows are returned as hashes, using symbols for the column names. Rows can also 
@@ -92,11 +106,11 @@ be returned as arrays by providing a row_style:
 By adding <code>:row_style => :array</code> to the connection hash, all results will be 
 returned as array.
 
-# About
+## About
 
 This package is MIT licensed. See the LICENSE file for more information.
 
-## Development
+### Development
 
 This project comes with a test suite. The unit tests in <tt>/test/unit</tt> do not need a database
 connection to run, the functional tests in <tt>/test/functional</tt> do need a working
@@ -112,10 +126,15 @@ prefixed with <tt>test_ruby_vertica_</tt>.
 
  * Asynchronous / EventMachine version
 
-## Authors
+### Authors
 
- * [Matt Bauer](http://github.com/mattbauer) all the hard work
- * [Jeff Smick](http://github.com/sprsquish) current maintainer
- * [Willem van Bergen](http://github.com/wvanbergen) contributor
- * [Camilo Lopez](http://github.com/camilo) contributor
- * [Erik Selin](http://github.com/tyro89) contributor
+ * [Matt Bauer](https://github.com/mattbauer) all the hard work
+ * [Jeff Smick](https://github.com/sprsquish) current maintainer
+ * [Willem van Bergen](https://github.com/wvanbergen) contributor
+ * [Camilo Lopez](https://github.com/camilo) contributor
+ * [Erik Selin](https://github.com/tyro89) contributor
+
+### See also
+
+* [sequel-vertica](https://github.com/camilo/sequel-vertica) Sequel integration.
+* [newrelic-vertica](https://github.com/wvanbergen/newrelic-vertica) NewRelic monitoring of queries.
