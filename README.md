@@ -4,8 +4,12 @@ Vertica is a pure Ruby library for connecting to Vertica databases. You can lear
 about Vertica at http://www.vertica.com.
 
 This library currently supports connecting, executing SQL queries, and transferring data
-for a "COPY table FROM STDIN" statement. The gem is tested against Vertica version 4.1, 
-5.0, 5.1, and 6.1, and Ruby version 1.8 and 1.9.
+for a "COPY table FROM STDIN" statement. The gem is tested against Vertica version 6.0, 
+and 6.1, and Ruby version 1.9 and 2.0. 
+
+- Ruby 1.8 is no longer supported, but version 0.9.x should still support it.
+- Vertica versions4.1, 5.0, and 5.1 worked with at some point with this gem, but
+  compatibility is no longer tested.
 
 # Install
 
@@ -114,3 +118,4 @@ prefixed with <tt>test_ruby_vertica_</tt>.
  * [Jeff Smick](http://github.com/sprsquish) current maintainer
  * [Willem van Bergen](http://github.com/wvanbergen) contributor
  * [Camilo Lopez](http://github.com/camilo) contributor
+ * [Erik Selin](http://github.com/tyro89) contributor
