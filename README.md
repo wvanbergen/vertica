@@ -10,6 +10,7 @@ about Vertica at http://www.vertica.com.
 - The library is thread-safe as of version 0.11. However, you can only run one 
   statement at the time per connection, because the protocol is stateful.
 
+
 ## Installation
 
     $ gem install vertica
@@ -25,6 +26,7 @@ Or add it to your Gemfile:
 - Vertica versions 4.1, 5.0, and 5.1 worked with at some point with this gem, but
   compatibility is no longer tested. It probably still works as the protocol hasn't 
   changed.
+
 
 ## Usage
 
@@ -75,6 +77,18 @@ Store the result of the query method as a variable to get a buffered resultset:
       puts row # => {:id => 123, :name => "Jim Bob"}
     end
 
+### Row format
+
+By default, rows are returned as hashes, using symbols for the column names. Rows can also 
+be returned as arrays by providing a row_style:
+
+    connection.query("SELECT id, name FROM my_table", :row_style => :array) do |row|
+      puts row # => [123, "Jim Bob"]
+    end
+    
+By adding <code>:row_style => :array</code> to the connection hash, all results will be 
+returned as array.
+
 ### Loading data using COPY
 
 Using the COPY statement, you can load arbitrary data from your ruby script.
@@ -92,18 +106,6 @@ You can also provide a filename or an IO object:
     connection.copy("COPY table FROM STDIN ...", "data.csv")
     connection.copy("COPY table FROM STDIN ...", io)
 
-
-### Row format
-
-By default, rows are returned as hashes, using symbols for the column names. Rows can also 
-be returned as arrays by providing a row_style:
-
-    connection.query("SELECT id, name FROM my_table", :row_style => :array) do |row|
-      puts row # => [123, "Jim Bob"]
-    end
-    
-By adding <code>:row_style => :array</code> to the connection hash, all results will be 
-returned as array.
 
 ## About
 
@@ -135,5 +137,6 @@ prefixed with <tt>test_ruby_vertica_</tt>.
 
 ### See also
 
+* [Documentation](http://www.rubydoc.info/gems/vertica/frames) API documentation.
 * [sequel-vertica](https://github.com/camilo/sequel-vertica) Sequel integration.
 * [newrelic-vertica](https://github.com/wvanbergen/newrelic-vertica) NewRelic monitoring of queries.
