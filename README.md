@@ -22,8 +22,9 @@ Or add it to your Gemfile:
 ### Compatiblity
 
 - Ruby 1.8 is no longer supported, but version 0.9.x should still support it.
-- Vertica versions4.1, 5.0, and 5.1 worked with at some point with this gem, but
-  compatibility is no longer tested.
+- Vertica versions 4.1, 5.0, and 5.1 worked with at some point with this gem, but
+  compatibility is no longer tested. It probably still works as the protocol hasn't 
+  changed.
 
 ## Usage
 
@@ -45,8 +46,6 @@ connection object. For most options, the gem will use a default value if no valu
     })
     
 To close the connection when you're done with it, run <code>connection.close</code>.
-
-### Querying
 
 ### Querying with unbuffered result as streaming rows
 
