@@ -70,7 +70,6 @@ class Vertica::Connection
   end
 
   def write_message(message)
-    raise ArgumentError, "invalid message: (#{message.inspect})" unless message.respond_to?(:to_bytes)
     puts "=> #{message.inspect}" if @debug
     write_bytes message.to_bytes
   rescue SystemCallError, IOError => e
