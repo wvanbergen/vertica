@@ -1,4 +1,2 @@
-source :rubygems
-
-gem 'rake'
-gem 'jeweler'
+source 'https://rubygems.org'
+gemspec

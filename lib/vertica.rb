@@ -7,9 +7,6 @@ require 'bigdecimal'
 # prevent SQL injection.
 module Vertica
   
-  # The version number of this library.
-  VERSION = File.read(File.join(File.dirname(__FILE__), *%w[.. VERSION])).strip
-
   # The protocol version (3.0.0) implemented in this library.
   PROTOCOL_VERSION = 3 << 16
 
@@ -51,5 +48,6 @@ module Vertica
   end
 end
 
+require 'vertica/version'
 require 'vertica/error'
 require 'vertica/connection'
