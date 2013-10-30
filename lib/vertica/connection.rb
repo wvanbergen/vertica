@@ -179,7 +179,12 @@ class Vertica::Connection
   def run_with_mutex(job)
     boot_connection if closed?
     if @mutex.try_lock
-      job.run
+      begin
+        job.run
+      rescue StandardError
+        @mutex.unlock if @mutex.locked?
+        raise
+      end
     else
       raise Vertica::Error::SynchronizeError.new(job)
     end

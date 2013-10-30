@@ -69,6 +69,8 @@ class Vertica::Query
         end
       rescue => e
         @connection.write_message Vertica::Messages::CopyFail.new(e.message)
+        process_message(@connection.read_message) # ErrorResponse
+        process_message(@connection.read_message) # ReadyForQuery
         raise
       end
     end

@@ -1,5 +1,6 @@
 require 'test_helper'
 require 'zlib'
+class TestError < StandardError; end
 
 class QueryTest < Minitest::Test
   
@@ -161,6 +162,35 @@ class QueryTest < Minitest::Test
     assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.rows
   end  
   
+  def test_copy_with_ruby_exception
+    2.times do
+      begin
+        @connection.copy "COPY test_ruby_vertica_table FROM STDIN" do |data|
+          data.write "11|#{"a" * 10}\n"
+          raise TestError
+        end
+      rescue TestError
+      end
+
+      result = @connection.query("SELECT id FROM test_ruby_vertica_table ORDER BY id", :row_style => :array)
+      assert_equal 1, result.length
+    end
+  end
+ 
+  def test_copy_with_backend_exception
+    2.times do
+      begin
+        @connection.copy "COPY test_ruby_vertica_table FROM STDIN ABORT ON ERROR" do |data|
+          data.write "11|#{"a" * 10}|11\n" # write invalid data
+        end
+      rescue Vertica::Error::CopyRejected
+      end
+
+      result = @connection.query("SELECT id FROM test_ruby_vertica_table ORDER BY id", :row_style => :array)
+      assert_equal 1, result.length
+    end
+  end
+
   def test_copy_in_with_file
     filename = File.expand_path('../../resources/test_ruby_vertica_table.csv', __FILE__)
     @connection.copy "COPY test_ruby_vertica_table FROM STDIN", filename
