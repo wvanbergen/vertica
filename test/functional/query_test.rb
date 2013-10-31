@@ -169,7 +169,7 @@ class QueryTest < Minitest::Test
           data.write "11|#{"a" * 10}\n"
           raise TestError
         end
-      rescue TestError
+      rescue Vertica::Error::CopyFromStdinFailed
       end
 
       result = @connection.query("SELECT id FROM test_ruby_vertica_table ORDER BY id", :row_style => :array)

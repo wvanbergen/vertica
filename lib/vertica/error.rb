@@ -44,6 +44,7 @@ class Vertica::Error < StandardError
     '42V01' => (MissingRelation       = Class.new(Vertica::Error::QueryError)),
     '42703' => (MissingColumn         = Class.new(Vertica::Error::QueryError)),
     '22V04' => (CopyRejected          = Class.new(Vertica::Error::QueryError)),
+    '08000' => (CopyFromStdinFailed   = Class.new(Vertica::Error::QueryError)),
     '42501' => (PermissionDenied      = Class.new(Vertica::Error::QueryError))
   }
 end
