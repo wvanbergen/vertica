@@ -118,7 +118,7 @@ class ConnectionTest < Minitest::Test
 
   def test_concurrent_access
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
-    t = Thread.new { p 'running'; connection.query("SELECT 5") }
+    t = Thread.new { connection.query("SELECT sleep(1)") }
     sleep(0.1)
     
     assert connection.busy?, "The connection should be busy while executing a query"
