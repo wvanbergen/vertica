@@ -1,4 +1,4 @@
-# Vertica
+# Vertica [![Build Status](https://travis-ci.org/wvanbergen/vertica.png?branch=travis)](https://travis-ci.org/wvanbergen/vertica)
 
 Vertica is a pure Ruby library for connecting to Vertica databases. You can learn more
 about Vertica at http://www.vertica.com.
