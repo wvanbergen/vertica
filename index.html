@@ -1,84 +1,218 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!DOCTYPE html>
+<html>
 
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Vertica : Ruby adapter for Vertica databases" />
 
-	<title>mattbauer/vertica @ GitHub</title>
-	
-	<style type="text/css">
-		body {
-  		margin-top: 1.0em;
-  		background-color: #96b0e3;
-		  font-family: "helvetica"; 
-  		color: #000000;
-    }
-    #container {
-      margin: 0 auto;
-      width: 700px;
-    }
-		h1 { font-size: 3.8em; color: #694f1c; margin-bottom: 3px; }
-		h1 .small { font-size: 0.4em; }
-		h1 a { text-decoration: none }
-		h2 { font-size: 1.5em; color: #694f1c; }
-    h3 { text-align: center; color: #694f1c; }
-    a { color: #694f1c; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-		pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
-	</style>
-	
-</head>
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
-<body>
-  <a href="http://github.com/mattbauer/vertica"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
-  
-  <div id="container">
+    <title>Vertica</title>
+  </head>
 
-    <div class="download">
-      <a href="http://github.com/mattbauer/vertica/zipball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/mattbauer/vertica/tarball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
-    </div>
-      
-    <h1><a href="http://github.com/mattbauer/vertica">vertica</a> 
-      <span class="small">by <a href="http://github.com/mattbauer">mattbauer</a></small></h1>
+  <body>
 
-    <div class="description">
-      Ruby Adapter For Vertica Databases
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/wvanbergen/vertica">View on GitHub</a>
+
+          <h1 id="project_title">Vertica</h1>
+          <h2 id="project_tagline">Ruby adapter for Vertica databases</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/wvanbergen/vertica/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/wvanbergen/vertica/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
     </div>
 
-    <p>Ruby Adapter For Vertica Databases</p><h2>Install</h2>
-<p>gem install mattbauer-vertica --source http://gems.github.com</p>
-<h2>License</h2>
-<p>MIT</p>
-<h2>Authors</h2>
-<p>mattbauer (bauer@pedalbrain.com)<br/><br/>      </p>
-<h2>Contact</h2>
-<p>Matt Bauer (bauer@pedalbrain.com)<br/>      </p>
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="vertica" class="anchor" href="#vertica"><span class="octicon octicon-link"></span></a>Vertica</h1>
 
+<p>Vertica is a pure Ruby library for connecting to Vertica databases. You can learn more
+about Vertica at <a href="http://www.vertica.com">http://www.vertica.com</a>.</p>
 
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="http://github.com/mattbauer/vertica/zipball/master">zip</a> or
-      <a href="http://github.com/mattbauer/vertica/tarball/master">tar</a> formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/mattbauer/vertica</pre>
-    </p>
-      
-    <div class="footer">
-      get the source code on GitHub : <a href="http://github.com/mattbauer/vertica">mattbauer/vertica</a>
+<ul>
+<li>Connecting, including over SSL</li>
+<li>Executing queries, with results as streaming rows or buffered resultsets.</li>
+<li>"COPY table FROM STDIN" statement to load data. </li>
+<li>Tested against Ruby 1.9 and 2.0, and Vertica version 6.0 and 6.1.</li>
+<li>The library is thread-safe as of version 0.11. However, you can only run one 
+statement at the time per connection, because the protocol is stateful.</li>
+</ul><h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<pre><code>$ gem install vertica
+</code></pre>
+
+<p>Or add it to your Gemfile:</p>
+
+<pre><code>gem 'vertica'
+# gem 'vertica', git: 'git://github.com/sprsquish/vertica.git' # HEAD version
+</code></pre>
+
+<h3>
+<a name="compatiblity" class="anchor" href="#compatiblity"><span class="octicon octicon-link"></span></a>Compatiblity</h3>
+
+<ul>
+<li>Ruby 1.8 is no longer supported, but version 0.9.x should still support it.</li>
+<li>Vertica versions 4.1, 5.0, and 5.1 worked with at some point with this gem, but
+compatibility is no longer tested. It probably still works as the protocol hasn't 
+changed.</li>
+</ul><h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<h3>
+<a name="connecting" class="anchor" href="#connecting"><span class="octicon octicon-link"></span></a>Connecting</h3>
+
+<p>The <code>Vertica.connect</code> methods takes a connection parameter hash and returns a 
+connection object. For most options, the gem will use a default value if no value is provided.</p>
+
+<pre><code>connection = Vertica.connect({
+  :host     =&gt; 'db_server',
+  :user     =&gt; 'user',
+  :password =&gt; 'password',
+  # :ssl         =&gt; false, # use SSL for the connection
+  # :port        =&gt; 5433,  # default Vertica port: 5433
+  # :database    =&gt; 'db',  # there is only one database
+  # :role        =&gt; nil,   # the (additional) role(s) to enable for the user.
+  # :search_path =&gt; nil,   # default: &lt;user&gt;,public,v_catalog
+  # :row_style   =&gt; :hash  # can also be :array (see below)
+})
+</code></pre>
+
+<p>To close the connection when you're done with it, run <code>connection.close</code>.</p>
+
+<h3>
+<a name="querying-with-unbuffered-result-as-streaming-rows" class="anchor" href="#querying-with-unbuffered-result-as-streaming-rows"><span class="octicon octicon-link"></span></a>Querying with unbuffered result as streaming rows</h3>
+
+<p>You can run simple queries using the <code>query</code> method, either in buffered and 
+unbuffered mode. For large result sets, you probably do not want to use buffered results.</p>
+
+<p>Get all the result rows without buffering by providing a block:</p>
+
+<pre><code>connection.query("SELECT id, name FROM my_table") do |row|
+  puts row # =&gt; {:id =&gt; 123, :name =&gt; "Jim Bob"}
+end
+</code></pre>
+
+<p>Note: you can only use the connection for one query at the time. If you try to run another 
+query when the connection is still busy delivering the results of a previous query, a
+<code>Vertica::Error::SynchronizeError</code> will be raised. Use buffered resultsets to prevent this
+problem.</p>
+
+<p>Store the result of the query method as a variable to get a buffered resultset:</p>
+
+<pre><code>result = connection.query("SELECT id, name FROM my_table")
+connection.close
+
+result.rows # =&gt; [{:id =&gt; 123, :name =&gt; "Jim Bob"}, {:id =&gt; 456, :name =&gt; "Joe Jack"}]
+result.row_count # =&gt; 2
+
+result.each do |row|
+  puts row # =&gt; {:id =&gt; 123, :name =&gt; "Jim Bob"}
+end
+</code></pre>
+
+<h3>
+<a name="row-format" class="anchor" href="#row-format"><span class="octicon octicon-link"></span></a>Row format</h3>
+
+<p>By default, rows are returned as hashes, using symbols for the column names. Rows can also 
+be returned as arrays by providing a row_style:</p>
+
+<pre><code>connection.query("SELECT id, name FROM my_table", :row_style =&gt; :array) do |row|
+  puts row # =&gt; [123, "Jim Bob"]
+end
+</code></pre>
+
+<p>By adding <code>:row_style =&gt; :array</code> to the connection hash, all results will be 
+returned as array.</p>
+
+<h3>
+<a name="loading-data-using-copy" class="anchor" href="#loading-data-using-copy"><span class="octicon octicon-link"></span></a>Loading data using COPY</h3>
+
+<p>Using the COPY statement, you can load arbitrary data from your ruby script.</p>
+
+<pre><code>connection.copy("COPY table FROM STDIN ...") do |stdin|
+  File.open('data.tsv', 'r') do |f|
+    begin 
+      stdin &lt;&lt; f.gets
+    end until f.eof?
+  end
+end
+</code></pre>
+
+<p>You can also provide a filename or an IO object:</p>
+
+<pre><code>connection.copy("COPY table FROM STDIN ...", "data.csv")
+connection.copy("COPY table FROM STDIN ...", io)
+</code></pre>
+
+<h2>
+<a name="about" class="anchor" href="#about"><span class="octicon octicon-link"></span></a>About</h2>
+
+<p>This package is MIT licensed. See the LICENSE file for more information.</p>
+
+<h3>
+<a name="development" class="anchor" href="#development"><span class="octicon octicon-link"></span></a>Development</h3>
+
+<p>This project comes with a test suite. The unit tests in <tt>/test/unit</tt> do not need a database
+connection to run, the functional tests in <tt>/test/functional</tt> do need a working
+database connection. You can specify the connection parameters by copying the file
+<tt>/test/connection.yml.example</tt> to <tt>/test/connection.yml</tt> and filling out the 
+necessary fields. </p>
+
+<p>Note that the test suite requires write access to the default schema of the provided connection, 
+although it tries to be as little invasive as possible: all tables it creates (and drops) are 
+prefixed with <tt>test_ruby_vertica_</tt>.</p>
+
+<h3>
+<a name="todo" class="anchor" href="#todo"><span class="octicon octicon-link"></span></a>TODO</h3>
+
+<ul>
+<li>Asynchronous / EventMachine version</li>
+</ul><h3>
+<a name="authors" class="anchor" href="#authors"><span class="octicon octicon-link"></span></a>Authors</h3>
+
+<ul>
+<li>
+<a href="https://github.com/mattbauer">Matt Bauer</a> all the hard work</li>
+<li>
+<a href="https://github.com/sprsquish">Jeff Smick</a> current maintainer</li>
+<li>
+<a href="https://github.com/wvanbergen">Willem van Bergen</a> contributor</li>
+<li>
+<a href="https://github.com/camilo">Camilo Lopez</a> contributor</li>
+<li>
+<a href="https://github.com/tyro89">Erik Selin</a> contributor</li>
+</ul><h3>
+<a name="see-also" class="anchor" href="#see-also"><span class="octicon octicon-link"></span></a>See also</h3>
+
+<ul>
+<li>
+<a href="http://www.rubydoc.info/gems/vertica/frames">Documentation</a> API documentation.</li>
+<li>
+<a href="https://github.com/camilo/sequel-vertica">sequel-vertica</a> Sequel integration.</li>
+<li>
+<a href="https://github.com/wvanbergen/newrelic-vertica">newrelic-vertica</a> NewRelic monitoring of queries.</li>
+</ul>
+      </section>
     </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Vertica maintained by <a href="https://github.com/wvanbergen">wvanbergen</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
     
-  </div>
 
-  
-</body>
+  </body>
 </html>
