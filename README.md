@@ -123,9 +123,7 @@ Note that the test suite requires write access to the default schema of the prov
 although it tries to be as little invasive as possible: all tables it creates (and drops) are 
 prefixed with <tt>test_ruby_vertica_</tt>.
 
-### TODO
-
- * Asynchronous / EventMachine version
+The test suite is also run by Travis CI againast Vertica 7.0.1, and Ruby 1.93, 2.0.0, and 2.1.1.
 
 ### Authors
 
@@ -136,8 +134,8 @@ prefixed with <tt>test_ruby_vertica_</tt>.
 
 ### See also
 
-* [Website](http://vanbergen.org/vertica/frames) Website.
+* [Website](http://vanbergen.org/vertica/frames)
 * [API Documentation](http://www.rubydoc.info/gems/vertica/frames)
-* [sequel-vertica](https://github.com/camilo/sequel-vertica) Sequel integration.
-* [newrelic-vertica](https://github.com/wvanbergen/newrelic-vertica) NewRelic monitoring of queries.
-* [node-vertica](https://github.com/wvanbergen/node-vertica) node.js Vertica driver.
+* [sequel-vertica](https://github.com/camilo/sequel-vertica): Sequel integration
+* [newrelic-vertica](https://github.com/wvanbergen/newrelic-vertica): NewRelic monitoring of queries
+* [node-vertica](https://github.com/wvanbergen/node-vertica): node.js Vertica driver
