@@ -135,7 +135,7 @@ The test suite is also run by Travis CI againast Vertica 7.0.1, and Ruby 1.93, 2
 
 ### See also
 
-* [Website](http://vanbergen.org/vertica/frames)
+* [Website](http://vanbergen.org/vertica)
 * [API Documentation](http://www.rubydoc.info/gems/vertica/frames)
 * [sequel-vertica](https://github.com/camilo/sequel-vertica): Sequel integration
 * [newrelic-vertica](https://github.com/wvanbergen/newrelic-vertica): NewRelic monitoring of queries
