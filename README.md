@@ -1,4 +1,4 @@
-# Vertica
+# Vertica [![Build Status](https://travis-ci.org/wvanbergen/vertica.png?branch=travis)](https://travis-ci.org/wvanbergen/vertica)
 
 Vertica is a pure Ruby library for connecting to Vertica databases. You can learn more
 about Vertica at http://www.vertica.com.
@@ -129,14 +129,15 @@ prefixed with <tt>test_ruby_vertica_</tt>.
 
 ### Authors
 
- * [Matt Bauer](https://github.com/mattbauer) all the hard work
- * [Jeff Smick](https://github.com/sprsquish) current maintainer
- * [Willem van Bergen](https://github.com/wvanbergen) contributor
+ * [Matt Bauer](https://github.com/mattbauer) & [Jeff Smick](https://github.com/sprsquish) all the hard work
+ * [Willem van Bergen](https://github.com/wvanbergen) current maintainer
  * [Camilo Lopez](https://github.com/camilo) contributor
  * [Erik Selin](https://github.com/tyro89) contributor
 
 ### See also
 
-* [Documentation](http://www.rubydoc.info/gems/vertica/frames) API documentation.
+* [Website](http://vanbergen.org/vertica/frames) Website.
+* [API Documentation](http://www.rubydoc.info/gems/vertica/frames)
 * [sequel-vertica](https://github.com/camilo/sequel-vertica) Sequel integration.
 * [newrelic-vertica](https://github.com/wvanbergen/newrelic-vertica) NewRelic monitoring of queries.
+* [node-vertica](https://github.com/wvanbergen/node-vertica) node.js Vertica driver.
