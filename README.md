@@ -3,10 +3,11 @@
 Vertica is a pure Ruby library for connecting to Vertica databases. You can learn more
 about Vertica at http://www.vertica.com.
 
-- Connecting, including over SSL
+- Connecting, including over SSL.
 - Executing queries, with results as streaming rows or buffered resultsets.
-- "COPY table FROM STDIN" statement to load data. 
-- Tested against Ruby 1.9 and 2.0, and Vertica version 6.0 and 6.1.
+- `COPY table FROM STDIN` statement to load data from your application. 
+- Confirmed to work with Ruby 1.9, 2.0, and 2.1 and with Vertica version 6.x, 
+  and 7.x.
 - The library is thread-safe as of version 0.11. However, you can only run one 
   statement at the time per connection, because the protocol is stateful.
 
@@ -18,14 +19,14 @@ about Vertica at http://www.vertica.com.
 Or add it to your Gemfile:
 
     gem 'vertica'
-    # gem 'vertica', git: 'git://github.com/sprsquish/vertica.git' # HEAD version
+    # gem 'vertica', git: 'git://github.com/wvanbergen/vertica.git' # HEAD version
 
 ### Compatiblity
 
 - Ruby 1.8 is no longer supported, but version 0.9.x should still support it.
-- Vertica versions 4.1, 5.0, and 5.1 worked with at some point with this gem, but
+- Vertica versions 4.x, and 5.x worked with at some point with this gem, but
   compatibility is no longer tested. It probably still works as the protocol hasn't 
-  changed.
+  changed as far as I am aware.
 
 
 ## Usage
