@@ -124,7 +124,7 @@ Note that the test suite requires write access to the default schema of the prov
 although it tries to be as little invasive as possible: all tables it creates (and drops) are 
 prefixed with <tt>test_ruby_vertica_</tt>.
 
-The test suite is also run by Travis CI againast Vertica 7.0.1, and Ruby 1.93, 2.0.0, and 2.1.1.
+The test suite is also run by Travis CI againast Vertica 7.0.1, and Ruby 1.9.3, 2.0.0, and 2.1.1.
 
 ### Authors
 
