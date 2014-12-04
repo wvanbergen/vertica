@@ -17,3 +17,5 @@ before_install:
 
 before_script:
   - cp ./test/connection.yml.example ./test/connection.yml
+
+sudo: false
