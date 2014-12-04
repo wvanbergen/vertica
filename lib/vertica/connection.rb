@@ -37,7 +37,8 @@ class Vertica::Connection
         require 'openssl'
         raw_socket.write Vertica::Messages::SslRequest.new.to_bytes
         if raw_socket.read(1) == 'S'
-          raw_socket = OpenSSL::SSL::SSLSocket.new(raw_socket, OpenSSL::SSL::SSLContext.new)
+          ssl_context = @options[:ssl].is_a?(OpenSSL::SSL::SSLContext) ? @options[:ssl] : OpenSSL::SSL::SSLContext.new
+          raw_socket = OpenSSL::SSL::SSLSocket.new(raw_socket, ssl_context)
           raw_socket.sync = true
           raw_socket.connect
         else

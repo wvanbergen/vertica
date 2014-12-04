@@ -50,6 +50,8 @@ connection object. For most options, the gem will use a default value if no valu
 
 To close the connection when you're done with it, run <code>connection.close</code>.
 
+You can pass `OpenSSL::SSL::SSLContext` in `:ssl` to customize SSL connection options.
+
 ### Querying with unbuffered result as streaming rows
 
 You can run simple queries using the <code>query</code> method, either in buffered and
