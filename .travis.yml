@@ -1,8 +1,8 @@
 language: ruby
 rvm:
-  - 1.9.3
-  - 2.0.0
-  - 2.1.1
+  - "2.0"
+  - "2.1"
+  - "2.2"
 
 before_install:
   - sudo wget -nv https://s3.amazonaws.com/circle-support-bucket/vertica_7.0.1-0_amd64.deb
