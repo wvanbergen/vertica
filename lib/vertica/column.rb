@@ -8,6 +8,19 @@ module Vertica
 
     STRING_CONVERTER = lambda { |s| s.force_encoding('utf-8') }
 
+    FLOAT_CONVERTER = lambda do |s|
+      case s
+      when 'Infinity'
+        Float::INFINITY
+      when '-Infinity'
+        -Float::INFINITY
+      when 'NaN'
+        Float::NAN
+      else
+        s.to_f
+      end
+    end
+
     DATA_TYPE_CONVERSIONS = [
       [:unspecified,  nil],
       [:tuple,        nil],
@@ -16,7 +29,7 @@ module Vertica
       [:unknown,      nil],
       [:bool,         lambda { |s| s == 't' }],
       [:integer,      lambda { |s| s.to_i }],
-      [:float,        lambda { |s| s.to_f }],
+      [:float,        FLOAT_CONVERTER],
       [:char,         STRING_CONVERTER],
       [:varchar,      STRING_CONVERTER],
       [:date,         lambda { |s| Date.new(*s.split("-").map{|x| x.to_i}) }],
