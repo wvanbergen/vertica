@@ -23,7 +23,8 @@ class Vertica::Error < StandardError
     
     def initialize(error_response, sql)
       @error_response, @sql = error_response, sql
-      super("#{error_response.error_message}, SQL: #{one_line_sql.inspect}" )
+      super("#{error_response.error_message.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => '?')}, " + 
+            "SQL: #{one_line_sql.inspect.encode("UTF-8", :invalid => :replace, :undef => :replace, :replace => '?')}" )
     end
     
     def one_line_sql
