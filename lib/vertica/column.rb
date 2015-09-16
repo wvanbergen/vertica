@@ -49,7 +49,7 @@ module Vertica
       @type_modifier    = col[:type_modifier]
       @format           = col[:format_code] == 0 ? :text : :binary
       @table_oid        = col[:table_oid]
-      @name             = col[:name].to_sym
+      @name             = col[:name].force_encoding('UTF-8').to_sym
       @attribute_number = col[:attribute_number]
       @data_type        = DATA_TYPE_CONVERSIONS[col[:data_type_oid]][0]
       @converter        = DATA_TYPE_CONVERSIONS[col[:data_type_oid]][1]
