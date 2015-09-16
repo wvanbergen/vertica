@@ -12,7 +12,7 @@ module Vertica
         field_count.times do |field_index|
           field_info = data.unpack("@#{pos}Z*NnNnNn")
           @fields << {
-            :name             => field_info[0],
+            :name             => field_info[0].force_encoding('UTF-8'),
             :table_oid        => field_info[1],
             :attribute_number => field_info[2],
             :data_type_oid    => field_info[3],
