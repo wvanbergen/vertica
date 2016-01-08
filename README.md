@@ -6,8 +6,8 @@ about Vertica at http://www.vertica.com.
 - Connecting, including over SSL.
 - Executing queries, with results as streaming rows or buffered resultsets.
 - `COPY table FROM STDIN` statement to load data from your application.
-- Confirmed to work with Ruby 1.9, 2.0, and 2.1 and with Vertica version 6.x,
-  and 7.x.
+- Confirmed to work with Ruby 1.9, 2.0, and 2.1; JRuby 1.7.23 and 9.0.4.0; and
+  with Vertica version 6.x, and 7.x.
 - The library is thread-safe as of version 0.11. However, you can only run one
   statement at the time per connection, because the protocol is stateful.
 
