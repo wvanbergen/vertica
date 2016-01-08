@@ -16,6 +16,7 @@ before_install:
   - sudo -u dbadmin /opt/vertica/bin/adminTools -t stop_db --database ci -p dbadmin
   - sudo -u dbadmin sh -c 'echo "EnableSSL = 1" > /home/dbadmin/ci/v_ci_node0001_catalog/vertica.conf'
   - sudo -u dbadmin /opt/vertica/bin/adminTools -t start_db --database ci -p dbadmin
+  - gem update bundle
 
 before_script:
   - cp ./test/connection.yml.example ./test/connection.yml
