@@ -38,7 +38,7 @@ class ValueConversionTest < Minitest::Test
       123, 
       'hello world', 
       Date.parse('2010-01-01'), 
-      DateTime.parse('2010-01-01 12:00:00'),
+      Time.parse('2010-01-01 12:00:00'),
       "12:00:00", 
       "1", 
       true,
