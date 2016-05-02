@@ -16,6 +16,7 @@ class Vertica::Connection
     reset_values
 
     @options = {}
+    @debug = false
 
     options.each { |key, value| @options[key.to_s.to_sym] = value if value}
 
