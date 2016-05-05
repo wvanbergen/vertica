@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.name        = "vertica"
   s.summary     = "Pure Ruby library for interacting with Vertica"
   s.description = "Query Vertica with ruby"
-  s.homepage    = "https://github.com/sprsquish/vertica"
+  s.homepage    = "https://github.com/wvanbergen/vertica"
   s.license     = "MIT"
   s.version     = Vertica::VERSION
 
