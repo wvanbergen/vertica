@@ -1,10 +1,18 @@
 language: ruby
 rvm:
-  - "2.0"
-  - "2.1"
-  - "2.2"
-  - "jruby-1.7.23"
-  - "jruby-9.0.4.0"
+  - 2.0
+  - 2.1
+  - 2.2
+  - 2.3.1
+  - jruby-9.1.1.0
+  - jruby-head
+  - ruby-head
+
+matrix:
+  allow_failures:
+    - rvm: jruby-head
+    - rvm: ruby-head
+  fast_finish: true
 
 before_install:
   - sudo wget -nv https://s3.amazonaws.com/circle-support-bucket/vertica_7.0.1-0_amd64.deb
