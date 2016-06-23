@@ -46,19 +46,27 @@ module Vertica
     DATA_TYPES = DATA_TYPE_CONVERSIONS.map { |t| t[0] }
 
     def initialize(col)
-      @type_modifier    = col[:type_modifier]
-      @format           = col[:format_code] == 0 ? :text : :binary
-      @table_oid        = col[:table_oid]
-      @name             = col[:name].to_sym
-      @attribute_number = col[:attribute_number]
-      @data_type        = DATA_TYPE_CONVERSIONS[col[:data_type_oid]][0]
-      @converter        = DATA_TYPE_CONVERSIONS[col[:data_type_oid]][1]
-      @size             = col[:data_type_size]
+      @type_modifier    = col.fetch(:type_modifier)
+      @format           = col.fetch(:format_code) == 0 ? :text : :binary
+      @table_oid        = col.fetch(:table_oid)
+      @name             = col.fetch(:name).to_sym
+      @attribute_number = col.fetch(:attribute_number)
+      @size             = col.fetch(:data_type_size)
+
+      @data_type, @converter = column_type_from_oid(col.fetch(:data_type_oid))
     end
 
     def convert(s)
       return unless s
       @converter ? @converter.call(s) : s
+    end
+
+    private
+
+    def column_type_from_oid(oid)
+      DATA_TYPE_CONVERSIONS.fetch(oid) do |unknown_oid|
+        raise Vertica::Error::UnknownTypeError, "Unknown type OID: #{unknown_oid}"
+      end
     end
   end
 end
