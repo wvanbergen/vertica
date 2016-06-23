@@ -39,7 +39,7 @@ module Vertica
       [:interval,     nil],
       [:time_tz,      nil],
       [:numeric,      lambda { |s| BigDecimal.new(s) }],
-      [:bytea,        nil],
+      [:bytea,        lambda { |s| s.gsub(/\\([0-3][0-7][0-7])/) { $1.to_i(8).chr }} ],
       [:rle_tuple,    nil]
     ]
 
