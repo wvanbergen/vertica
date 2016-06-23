@@ -16,7 +16,8 @@ class ValueConversionTest < Minitest::Test
         "interval_field" interval,
         "boolean_field" boolean,
         "float_field" float,
-        "float_zero" float
+        "float_zero" float,
+        "binary_field" varbinary
       )
     SQL
   end
@@ -28,7 +29,7 @@ class ValueConversionTest < Minitest::Test
   end
   
   def test_value_conversions
-    @connection.query "INSERT INTO conversions_table VALUES (123, 'hello world', '2010-01-01', '2010-01-01 12:00:00', '12:00:00', INTERVAL '1 DAY', TRUE, 1.0, 0.0)"
+    @connection.query "INSERT INTO conversions_table VALUES (123, 'hello world', '2010-01-01', '2010-01-01 12:00:00', '12:00:00', INTERVAL '1 DAY', TRUE, 1.0, 0.0, HEX_TO_BINARY('d09fd180d0b8d0b2d0b5d1822c2068656c6c6f21'))"
     result = @connection.query "SELECT *,
                                        float_field / float_zero as infinity,
                                        float_field / float_zero - float_field / float_zero as nan
@@ -44,15 +45,16 @@ class ValueConversionTest < Minitest::Test
       true,
       1.0,
       0.0,
+      ['d09fd180d0b8d0b2d0b5d1822c2068656c6c6f21'].pack('H*'),
       Float::INFINITY,
       Float::NAN], result.rows.first
   end
   
   def test_nil_conversions
-    @connection.query "INSERT INTO conversions_table VALUES (NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)"
+    @connection.query "INSERT INTO conversions_table VALUES (NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)"
     result = @connection.query "SELECT * FROM conversions_table LIMIT 1"
     assert_equal result.rows.length, 1
-    assert_equal [nil, nil, nil, nil, nil, nil, nil, nil, nil], result.rows.first
+    assert_equal [nil, nil, nil, nil, nil, nil, nil, nil, nil, nil], result.rows.first
   end
   
   def test_string_encoding
