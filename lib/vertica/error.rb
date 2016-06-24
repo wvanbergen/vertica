@@ -24,11 +24,12 @@ class Vertica::Error < StandardError
 
     def initialize(error_response, sql)
       @error_response, @sql = error_response, sql
-      super("#{error_response.error_message}, SQL: #{one_line_sql.inspect}" )
+      utf8_encoded_error = error_response.error_message.encode('utf-8', :invalid => :replace, :undef => :replace)
+      super("#{utf8_encoded_error}, SQL: #{one_line_sql.inspect}" )
     end
 
     def one_line_sql
-      @sql.gsub(/[\r\n]+/, ' ')
+      @sql.to_s.encode('utf-8', :invalid => :replace, :undef => :replace).gsub(/[\r\n]+/, ' ')
     end
 
     def self.from_error_response(error_response, sql)
