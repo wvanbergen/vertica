@@ -70,6 +70,22 @@ class ValueConversionTest < Minitest::Test
       Float::NAN], result.rows.first
   end
 
+  def test_timezone_conversions
+    @connection.query("SET TIMEZONE TO 'UTC'")
+    p @connection.query("SELECT '2012-11-23 08:12:54'::timestamptz").the_value
+    p @connection.query("SELECT '2012-11-23 08:12:54'::timestamp").the_value
+    p @connection.query("SELECT '2012-11-23 08:12:54 -8:00'::timestamptz").the_value
+    p @connection.query("SELECT ('2012-11-23 08:12:54 -8:00'::timestamp)::timestamptz").the_value
+    p @connection.query("SELECT ('2012-11-23 08:12:54 -8:00'::timestamptz)::timestamp").the_value
+
+    @connection.query("SET TIMEZONE TO 'Asia/Tokyo'")
+    p @connection.query("SELECT '2012-11-23 08:12:54'::timestamptz").the_value
+    p @connection.query("SELECT '2012-11-23 08:12:54'::timestamp").the_value
+    p @connection.query("SELECT '2012-11-23 08:12:54 -8:00'::timestamptz").the_value
+    p @connection.query("SELECT ('2012-11-23 08:12:54 -8:00'::timestamp)::timestamptz").the_value
+    p @connection.query("SELECT ('2012-11-23 08:12:54 -8:00'::timestamptz)::timestamp").the_value
+  end
+
   def test_nil_conversions
     @connection.query "INSERT INTO conversions_table VALUES (NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)"
     result = @connection.query "SELECT * FROM conversions_table LIMIT 1"
