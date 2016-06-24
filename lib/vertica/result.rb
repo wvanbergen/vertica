@@ -1,6 +1,6 @@
 class Vertica::Result
   include Enumerable
-  
+
   attr_reader :columns
   attr_reader :rows
   attr_accessor :tag, :notice
@@ -17,20 +17,20 @@ class Vertica::Result
   def format_row_as_hash(row_data)
     row = {}
     row_data.values.each_with_index do |value, idx|
-      col = columns[idx]
+      col = columns.fetch(idx)
       row[col.name] = col.convert(value)
     end
     row
   end
-  
+
   def format_row(row_data)
     send("format_row_as_#{@row_style}", row_data)
   end
-  
+
   def format_row_as_array(row_data)
     row = []
     row_data.values.each_with_index do |value, idx|
-      row << columns[idx].convert(value)
+      row << columns.fetch(idx).convert(value)
     end
     row
   end
@@ -42,11 +42,11 @@ class Vertica::Result
   def each_row(&block)
     @rows.each(&block)
   end
-  
+
   def empty?
     @rows.empty?
   end
-  
+
   def the_value
     if empty?
       nil
@@ -58,7 +58,7 @@ class Vertica::Result
   def [](row, col = nil)
     col.nil? ? row[row] : rows[row][col]
   end
-  
+
   alias_method :each, :each_row
 
   def row_count
