@@ -1,42 +1,14 @@
 require 'test_helper'
 
 class ConnectionTest < Minitest::Test
-  
-  def teardown
-    @connection.close if @connection
-  end
-
-  def assert_valid_open_connection(connection)
-    assert connection.opened?
-    assert !connection.closed?
-
-    # connection variables
-    assert connection.backend_pid
-    assert connection.backend_key
-    assert connection.transaction_status
-    
-    # parameters
-    assert connection.parameters.kind_of?(Hash)
-    assert connection.parameters.include?('server_version')
-  end
-
-  def assert_valid_closed_connection(connection)
-    assert !connection.opened?
-    assert connection.closed?
-    assert_equal({}, connection.parameters)
-    assert_nil connection.backend_pid
-    assert_nil connection.backend_key
-    assert_nil connection.transaction_status
-  end
-
   def test_opening_and_closing_connection
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     assert_valid_open_connection(connection)
 
     connection.close
-    assert_valid_closed_connection(connection)    
+    assert_valid_closed_connection(connection)
   end
-  
+
   def test_connection_with_ssl
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:ssl => true))
     assert_valid_open_connection(connection)
@@ -45,8 +17,8 @@ class ConnectionTest < Minitest::Test
     connection.close
     assert_valid_closed_connection(connection)
     assert !connection.ssl?
-    
-  rescue Vertica::Error::SSLNotSupported => e
+
+  rescue Vertica::Error::SSLNotSupported
     puts "\nThe test server doesn't support SSL, so SSL connections could not be tested."
   end
 
@@ -61,7 +33,7 @@ class ConnectionTest < Minitest::Test
     assert original_backend_key != connection.backend_key
     assert_equal :no_transaction, connection.transaction_status
   end
-  
+
   def test_interruptable_connection
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:interruptable => true))
     assert connection.interruptable?, "The connection should be interruptable!"
@@ -72,7 +44,7 @@ class ConnectionTest < Minitest::Test
       Vertica::Connection.new(TEST_CONNECTION_HASH.merge('database' => 'nonexistant_db'))
     end
   end
-  
+
   def test_connection_inspect_should_not_print_password
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     inspected_string = connection.inspect
@@ -100,7 +72,7 @@ class ConnectionTest < Minitest::Test
       end
     end
 
-    assert_raises(Vertica::Error::ConnectionError) {connection.query('select 1')}
+    assert_raises(Vertica::Error::ConnectionError) { connection.query('select 1') }
     assert connection.closed?
   end
 
@@ -120,12 +92,37 @@ class ConnectionTest < Minitest::Test
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     t = Thread.new { connection.query("SELECT sleep(1)") }
     sleep(0.1)
-    
+
     assert connection.busy?, "The connection should be busy while executing a query"
     assert_raises(Vertica::Error::SynchronizeError) { connection.query('SELECT 1') }
-    
+
     t.join
     assert connection.ready_for_query?, "The connection should be available again."
     connection.close
+  end
+
+  private
+
+  def assert_valid_open_connection(connection)
+    assert connection.opened?
+    assert !connection.closed?
+
+    # connection variables
+    assert connection.backend_pid
+    assert connection.backend_key
+    assert connection.transaction_status
+
+    # parameters
+    assert connection.parameters.kind_of?(Hash)
+    assert connection.parameters.include?('server_version')
+  end
+
+  def assert_valid_closed_connection(connection)
+    assert !connection.opened?
+    assert connection.closed?
+    assert_equal({}, connection.parameters)
+    assert_nil connection.backend_pid
+    assert_nil connection.backend_key
+    assert_nil connection.transaction_status
   end
 end

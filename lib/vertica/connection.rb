@@ -14,6 +14,7 @@ class Vertica::Connection
   # @param [Hash] options The connection options to use.
   def initialize(options = {})
     reset_values
+    @notice_handler = nil
 
     @options = {}
     @debug = false
@@ -163,7 +164,7 @@ class Vertica::Connection
     job = Vertica::Query.new(self, sql, :row_style => @row_style)
     if block_given?
       job.copy_handler = block
-    elsif source && File.exists?(source.to_s)
+    elsif source && File.exist?(source.to_s)
       job.copy_handler = lambda { |data| file_copy_handler(source, data) }
     elsif source.respond_to?(:read) && source.respond_to?(:eof?)
       job.copy_handler = lambda { |data| io_copy_handler(source, data) }
@@ -217,7 +218,7 @@ class Vertica::Connection
         io_select(wait_error)
         retry
       end
-    end 
+    end
     bytes
   end
 
@@ -228,7 +229,7 @@ class Vertica::Connection
     io_select(wait_error)
     retry
   end
-  
+
   def io_select(exception)
     readers, writers = nil, nil
     readers = [socket] if exception.is_a?(IO::WaitReadable)
