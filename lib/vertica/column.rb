@@ -21,29 +21,30 @@ module Vertica
       end
     end
 
-    DATA_TYPE_CONVERSIONS = [
-      [:unspecified,  nil],
-      [:tuple,        nil],
-      [:pos,          nil],
-      [:record,       nil],
-      [:unknown,      nil],
-      [:bool,         lambda { |s| s == 't' }],
-      [:integer,      lambda { |s| s.to_i }],
-      [:float,        FLOAT_CONVERTER],
-      [:char,         STRING_CONVERTER],
-      [:varchar,      STRING_CONVERTER],
-      [:date,         lambda { |s| Date.new(*s.split("-").map{|x| x.to_i}) }],
-      [:time,         nil],
-      [:timestamp,    lambda { |s| DateTime.parse(s, true) }],
-      [:timestamp_tz, lambda { |s| DateTime.parse(s, true) }],
-      [:interval,     nil],
-      [:time_tz,      nil],
-      [:numeric,      lambda { |s| BigDecimal.new(s) }],
-      [:bytea,        lambda { |s| s.gsub(/\\([0-3][0-7][0-7])/) { $1.to_i(8).chr }} ],
-      [:rle_tuple,    nil]
-    ]
+    DATA_TYPE_CONVERSIONS = {
+      0   => [:unspecified,  nil],
+      1   => [:tuple,        nil],
+      2   => [:pos,          nil],
+      3   => [:record,       nil],
+      4   => [:unknown,      nil],
+      5   => [:bool,         lambda { |s| s == 't' }],
+      6   => [:integer,      lambda { |s| s.to_i }],
+      7   => [:float,        FLOAT_CONVERTER],
+      8   => [:char,         STRING_CONVERTER],
+      9   => [:varchar,      STRING_CONVERTER],
+      10  => [:date,         lambda { |s| Date.new(*s.split("-").map{|x| x.to_i}) }],
+      11  => [:time,         nil],
+      12  => [:timestamp,    lambda { |s| DateTime.parse(s, true) }],
+      13  => [:timestamp_tz, lambda { |s| DateTime.parse(s, true) }],
+      14  => [:interval,     nil],
+      15  => [:time_tz,      nil],
+      16  => [:numeric,      lambda { |s| BigDecimal.new(s) }],
+      17  => [:bytea,        lambda { |s| s.gsub(/\\([0-3][0-7][0-7])/) { $1.to_i(8).chr }} ],
+      18  => [:rle_tuple,    nil],
+      115 => [:long_varchar, STRING_CONVERTER],
+    }
 
-    DATA_TYPES = DATA_TYPE_CONVERSIONS.map { |t| t[0] }
+    DATA_TYPES = DATA_TYPE_CONVERSIONS.values.map { |t| t[0] }
 
     def initialize(col)
       @type_modifier    = col.fetch(:type_modifier)
