@@ -7,7 +7,7 @@ class Vertica::Query
     @connection, @sql = connection, sql
     
     @row_style    = options[:row_style] || @connection.row_style || :hash
-    @row_handler  = options[:row_handler] 
+    @row_handler  = options[:row_handler]
     @copy_handler = options[:copy_handler]
 
     @error  = nil
@@ -15,8 +15,8 @@ class Vertica::Query
   end
 
   def run
-    @connection.write_message Vertica::Messages::Query.new(sql)
-    
+    @connection.write_message(Vertica::Messages::Query.new(sql))
+
     begin
       process_message(message = @connection.read_message)
     end until message.kind_of?(Vertica::Messages::ReadyForQuery)
@@ -24,20 +24,20 @@ class Vertica::Query
     raise error unless error.nil?
     return result
   end
-  
+
   def write(data)
-    @connection.write_message Vertica::Messages::CopyData.new(data)
+    @connection.write_message(Vertica::Messages::CopyData.new(data))
     return self
   end
-  
+
   alias_method :<<, :write
 
   def to_s
     @sql
   end
-  
+
   protected
-  
+
   def process_message(message)
     case message
     when Vertica::Messages::ErrorResponse
@@ -56,19 +56,19 @@ class Vertica::Query
       @connection.process_message(message)
     end
   end
-  
+
   def handle_copy_from_stdin
     if copy_handler.nil?
-      @connection.write_message Vertica::Messages::CopyFail.new('no handler provided')
+      @connection.write_message(Vertica::Messages::CopyFail.new('no handler provided'))
     else
       begin
         if copy_handler.call(self) == :rollback
-          @connection.write_message Vertica::Messages::CopyFail.new("rollback")
+          @connection.write_message(Vertica::Messages::CopyFail.new("rollback"))
         else
-          @connection.write_message Vertica::Messages::CopyDone.new
+          @connection.write_message(Vertica::Messages::CopyDone.new)
         end
       rescue => e
-        @connection.write_message Vertica::Messages::CopyFail.new(e.message)
+        @connection.write_message(Vertica::Messages::CopyFail.new(e.message))
       end
     end
   end
@@ -78,7 +78,7 @@ class Vertica::Query
     result.add_row(record) if buffer_rows?
     row_handler.call(record) if row_handler
   end
-  
+
   def buffer_rows?
     row_handler.nil? && copy_handler.nil?
   end

@@ -1,9 +1,7 @@
 require 'test_helper'
 require 'zlib'
-class TestError < StandardError; end
 
 class QueryTest < Minitest::Test
-
   def setup
     @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     @connection.query("DROP TABLE IF EXISTS test_ruby_vertica_table CASCADE;")
@@ -140,13 +138,13 @@ class QueryTest < Minitest::Test
   end
 
   def test_sql_error
-    assert_raises Vertica::Error::MissingColumn do
-      @connection.query("SELECT asad FROM test_ruby_vertica_table")
+    assert_raises(Vertica::Error::MissingColumn) do
+      @connection.query("SELECT missing FROM test_ruby_vertica_table")
     end
-    assert_raises Vertica::Error::MissingRelation do
+    assert_raises(Vertica::Error::MissingRelation) do
       @connection.query("SELECT * FROM nonexisting_dsfdfsdfsdfs")
     end
-    assert_raises Vertica::Error::SyntaxError do
+    assert_raises(Vertica::Error::SyntaxError) do
       @connection.query("BLAH")
     end
   end
@@ -188,7 +186,7 @@ class QueryTest < Minitest::Test
       begin
         @connection.copy "COPY test_ruby_vertica_table FROM STDIN" do |data|
           data.write "11|#{"a" * 10}\n"
-          raise TestError
+          raise "some error"
         end
       rescue Vertica::Error::CopyFromStdinFailed
       end
@@ -267,6 +265,18 @@ class QueryTest < Minitest::Test
         @connection.query("SELECT 3")
       end
     end
+  end
+
+  def test_sql_with_non_unicode_characters
+    assert_raises(Vertica::Error::MissingColumn) do
+      sql = "select あ".encode('EUC-JP').force_encoding('BINARY')
+      @connection.query(sql)
+    end
+
+    sql = "select 'あ'".encode('EUC-JP')
+    result = @connection.query(sql)
+    assert_equal "\xA4\xA2", result.the_value
+    assert_equal Encoding::UTF_8, result.the_value.encoding
   end
 
   def test_interrupting_connections
