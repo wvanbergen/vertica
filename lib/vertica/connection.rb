@@ -74,14 +74,14 @@ class Vertica::Connection
 
   def write_message(message)
     puts "=> #{message.inspect}" if @debug
-    write_bytes message.to_bytes
+    write_bytes(message.to_bytes)
   rescue SystemCallError, IOError => e
     close_socket
     raise Vertica::Error::ConnectionError.new(e.message)
   end
 
   def close
-    write_message Vertica::Messages::Terminate.new
+    write_message(Vertica::Messages::Terminate.new)
   ensure
     close_socket
   end
@@ -106,8 +106,8 @@ class Vertica::Connection
 
   def cancel
     conn = self.class.new(options.merge(:skip_startup => true))
-    conn.write_message Vertica::Messages::CancelRequest.new(backend_pid, backend_key)
-    conn.write_message Vertica::Messages::Flush.new
+    conn.write_message(Vertica::Messages::CancelRequest.new(backend_pid, backend_key))
+    conn.write_message(Vertica::Messages::Flush.new)
     conn.socket.close
   end
 
@@ -193,21 +193,20 @@ class Vertica::Connection
     end
   end
 
-  COPY_FROM_IO_BLOCK_SIZE = 1024 * 4096
-
-  def file_copy_handler(input_file, output)
+  def file_copy_handler(input_file, output, block_size: IO_COPY_HANDLER_DEFAULT_BLOCK_SIZE)
     File.open(input_file, 'r') do |input|
-      while data = input.read(COPY_FROM_IO_BLOCK_SIZE)
-        output << data
-      end
+      io_copy_handler(input, output, block_size: block_size)
     end
   end
 
-  def io_copy_handler(input, output)
+  def io_copy_handler(input, output, block_size: IO_COPY_HANDLER_DEFAULT_BLOCK_SIZE)
     until input.eof?
-      output << input.read(COPY_FROM_IO_BLOCK_SIZE)
+      output << input.read(block_size)
     end
   end
+
+  IO_COPY_HANDLER_DEFAULT_BLOCK_SIZE = 1024 * 4096
+  protected_constant :IO_COPY_HANDLER_DEFAULT_BLOCK_SIZE
 
   def read_bytes(n)
     bytes = ""
@@ -241,13 +240,13 @@ class Vertica::Connection
   end
 
   def startup_connection
-    write_message Vertica::Messages::Startup.new(@options[:user] || @options[:username], @options[:database])
+    write_message(Vertica::Messages::Startup.new(@options[:user] || @options[:username], @options[:database]))
     message = nil
     begin
       case message = read_message
       when Vertica::Messages::Authentication
         if message.code != Vertica::Messages::Authentication::OK
-          write_message Vertica::Messages::Password.new(@options[:password], message.code, {:user => @options[:user], :salt => message.salt})
+          write_message(Vertica::Messages::Password.new(@options[:password], message.code, :user => @options[:user], :salt => message.salt))
         end
       else
         process_message(message)
@@ -259,6 +258,7 @@ class Vertica::Connection
     query("SET SEARCH_PATH TO #{options[:search_path]}") if options[:search_path]
     query("SET ROLE #{options[:role]}") if options[:role]
     @session_id = query("SELECT session_id FROM v_monitor.current_session").the_value if options[:interruptable]
+    query("SET TIMEZONE TO #{Vertica.quote(options[:timezone])}") if options[:timezone]
   end
 
   def reset_values
