@@ -150,7 +150,7 @@ class QueryTest < Minitest::Test
   end
 
   def test_copy_in_alot_of_data_with_customer_handler
-    @connection.copy "COPY test_ruby_vertica_table FROM STDIN" do |data|
+    @connection.copy("COPY test_ruby_vertica_table FROM STDIN") do |data|
       data.write "11|#{"a" * 1_000_000}\n"
     end
 
@@ -159,7 +159,7 @@ class QueryTest < Minitest::Test
   end
 
   def test_copy_in_with_customer_handler
-    @connection.copy "COPY test_ruby_vertica_table FROM STDIN" do |data|
+    @connection.copy("COPY test_ruby_vertica_table FROM STDIN") do |data|
       data.write "11|Stuff\r\n"
       data << "12|More stuff\n13|Fin" << "al stuff\n"
     end
@@ -170,7 +170,7 @@ class QueryTest < Minitest::Test
   end
 
   def test_copy_in_with_gzip
-    @connection.copy "COPY test_ruby_vertica_table FROM STDIN GZIP" do |data|
+    @connection.copy("COPY test_ruby_vertica_table FROM STDIN GZIP") do |data|
       gz = Zlib::GzipWriter.new(data)
       gz << "11|Stuff\n12|More stuff\n13|Final stuff\n"
       gz.close
@@ -184,7 +184,7 @@ class QueryTest < Minitest::Test
   def test_copy_with_ruby_exception
     2.times do
       begin
-        @connection.copy "COPY test_ruby_vertica_table FROM STDIN" do |data|
+        @connection.copy("COPY test_ruby_vertica_table FROM STDIN") do |data|
           data.write "11|#{"a" * 10}\n"
           raise "some error"
         end
@@ -199,7 +199,7 @@ class QueryTest < Minitest::Test
   def test_copy_with_backend_exception
     2.times do
       begin
-        @connection.copy "COPY test_ruby_vertica_table FROM STDIN ABORT ON ERROR" do |data|
+        @connection.copy("COPY test_ruby_vertica_table FROM STDIN ABORT ON ERROR") do |data|
           data.write "11|#{"a" * 10}|11\n" # write invalid data
         end
       rescue Vertica::Error::CopyRejected
@@ -212,7 +212,7 @@ class QueryTest < Minitest::Test
 
   def test_copy_in_with_file
     filename = File.expand_path('../../resources/test_ruby_vertica_table.csv', __FILE__)
-    @connection.copy "COPY test_ruby_vertica_table FROM STDIN", filename
+    @connection.copy("COPY test_ruby_vertica_table FROM STDIN", source: filename)
     result = @connection.query("SELECT * FROM test_ruby_vertica_table ORDER BY id", :row_style => :array)
     assert_equal 4, result.length
     assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.rows
@@ -220,7 +220,7 @@ class QueryTest < Minitest::Test
 
   def test_copy_in_with_io
     io = StringIO.new("11|Stuff\r\n12|More stuff\n13|Final stuff\n")
-    @connection.copy "COPY test_ruby_vertica_table FROM STDIN", io
+    @connection.copy("COPY test_ruby_vertica_table FROM STDIN", source: io)
     result = @connection.query("SELECT * FROM test_ruby_vertica_table ORDER BY id", :row_style => :array)
     assert_equal 4, result.length
     assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.rows

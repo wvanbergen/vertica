@@ -161,21 +161,23 @@ class Vertica::Connection
     end
   end
 
-  def query(sql, options = {}, &block)
-    job = Vertica::Query.new(self, sql, { :row_style => @options.fetch(:row_style) }.merge(options))
-    job.row_handler = block if block_given?
+  def query(sql, **kwargs, &block)
+    row_handler = block_given? ? block : nil
+    job = Vertica::Query.new(self, sql, row_handler: row_handler, **kwargs)
     run_with_mutex(job)
   end
 
-  def copy(sql, source = nil, &block)
-    job = Vertica::Query.new(self, sql, :row_style => @options.fetch(:row_style))
-    if block_given?
-      job.copy_handler = block
+  def copy(sql, source: nil, **kwargs, &block)
+    copy_handler = if block_given?
+      block
     elsif source && File.exist?(source.to_s)
-      job.copy_handler = lambda { |data| file_copy_handler(source, data) }
+      lambda { |data| file_copy_handler(source, data) }
     elsif source.respond_to?(:read) && source.respond_to?(:eof?)
-      job.copy_handler = lambda { |data| io_copy_handler(source, data) }
+      lambda { |data| io_copy_handler(source, data) }
     end
+
+    job = Vertica::Query.new(self, sql, copy_handler: copy_handler, **kwargs)
+
     run_with_mutex(job)
   end
 

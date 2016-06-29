@@ -3,15 +3,14 @@ class Vertica::Query
   attr_reader :connection, :sql, :result, :error
   attr_accessor :row_handler, :copy_handler, :row_style
 
-  def initialize(connection, sql, options = {})
+  def initialize(connection, sql, row_style: nil, row_handler: nil, copy_handler: nil)
     @connection, @sql = connection, sql
-    
-    @row_style    = options[:row_style] || @connection.row_style || :hash
-    @row_handler  = options[:row_handler]
-    @copy_handler = options[:copy_handler]
+
+    @row_handler  = row_handler
+    @copy_handler = copy_handler
 
     @error  = nil
-    @result = Vertica::Result.new(row_style)
+    @result = Vertica::Result.new(row_style || connection.options.fetch(:row_style, :hash))
   end
 
   def run
