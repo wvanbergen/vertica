@@ -1,7 +1,7 @@
 require 'test_helper'
 require 'zlib'
 
-class QueryTest < Minitest::Test
+class FunctionalQueryTest < Minitest::Test
   def setup
     @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     @connection.query("DROP TABLE IF EXISTS test_ruby_vertica_table CASCADE;")

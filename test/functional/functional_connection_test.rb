@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class ConnectionTest < Minitest::Test
+class FunctionalConnectionTest < Minitest::Test
   def test_opening_and_closing_connection
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     assert_valid_open_connection(connection)
@@ -22,25 +22,13 @@ class ConnectionTest < Minitest::Test
     puts "\nThe test server doesn't support SSL, so SSL connections could not be tested."
   end
 
-  def test_reset_connection
-    connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
-    original_backend_pid, original_backend_key = connection.backend_pid, connection.backend_key
-
-    connection.reset_connection
-
-    assert_valid_open_connection(connection)
-    assert original_backend_pid != connection.backend_pid
-    assert original_backend_key != connection.backend_key
-    assert_equal :no_transaction, connection.transaction_status
-  end
-
   def test_interruptable_connection
     connection = Vertica::Connection.new(interruptable: true, **TEST_CONNECTION_HASH)
     assert connection.interruptable?, "The connection should be interruptable!"
   end
 
   def test_new_with_error_response
-    assert_raises Vertica::Error::ConnectionError do
+    assert_raises(Vertica::Error::ConnectionError) do
       Vertica::Connection.new(TEST_CONNECTION_HASH.merge(database: 'nonexistant_db'))
     end
   end
@@ -61,30 +49,36 @@ class ConnectionTest < Minitest::Test
   def test_automatically_reconnects
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     connection.close
-    assert_equal(1, connection.query("SELECT 1").the_value)
+    assert_equal 1, connection.query("SELECT 1").the_value
   end
 
-  def test_socket_write_error
-    connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
-    class << connection.socket
-      def write_nonblock(foo)
-        raise Errno::ETIMEDOUT
-      end
+  def test_socket_connection_error
+    TCPSocket.expects(:new).raises(Errno::ECONNREFUSED)
+
+    assert_raises(Vertica::Error::ConnectionError) { Vertica::Connection.new(TEST_CONNECTION_HASH) }
+  end
+
+  def test_socket_read_error_during_initialization
+    TCPSocket.any_instance.expects(:read_nonblock).raises(Errno::ETIMEDOUT)
+
+    assert_raises(Vertica::Error::ConnectionError) { Vertica::Connection.new(TEST_CONNECTION_HASH) }
     end
+
+  def test_socket_write_error_during_query
+    connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
+
+    TCPSocket.any_instance.expects(:write_nonblock).raises(Errno::ETIMEDOUT)
 
     assert_raises(Vertica::Error::ConnectionError) { connection.query('select 1') }
     assert connection.closed?
   end
 
-  def test_socket_read_error
+  def test_socket_read_error_during_query
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
-    class << connection.socket
-      def read_nonblock(foo)
-        raise Errno::ETIMEDOUT
-      end
-    end
 
-    assert_raises(Vertica::Error::ConnectionError) {connection.query('select 1')}
+    TCPSocket.any_instance.expects(:read_nonblock).raises(Errno::ETIMEDOUT)
+
+    assert_raises(Vertica::Error::ConnectionError) { connection.query('select 1') }
     assert connection.closed?
   end
 
@@ -105,7 +99,7 @@ class ConnectionTest < Minitest::Test
 
   def assert_valid_open_connection(connection)
     assert connection.opened?
-    assert !connection.closed?
+    refute connection.closed?
 
     # connection variables
     assert connection.backend_pid
@@ -118,7 +112,7 @@ class ConnectionTest < Minitest::Test
   end
 
   def assert_valid_closed_connection(connection)
-    assert !connection.opened?
+    refute connection.opened?
     assert connection.closed?
     assert_equal({}, connection.parameters)
     assert_nil connection.backend_pid
