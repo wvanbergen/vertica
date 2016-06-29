@@ -4,7 +4,7 @@ require 'test_helper'
 class ValueConversionTest < Minitest::Test
 
   def setup
-    @connection = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:row_style => :array))
+    @connection = Vertica::Connection.new(row_style: :array, **TEST_CONNECTION_HASH)
 
     @connection.query <<-SQL
       CREATE TABLE IF NOT EXISTS conversions_table (

@@ -10,7 +10,7 @@ class ConnectionTest < Minitest::Test
   end
 
   def test_connection_with_ssl
-    connection = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:ssl => true))
+    connection = Vertica::Connection.new(ssl: true, **TEST_CONNECTION_HASH)
     assert_valid_open_connection(connection)
     assert connection.ssl?
 
@@ -35,13 +35,13 @@ class ConnectionTest < Minitest::Test
   end
 
   def test_interruptable_connection
-    connection = Vertica::Connection.new(TEST_CONNECTION_HASH.merge(:interruptable => true))
+    connection = Vertica::Connection.new(interruptable: true, **TEST_CONNECTION_HASH)
     assert connection.interruptable?, "The connection should be interruptable!"
   end
 
   def test_new_with_error_response
     assert_raises Vertica::Error::ConnectionError do
-      Vertica::Connection.new(TEST_CONNECTION_HASH.merge('database' => 'nonexistant_db'))
+      Vertica::Connection.new(TEST_CONNECTION_HASH.merge(database: 'nonexistant_db'))
     end
   end
 

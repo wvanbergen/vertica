@@ -2,9 +2,9 @@ require 'socket'
 
 class Vertica::Connection
 
-  attr_reader :notices, :transaction_status, :backend_pid, :backend_key, :parameters, :notice_handler, :session_id
+  attr_reader :transaction_status, :backend_pid, :backend_key, :parameters, :notice_handler, :session_id
 
-  attr_accessor :row_style, :debug, :options
+  attr_reader :options
 
   def self.cancel(existing_conn)
     existing_conn.cancel
@@ -12,20 +12,27 @@ class Vertica::Connection
 
   # Opens a connectio the a Vertica server
   # @param [Hash] options The connection options to use.
-  def initialize(options = {})
+  def initialize(host: nil, port: 5433, username: nil, password: nil, database: nil, interruptable: false, ssl: nil, read_timeout: 600,row_style: :hash, debug: false, role: nil, search_path: nil, timezone: nil, skip_startup: false)
     reset_values
     @notice_handler = nil
 
-    @options = {}
-    @debug = false
+    @options = {
+      host: host,
+      port: port.to_i,
+      username: username,
+      password: password,
+      database: database,
+      debug: debug,
+      ssl: ssl,
+      interruptable: interruptable,
+      read_timeout: read_timeout,
+      row_style: row_style,
+      role: role,
+      search_path: search_path,
+      timezone: timezone
+    }
 
-    options.each { |key, value| @options[key.to_s.to_sym] = value if value}
-
-    @options[:port] ||= 5433
-    @options[:read_timeout] ||= 600
-
-    @row_style = @options[:row_style] ? @options[:row_style] : :hash
-    boot_connection unless options[:skip_startup]
+    boot_connection unless skip_startup
   end
 
   def on_notice(&block)
@@ -73,7 +80,7 @@ class Vertica::Connection
   end
 
   def write_message(message)
-    puts "=> #{message.inspect}" if @debug
+    puts "=> #{message.inspect}" if options.fetch(:debug)
     write_bytes message.to_bytes
   rescue SystemCallError, IOError => e
     close_socket
@@ -105,7 +112,7 @@ class Vertica::Connection
   end
 
   def cancel
-    conn = self.class.new(options.merge(:skip_startup => true))
+    conn = self.class.new(skip_startup: true, **options)
     conn.write_message Vertica::Messages::CancelRequest.new(backend_pid, backend_key)
     conn.write_message Vertica::Messages::Flush.new
     conn.socket.close
@@ -128,7 +135,7 @@ class Vertica::Connection
     size = read_bytes(4).unpack('N').first
     raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
     message = Vertica::Messages::BackendMessage.factory type, read_bytes(size - 4)
-    puts "<= #{message.inspect}" if @debug
+    puts "<= #{message.inspect}" if options.fetch(:debug)
     return message
   rescue SystemCallError, IOError => e
     close_socket
@@ -155,13 +162,13 @@ class Vertica::Connection
   end
 
   def query(sql, options = {}, &block)
-    job = Vertica::Query.new(self, sql, { :row_style => @row_style }.merge(options))
+    job = Vertica::Query.new(self, sql, { :row_style => @options.fetch(:row_style) }.merge(options))
     job.row_handler = block if block_given?
     run_with_mutex(job)
   end
 
   def copy(sql, source = nil, &block)
-    job = Vertica::Query.new(self, sql, :row_style => @row_style)
+    job = Vertica::Query.new(self, sql, :row_style => @options.fetch(:row_style))
     if block_given?
       job.copy_handler = block
     elsif source && File.exist?(source.to_s)
@@ -241,13 +248,13 @@ class Vertica::Connection
   end
 
   def startup_connection
-    write_message Vertica::Messages::Startup.new(@options[:user] || @options[:username], @options[:database])
+    write_message(Vertica::Messages::Startup.new(@options[:username], @options[:database]))
     message = nil
     begin
       case message = read_message
       when Vertica::Messages::Authentication
         if message.code != Vertica::Messages::Authentication::OK
-          write_message Vertica::Messages::Password.new(@options[:password], message.code, {:user => @options[:user], :salt => message.salt})
+          write_message(Vertica::Messages::Password.new(@options[:password], message.code, {:username => @options[:username], :salt => message.salt}))
         end
       else
         process_message(message)

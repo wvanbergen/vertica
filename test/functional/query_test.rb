@@ -32,7 +32,7 @@ class QueryTest < Minitest::Test
   end
 
   def test_select_query_with_results_as_array
-    @connection.row_style = :array
+    @connection.options[:row_style] = :array
     r = @connection.query("SELECT * FROM test_ruby_vertica_table")
     assert_equal 1, r.row_count
     assert_equal 2, r.columns.length
