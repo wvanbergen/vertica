@@ -5,8 +5,9 @@ class Vertica::Result
   attr_reader :rows
   attr_accessor :tag, :notice
 
-  def initialize(row_style = :hash)
+  def initialize(row_handler: nil, row_style: :hash)
     @row_style = row_style
+    @row_handler = row_handler || lambda { |record| buffer_row(record) }
     @rows = []
   end
 
@@ -14,13 +15,8 @@ class Vertica::Result
     @columns = message.fields.map { |fd| Vertica::Column.new(fd) }
   end
 
-  def format_row_as_hash(row_data)
-    row = {}
-    row_data.values.each_with_index do |value, idx|
-      col = columns.fetch(idx)
-      row[col.name] = col.convert(value)
-    end
-    row
+  def handle_row(message)
+    @row_handler.call(format_row(message))
   end
 
   def format_row(row_data)
@@ -35,7 +31,16 @@ class Vertica::Result
     row
   end
 
-  def add_row(row)
+  def format_row_as_hash(row_data)
+    row = {}
+    row_data.values.each_with_index do |value, idx|
+      col = columns.fetch(idx)
+      row[col.name] = col.convert(value)
+    end
+    row
+  end
+
+  def buffer_row(row)
     @rows << row
   end
 

@@ -1,16 +1,15 @@
 class Vertica::Query
 
   attr_reader :connection, :sql, :result, :error
-  attr_accessor :row_handler, :copy_handler, :row_style
 
   def initialize(connection, sql, row_style: nil, row_handler: nil, copy_handler: nil)
     @connection, @sql = connection, sql
 
-    @row_handler  = row_handler
+    row_style ||= connection.options.fetch(:row_style, :hash)
+    @result = Vertica::Result.new(row_style: row_style, row_handler: row_handler)
     @copy_handler = copy_handler
 
     @error  = nil
-    @result = Vertica::Result.new(row_style || connection.options.fetch(:row_style, :hash))
   end
 
   def run
@@ -24,16 +23,24 @@ class Vertica::Query
     return result
   end
 
-  def write(data)
-    @connection.write_message(Vertica::Messages::CopyData.new(data))
-    return self
-  end
-
-  alias_method :<<, :write
-
   def to_s
     @sql
   end
+
+
+  class CopyFromStdinWriter
+    def initialize(connection)
+      @connection = connection
+    end
+
+    def write(data)
+      @connection.write_message(Vertica::Messages::CopyData.new(data))
+      return self
+    end
+
+    alias_method :<<, :write
+  end
+  private_constant :CopyFromStdinWriter
 
   protected
 
@@ -48,7 +55,7 @@ class Vertica::Query
     when Vertica::Messages::RowDescription
       result.descriptions = message
     when Vertica::Messages::DataRow
-      handle_datarow(message)
+      result.handle_row(message)
     when Vertica::Messages::CommandComplete
       result.tag = message.tag
     else
@@ -57,28 +64,15 @@ class Vertica::Query
   end
 
   def handle_copy_from_stdin
-    if copy_handler.nil?
+    if @copy_handler.nil?
       @connection.write_message(Vertica::Messages::CopyFail.new('no handler provided'))
     else
       begin
-        if copy_handler.call(self) == :rollback
-          @connection.write_message(Vertica::Messages::CopyFail.new("rollback"))
-        else
-          @connection.write_message(Vertica::Messages::CopyDone.new)
-        end
+        @copy_handler.call(CopyFromStdinWriter.new(connection))
+        @connection.write_message(Vertica::Messages::CopyDone.new)
       rescue => e
         @connection.write_message(Vertica::Messages::CopyFail.new(e.message))
       end
     end
-  end
-
-  def handle_datarow(datarow_message)
-    record = result.format_row(datarow_message)
-    result.add_row(record) if buffer_rows?
-    row_handler.call(record) if row_handler
-  end
-
-  def buffer_rows?
-    row_handler.nil? && copy_handler.nil?
   end
 end
