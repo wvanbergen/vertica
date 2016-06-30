@@ -13,11 +13,11 @@ class Vertica::Query
   end
 
   def run
-    @connection.write_message(Vertica::Messages::Query.new(sql))
+    @connection.write_message(Vertica::Protocol::Query.new(sql))
 
     begin
       process_message(message = @connection.read_message)
-    end until message.kind_of?(Vertica::Messages::ReadyForQuery)
+    end until message.kind_of?(Vertica::Protocol::ReadyForQuery)
 
     raise error unless error.nil?
     return result
@@ -34,7 +34,7 @@ class Vertica::Query
     end
 
     def write(data)
-      @connection.write_message(Vertica::Messages::CopyData.new(data))
+      @connection.write_message(Vertica::Protocol::CopyData.new(data))
       return self
     end
 
@@ -46,17 +46,17 @@ class Vertica::Query
 
   def process_message(message)
     case message
-    when Vertica::Messages::ErrorResponse
+    when Vertica::Protocol::ErrorResponse
       @error = Vertica::Error::QueryError.from_error_response(message, @sql)
-    when Vertica::Messages::EmptyQueryResponse
+    when Vertica::Protocol::EmptyQueryResponse
       @error = Vertica::Error::EmptyQueryError.new("A SQL string was expected, but the given string was blank or only contained SQL comments.")
-    when Vertica::Messages::CopyInResponse
+    when Vertica::Protocol::CopyInResponse
       handle_copy_from_stdin
-    when Vertica::Messages::RowDescription
+    when Vertica::Protocol::RowDescription
       result.handle_row_description(message)
-    when Vertica::Messages::DataRow
+    when Vertica::Protocol::DataRow
       result.handle_data_row(message)
-    when Vertica::Messages::CommandComplete
+    when Vertica::Protocol::CommandComplete
       result.tag = message.tag
     else
       @connection.process_message(message)
@@ -65,13 +65,13 @@ class Vertica::Query
 
   def handle_copy_from_stdin
     if @copy_handler.nil?
-      @connection.write_message(Vertica::Messages::CopyFail.new('no handler provided'))
+      @connection.write_message(Vertica::Protocol::CopyFail.new('no handler provided'))
     else
       begin
         @copy_handler.call(CopyFromStdinWriter.new(connection))
-        @connection.write_message(Vertica::Messages::CopyDone.new)
+        @connection.write_message(Vertica::Protocol::CopyDone.new)
       rescue => e
-        @connection.write_message(Vertica::Messages::CopyFail.new(e.message))
+        @connection.write_message(Vertica::Protocol::CopyFail.new(e.message))
       end
     end
   end

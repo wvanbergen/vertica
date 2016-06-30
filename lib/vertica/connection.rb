@@ -89,15 +89,15 @@ class Vertica::Connection
   end
 
   def close
-    write_message(Vertica::Messages::Terminate.new)
+    write_message(Vertica::Protocol::Terminate.new)
   ensure
     close_socket
   end
 
   def cancel
     conn = self.class.new(skip_startup: true, **options)
-    conn.write_message(Vertica::Messages::CancelRequest.new(backend_pid, backend_key))
-    conn.write_message(Vertica::Messages::Flush.new)
+    conn.write_message(Vertica::Protocol::CancelRequest.new(backend_pid, backend_key))
+    conn.write_message(Vertica::Protocol::Flush.new)
     conn.close_socket
   end
 
@@ -122,7 +122,7 @@ class Vertica::Connection
   def read_message
     type, size = read_bytes(5).unpack('aN')
     raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
-    message = Vertica::Messages::BackendMessage.factory(type, read_bytes(size - 4))
+    message = Vertica::Protocol::BackendMessage.factory(type, read_bytes(size - 4))
     puts "<= #{message.inspect}" if options.fetch(:debug)
     return message
   rescue SystemCallError, IOError => e
@@ -133,16 +133,16 @@ class Vertica::Connection
   # @private
   def process_message(message)
     case message
-    when Vertica::Messages::ErrorResponse
+    when Vertica::Protocol::ErrorResponse
       raise Vertica::Error::ConnectionError.new(message.error_message)
-    when Vertica::Messages::NoticeResponse
+    when Vertica::Protocol::NoticeResponse
       @notice_handler.call(message) if @notice_handler
-    when Vertica::Messages::BackendKeyData
+    when Vertica::Protocol::BackendKeyData
       @backend_pid = message.pid
       @backend_key = message.key
-    when Vertica::Messages::ParameterStatus
+    when Vertica::Protocol::ParameterStatus
       @parameters[message.name] = message.value
-    when Vertica::Messages::ReadyForQuery
+    when Vertica::Protocol::ReadyForQuery
       @transaction_status = message.transaction_status
       @mutex.unlock
     else
@@ -157,7 +157,7 @@ class Vertica::Connection
       raw_socket = TCPSocket.new(@options[:host], @options[:port].to_i)
       if @options[:ssl]
         require 'openssl'
-        raw_socket.write(Vertica::Messages::SslRequest.new.to_bytes)
+        raw_socket.write(Vertica::Protocol::SslRequest.new.to_bytes)
         if raw_socket.read(1) == 'S'
           ssl_context = @options[:ssl].is_a?(OpenSSL::SSL::SSLContext) ? @options[:ssl] : OpenSSL::SSL::SSLContext.new
           raw_socket = OpenSSL::SSL::SSLSocket.new(raw_socket, ssl_context)
@@ -233,18 +233,18 @@ class Vertica::Connection
   end
 
   def startup_connection
-    write_message(Vertica::Messages::Startup.new(@options[:username], @options[:database]))
+    write_message(Vertica::Protocol::Startup.new(@options[:username], @options[:database]))
     message = nil
     begin
       case message = read_message
-      when Vertica::Messages::Authentication
-        if message.code != Vertica::Messages::Authentication::OK
-          write_message(Vertica::Messages::Password.new(@options[:password], auth_method: message.code, user: @options[:username], salt: message.salt))
+      when Vertica::Protocol::Authentication
+        if message.code != Vertica::Protocol::Authentication::OK
+          write_message(Vertica::Protocol::Password.new(@options[:password], auth_method: message.code, user: @options[:username], salt: message.salt))
         end
       else
         process_message(message)
       end
-    end until message.kind_of?(Vertica::Messages::ReadyForQuery)
+    end until message.kind_of?(Vertica::Protocol::ReadyForQuery)
   end
 
   def initialize_connection
@@ -282,8 +282,3 @@ class Vertica::Connection
     @mutex              = Mutex.new.lock
   end
 end
-
-require 'vertica/query'
-require 'vertica/column'
-require 'vertica/result'
-require 'vertica/messages/message'
