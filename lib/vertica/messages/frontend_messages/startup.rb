@@ -10,13 +10,12 @@ module Vertica
         @options  = options
       end
 
-      def to_bytes
+      def message_body
         str =  [Vertica::PROTOCOL_VERSION].pack('N')
         str << ["user", @user].pack('Z*Z*')         if @user
         str << ["database", @database].pack('Z*Z*') if @database
         str << ["options", @options].pack('Z*Z*')   if @options
         str << [].pack('x')
-        message_string str
       end
     end
   end

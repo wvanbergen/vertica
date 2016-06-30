@@ -8,8 +8,8 @@ module Vertica
         @max_rows    = max_rows
       end
 
-      def to_bytes
-        message_string [@portal_name, @max_rows].pack('Z*N')
+      def message_body
+        [@portal_name, @max_rows].pack('Z*N')
       end
     end
   end

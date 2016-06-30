@@ -1,6 +1,5 @@
 module Vertica
   module Messages
-
     class Query < FrontendMessage
       message_id 'Q'
 
@@ -8,8 +7,8 @@ module Vertica
         @query_string = query_string
       end
 
-      def to_bytes
-        message_string [@query_string].pack('Z*')
+      def message_body
+        [@query_string].pack('Z*')
       end
     end
   end

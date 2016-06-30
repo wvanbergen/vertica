@@ -4,7 +4,7 @@ module Vertica
       message_id nil
 
       def to_bytes
-        message_string [80877103].pack('N')
+        [80877103].pack('N')
       end
     end
   end

@@ -6,10 +6,12 @@ module Vertica
         self.send(:define_method, :message_id) { message_id }
       end
 
-      def message_string(msg)
-        msg = msg.join if msg.is_a?(Array)
-        message_size = [4 + msg.bytesize].pack('N')
-        message_id ? "#{message_id}#{message_size}#{msg}" : "#{message_size}#{msg}"
+      def prepend_message_header(msg)
+        if message_id
+          [message_id, 4 + msg.bytesize, msg].pack('aNa*')
+        else
+          [4 + msg.bytesize, msg].pack('Na*')
+        end
       end
     end
 
@@ -17,26 +19,29 @@ module Vertica
       MessageIdMap = {}
 
       def self.factory(type, data)
-        #puts "factory reading message #{type} #{size} #{type.class}"
-        if klass = MessageIdMap[type]           #explicitly use the char value, for 1.9 compat
-          klass.new data
+        if klass = MessageIdMap[type]
+          klass.new(data)
         else
-          Messages::Unknown.new type, data
+          Messages::Unknown.new(type, data)
         end
       end
 
       def self.message_id(message_id)
         super
-        MessageIdMap[message_id] = self          #explicitly use the char value, for 1.9 compat
+        MessageIdMap[message_id] = self
       end
 
-      def initialize(data)
+      def initialize(_data)
       end
     end
 
     class FrontendMessage < Message
+      def message_body
+        ''
+      end
+
       def to_bytes
-        message_string ''
+        prepend_message_header(message_body)
       end
     end
   end

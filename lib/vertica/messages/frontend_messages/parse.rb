@@ -9,8 +9,8 @@ module Vertica
         @param_types  = param_types
       end
 
-      def to_bytes
-        message_string([@name, @query, @param_types.length, *@param_types].pack('Z*Z*nN*'))
+      def message_body
+        [@name, @query, @param_types.length, *@param_types].pack('Z*Z*nN*')
       end
     end
   end

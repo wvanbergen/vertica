@@ -8,10 +8,9 @@ module Vertica
         @backend_key = backend_key
       end
 
-      def to_bytes
-        message_string [80877102, @backend_pid, @backend_key].pack('N3')
+      def message_body
+        [80877102, @backend_pid, @backend_key].pack('N3')
       end
-
     end
   end
 end

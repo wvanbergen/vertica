@@ -12,8 +12,8 @@ module Vertica
         end
       end
 
-      def to_bytes
-        message_string [@close_type, @close_name].pack('AZ*')
+      def message_body
+        [@close_type, @close_name].pack('AZ*')
       end
     end
   end
