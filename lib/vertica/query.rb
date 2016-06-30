@@ -53,9 +53,9 @@ class Vertica::Query
     when Vertica::Messages::CopyInResponse
       handle_copy_from_stdin
     when Vertica::Messages::RowDescription
-      result.descriptions = message
+      result.handle_row_description(message)
     when Vertica::Messages::DataRow
-      result.handle_row(message)
+      result.handle_data_row(message)
     when Vertica::Messages::CommandComplete
       result.tag = message.tag
     else

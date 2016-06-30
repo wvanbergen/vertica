@@ -38,7 +38,7 @@ connection object. For most options, the gem will use a default value if no valu
 
     connection = Vertica.connect({
       :host     => 'db_server',
-      :user     => 'user',
+      :username => 'user',
       :password => 'password',
       # :ssl         => false, # use SSL for the connection
       # :port        => 5433,  # default Vertica port: 5433
@@ -74,7 +74,7 @@ Store the result of the query method as a variable to get a buffered resultset:
     connection.close
 
     result.rows # => [{:id => 123, :name => "Jim Bob"}, {:id => 456, :name => "Joe Jack"}]
-    result.row_count # => 2
+    result.size # => 2
 
     result.each do |row|
       puts row # => {:id => 123, :name => "Jim Bob"}
