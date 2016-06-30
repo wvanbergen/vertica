@@ -5,6 +5,7 @@ module Vertica
     attr_reader :type_modifier
     attr_reader :size
     attr_reader :data_type
+    attr_reader :attribute_number
 
     STRING_CONVERTER = lambda { |s| s.force_encoding('utf-8') }
 

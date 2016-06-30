@@ -5,8 +5,7 @@ class Vertica::Result
   attr_reader :rows
   attr_accessor :tag
 
-  def initialize(row_handler: nil, row_style: :hash)
-    @row_style = row_style
+  def initialize(row_handler: nil)
     @row_handler = row_handler || lambda { |row| buffer_row(row) }
     @rows = []
   end
@@ -19,24 +18,30 @@ class Vertica::Result
     @rows.empty?
   end
 
-  def the_value
-    if empty?
-      nil
-    else
-      @row_style == :array ? rows[0][0] : rows[0][columns[0].name]
-    end
-  end
-
-  def [](row, col = nil)
-    col.nil? ? rows[row] : rows.fetch([row], {}).fetch(col)
-  end
-
   def size
     @rows.size
   end
 
   alias_method :count, :size
   alias_method :length, :size
+
+  def [](row, col = nil)
+    row = rows.fetch(0)
+    return row if col.nil?
+
+    column = find_column(col)
+    case row
+      when Hash; row.fetch(column.name)
+      when Array; row.fetch(column.attribute_number)
+    end
+  end
+
+  def value
+    self[0, 0]
+  end
+
+  alias_method :the_value, :value
+
 
   # @private
   def handle_row_description(message)
@@ -48,30 +53,42 @@ class Vertica::Result
     @row_handler.call(format_row(message))
   end
 
-  private
+  protected
+
+  def find_column(col)
+    case col
+      when Integer; columns.fetch(col)
+      when String, Symbol; columns.detect { |c| c.name.to_s == col }
+      else raise ArgumentError, "#{col.inspect} is not a valid column identifier"
+    end
+  end
 
   def format_row(message)
-    send("format_row_as_#{@row_style}", message)
-  end
-
-  def format_row_as_array(message)
-    row = []
-    message.values.each_with_index do |value, idx|
-      row << columns.fetch(idx).convert(value)
-    end
-    row
-  end
-
-  def format_row_as_hash(message)
-    row = {}
-    message.values.each_with_index do |value, idx|
-      col = columns.fetch(idx)
-      row[col.name] = col.convert(value)
-    end
-    row
+    raise NotImplementedError
   end
 
   def buffer_row(row)
     @rows << row
+  end
+
+  class ArrayResult < Vertica::Result
+    def format_row(message)
+      row = []
+      message.values.each_with_index do |value, idx|
+        row << columns.fetch(idx).convert(value)
+      end
+      row
+    end
+  end
+
+  class HashResult < Vertica::Result
+    def format_row(message)
+      row = {}
+      message.values.each_with_index do |value, idx|
+        col = columns.fetch(idx)
+        row[col.name] = col.convert(value)
+      end
+      row
+    end
   end
 end

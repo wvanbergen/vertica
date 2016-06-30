@@ -6,7 +6,12 @@ class Vertica::Query
     @connection, @sql = connection, sql
 
     row_style ||= connection.options.fetch(:row_style, :hash)
-    @result = Vertica::Result.new(row_style: row_style, row_handler: row_handler)
+    @result = case row_style
+      when :hash;  Vertica::Result::HashResult.new(row_handler: row_handler)
+      when :array; Vertica::Result::ArrayResult.new(row_handler: row_handler)
+      else raise ArgumentError, "Unknown row_style: #{row_style.inspect}"
+    end
+
     @copy_handler = copy_handler
 
     @error  = nil
