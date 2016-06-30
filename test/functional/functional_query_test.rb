@@ -45,29 +45,34 @@ class FunctionalQueryTest < Minitest::Test
   end
 
   def test_select_query_with_streaming_results
-    result = []
-    @connection.query("SELECT 1 AS a, 2 AS b UNION ALL SELECT 3, 4", row_style: :hash) do |row|
-      result << row
+    rows = []
+    result = @connection.query("SELECT 1 AS a, 2 AS b UNION ALL SELECT 3, 4", row_style: :hash) do |row|
+      rows << row
     end
 
-    assert_equal 2, result.length
-    assert_equal 1, result[0].fetch(:a)
-    assert_equal 2, result[0].fetch(:b)
-    assert_equal 3, result[1].fetch(:a)
-    assert_equal 4, result[1].fetch(:b)
+    # For unbuffered result, we return the kind of command that was executed
+    assert_equal "SELECT", result
+
+    assert_equal 2, rows.length
+    assert_equal 1, rows[0].fetch(:a)
+    assert_equal 2, rows[0].fetch(:b)
+    assert_equal 3, rows[1].fetch(:a)
+    assert_equal 4, rows[1].fetch(:b)
   end
 
   def test_select_query_with_zero_streaming_results
-    result = []
-    @connection.query("SELECT 'impossible' WHERE 1=2", row_style: :hash) do |row|
-      result << row
+    rows = []
+    result = @connection.query("SELECT 'impossible' WHERE 1=2", row_style: :hash) do |row|
+      rows << row
     end
 
-    assert_equal 0, result.length
+    assert_equal "SELECT", result
+    assert_equal 0, rows.length
   end
 
   def test_select_query_with_no_results
     r = @connection.query("SELECT * FROM test_ruby_vertica_table WHERE 1 != 1")
+    assert_equal "SELECT", r.tag
     assert_equal 0, r.size
     assert_equal 2, r.columns.length
     assert_equal :integer, r.columns[0].data_type
@@ -79,6 +84,7 @@ class FunctionalQueryTest < Minitest::Test
 
   def test_insert
     r = @connection.query("INSERT INTO test_ruby_vertica_table VALUES (2, 'stefanie')")
+    assert_equal "INSERT", r.tag
     assert_equal 1, r.size
     assert_equal 1, r.columns.length
     assert_equal :integer, r.columns[0].data_type
@@ -89,6 +95,7 @@ class FunctionalQueryTest < Minitest::Test
 
   def test_delete_of_no_rows
     r = @connection.query("DELETE FROM test_ruby_vertica_table WHERE 1 != 1")
+    assert_equal "DELETE", r.tag
     assert_equal 1, r.size
     assert_equal 1, r.columns.length
     assert_equal :integer, r.columns[0].data_type
@@ -98,6 +105,7 @@ class FunctionalQueryTest < Minitest::Test
 
   def test_delete_of_a_row
     r = @connection.query("DELETE FROM test_ruby_vertica_table WHERE id = 1")
+    assert_equal "DELETE", r.tag
     assert_equal 1, r.size
     assert_equal 1, r.columns.length
     assert_equal :integer, r.columns[0].data_type
