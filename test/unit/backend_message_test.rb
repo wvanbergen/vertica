@@ -68,33 +68,33 @@ class BackendMessageTest < Minitest::Test
     msg = Vertica::Protocol::RowDescription.new("\x00\x01OUTPUT\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x06\x00\b\x00\x00\x00\b\x00\x00")
     assert_equal 1, msg.fields.size
     assert_equal msg.fields[0], {
-      :name             => "OUTPUT",
-      :table_oid        => 0,
-      :attribute_number => 0,
-      :data_type_oid    => 6,
-      :data_type_size   => 8,
-      :type_modifier    => 8,
-      :format_code      => 0
+      :name               => "OUTPUT",
+      :table_oid          => 0,
+      :attribute_number   => 0,
+      :data_type_oid      => 6,
+      :data_type_size     => 8,
+      :data_type_modifier => 8,
+      :format_code        => 0
     }
 
     msg = Vertica::Protocol::RowDescription.new("\x00\x02id\x00\x00\np8\x00\x01\x00\x00\x00\x06\x00\b\xFF\xFF\xFF\xFF\x00\x00name\x00\x00\np8\x00\x02\x00\x00\x00\t\xFF\xFF\x00\x00\x00h\x00\x00")
     assert_equal msg.fields[0], {
-      :name             => "id",
-      :table_oid        => 684088,
-      :attribute_number => 1,
-      :data_type_oid    => 6,
-      :data_type_size   => 8,
-      :type_modifier    => 4294967295,
-      :format_code      => 0
+      :name               => "id",
+      :table_oid          => 684088,
+      :attribute_number   => 1,
+      :data_type_oid      => 6,
+      :data_type_size     => 8,
+      :data_type_modifier => 4294967295,
+      :format_code        => 0
     }
     assert_equal msg.fields[1], {
-      :name             => "name",
-      :table_oid        => 684088,
-      :attribute_number => 2,
-      :data_type_oid    => 9,
-      :data_type_size   => 65535,
-      :type_modifier    => 104,
-      :format_code      => 0
+      :name               => "name",
+      :table_oid          => 684088,
+      :attribute_number   => 2,
+      :data_type_oid      => 9,
+      :data_type_size     => 65535,
+      :data_type_modifier => 104,
+      :format_code        => 0
     }
   end
 
