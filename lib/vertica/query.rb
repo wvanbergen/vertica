@@ -53,7 +53,7 @@ class Vertica::Query
   end
 
   def handle_row_description(message)
-    @columns = message.fields.map { |fd| Vertica::Column.new(fd) }
+    @row_description = Vertica::RowDescription.build(message)
   end
 
   def handle_data_row(message)
@@ -62,8 +62,8 @@ class Vertica::Query
 
   def handle_command_complete(message)
     if buffer_rows?
-      @result = Vertica::Result.new(columns: @columns, rows: @rows, tag: message.tag)
-      @columns, @rows = nil, nil
+      @result = Vertica::Result.new(row_description: @row_description, rows: @rows, tag: message.tag)
+      @row_description, @rows = nil, nil
     else
       @result = message.tag
     end
@@ -85,7 +85,7 @@ class Vertica::Query
   def format_row_as_array(message)
     row = []
     message.values.each_with_index do |value, idx|
-      row << @columns.fetch(idx).convert(value)
+      row << @row_description.column(idx).convert(value)
     end
     row
   end
@@ -93,8 +93,8 @@ class Vertica::Query
   def format_row_as_hash(message)
     row = {}
     message.values.each_with_index do |value, idx|
-      col = @columns.fetch(idx)
-      row[col.name] = col.convert(value)
+      col = @row_description.column(idx)
+      row[col.name.to_sym] = col.convert(value)
     end
     row
   end

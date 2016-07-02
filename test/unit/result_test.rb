@@ -3,7 +3,7 @@ require 'test_helper'
 class ResultTest < Minitest::Test
   def setup
     @hash_result = Vertica::Result.new(
-      columns: [
+      row_description: [
         Vertica::Column.new(name: 'a', data_type_oid: 6),
         Vertica::Column.new(name: 'b', data_type_oid: 6),
       ],
@@ -15,7 +15,7 @@ class ResultTest < Minitest::Test
     )
 
     @array_result = Vertica::Result.new(
-      columns: [
+      row_description: [
         Vertica::Column.new(name: 'a', data_type_oid: 6),
         Vertica::Column.new(name: 'b', data_type_oid: 6),
       ],
@@ -60,15 +60,11 @@ class ResultTest < Minitest::Test
   def test_fetch_value_by_column_index
     assert_equal 1, @hash_result.fetch(0, 0)
     assert_equal 2, @hash_result.fetch(0, 1)
-    assert_equal 1, @hash_result.fetch(0, -2)
-    assert_equal 2, @hash_result.fetch(0, -1)
     assert_raises(IndexError) { @hash_result.fetch(0, 2) }
     assert_raises(IndexError) { @hash_result.fetch(0, -3) }
 
     assert_equal 1, @array_result.fetch(0, 0)
     assert_equal 2, @array_result.fetch(0, 1)
-    assert_equal 1, @array_result.fetch(0, -2)
-    assert_equal 2, @array_result.fetch(0, -1)
     assert_raises(IndexError) { @array_result.fetch(0, 2) }
     assert_raises(IndexError) { @array_result.fetch(0, -3) }
   end

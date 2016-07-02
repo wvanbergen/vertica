@@ -14,7 +14,7 @@ class ColumnTest < Minitest::Test
     }
 
     column = Vertica::Column.new(field_description)
-    assert_equal :OUTPUT, column.name
+    assert_equal 'OUTPUT', column.name
     assert_equal :integer, column.data_type
     assert_equal 8, column.data_type_modifier
   end

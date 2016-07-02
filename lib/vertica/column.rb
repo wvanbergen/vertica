@@ -2,10 +2,11 @@ module Vertica
   class Column
     attr_reader :name
     attr_reader :table_oid
+    attr_reader :attribute_number
+    attr_reader :format
     attr_reader :data_type
     attr_reader :data_type_size
     attr_reader :data_type_modifier
-    attr_reader :attribute_number
 
     STRING_CONVERTER = lambda { |s| s.force_encoding('utf-8') }
 
@@ -47,15 +48,32 @@ module Vertica
 
     DATA_TYPES = DATA_TYPE_CONVERSIONS.values.map { |t| t[0] }
 
-    def initialize(name: nil, attribute_number: nil, format_code: 0, table_oid: nil, data_type_oid: nil, data_type_size: nil, data_type_modifier: nil)
-      @format             = format_code == 0 ? :text : :binary
-      @table_oid          = table_oid
-      @name               = name.to_sym
-      @attribute_number   = attribute_number
-      @data_type_size     = data_type_size
-      @data_type_modifier = data_type_modifier
+    def initialize(name: nil, table_oid: nil, attribute_number: nil, format_code: 0, data_type_oid: nil, data_type_size: nil, data_type_modifier: nil)
+      @name             = name
+      @table_oid        = table_oid
+      @attribute_number = attribute_number
 
+      @format                = format_code == 0 ? :text : :binary
+      @data_type_size        = data_type_size
+      @data_type_modifier    = data_type_modifier
       @data_type, @converter = column_type_from_oid(data_type_oid)
+    end
+
+    def eql?(other)
+      self.class === other &&
+        other.name == name &&
+        other.format == format &&
+        other.data_type == data_type &&
+        other.data_type_size == data_type_size &&
+        other.data_type_modifier == data_type_modifier &&
+        other.table_oid == table_oid &&
+        other.attribute_number == attribute_number
+    end
+
+    alias_method :==, :eql?
+
+    def hash
+      [name, format, data_type, data_type_size, data_type_modifier, table_oid, attribute_number].hash
     end
 
     def convert(s)

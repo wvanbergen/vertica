@@ -1,12 +1,12 @@
 class Vertica::Result
   include Enumerable
 
-  attr_reader :columns
+  attr_reader :row_description
   attr_reader :rows
   attr_reader :tag
 
-  def initialize(columns: nil, rows: [], tag: nil)
-    @columns, @rows, @tag = columns, rows, tag
+  def initialize(row_description: nil, rows: [], tag: nil)
+    @row_description, @rows, @tag = Vertica::RowDescription.build(row_description), rows, tag
   end
 
   def each(&block)
@@ -28,9 +28,9 @@ class Vertica::Result
     row = rows.fetch(row_index)
     return row if col.nil?
 
-    column, index = find_column_with_index(col)
+    column, index = row_description.column_with_index(col)
     case row
-      when Hash; row.fetch(column.name)
+      when Hash; row.fetch(column.name.to_sym)
       when Array; row.fetch(index)
     end
   end
@@ -43,14 +43,5 @@ class Vertica::Result
 
   alias_method :the_value, :value
 
-  protected
-
-  def find_column_with_index(col)
-    index = case col
-      when Integer; col
-      when String, Symbol; columns.find_index { |c| c.name.to_s == col.to_s } or raise KeyError, "No column found with name #{col}"
-      else raise ArgumentError, "#{col.inspect} is not a valid column identifier"
-    end
-    [columns.fetch(index), index]
-  end
+  alias_method :columns, :row_description
 end

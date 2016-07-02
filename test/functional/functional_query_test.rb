@@ -22,11 +22,11 @@ class FunctionalQueryTest < Minitest::Test
   def test_select_query_with_results_as_hash
     r = @connection.query("SELECT * FROM test_ruby_vertica_table")
     assert_equal 1, r.size
-    assert_equal 2, r.columns.length
+    assert_equal 2, r.row_description.length
     assert_equal :integer, r.columns[0].data_type
-    assert_equal :id, r.columns[0].name
+    assert_equal 'id', r.columns[0].name
     assert_equal :varchar, r.columns[1].data_type
-    assert_equal :name, r.columns[1].name
+    assert_equal 'name', r.columns[1].name
 
     assert_equal [{:id => 1, :name => "matt"}], r.rows
   end
@@ -35,11 +35,11 @@ class FunctionalQueryTest < Minitest::Test
     @connection.options[:row_style] = :array
     r = @connection.query("SELECT * FROM test_ruby_vertica_table")
     assert_equal 1, r.size
-    assert_equal 2, r.columns.length
-    assert_equal :integer, r.columns[0].data_type
-    assert_equal :id, r.columns[0].name
-    assert_equal :varchar, r.columns[1].data_type
-    assert_equal :name, r.columns[1].name
+    assert_equal 2, r.row_description.length
+    assert_equal :integer, r.row_description[0].data_type
+    assert_equal 'id', r.row_description[0].name
+    assert_equal :varchar, r.row_description[1].data_type
+    assert_equal 'name', r.row_description[1].name
 
     assert_equal [[1, "matt"]], r.rows
   end
@@ -76,9 +76,9 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal 0, r.size
     assert_equal 2, r.columns.length
     assert_equal :integer, r.columns[0].data_type
-    assert_equal :id, r.columns[0].name
+    assert_equal 'id', r.columns[0].name
     assert_equal :varchar, r.columns[1].data_type
-    assert_equal :name, r.columns[1].name
+    assert_equal 'name', r.columns[1].name
     assert_equal [], r.rows
   end
 
@@ -88,7 +88,7 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal 1, r.size
     assert_equal 1, r.columns.length
     assert_equal :integer, r.columns[0].data_type
-    assert_equal :OUTPUT, r.columns[0].name
+    assert_equal 'OUTPUT', r.columns[0].name
     assert_equal [{:OUTPUT => 1}], r.rows
   end
 
@@ -99,7 +99,7 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal 1, r.size
     assert_equal 1, r.columns.length
     assert_equal :integer, r.columns[0].data_type
-    assert_equal :OUTPUT, r.columns[0].name
+    assert_equal 'OUTPUT', r.columns[0].name
     assert_equal [{:OUTPUT => 0}], r.rows
   end
 
@@ -109,7 +109,7 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal 1, r.size
     assert_equal 1, r.columns.length
     assert_equal :integer, r.columns[0].data_type
-    assert_equal :OUTPUT, r.columns[0].name
+    assert_equal 'OUTPUT', r.columns[0].name
     assert_equal [{:OUTPUT => 1}], r.rows
   end
 
@@ -131,9 +131,9 @@ class FunctionalQueryTest < Minitest::Test
       assert_equal 1, r.size
       assert_equal 2, r.columns.length
       assert_equal :integer, r.columns[0].data_type
-      assert_equal :id, r.columns[0].name
+      assert_equal 'id', r.columns[0].name
       assert_equal :varchar, r.columns[1].data_type
-      assert_equal :name, r.columns[1].name
+      assert_equal 'name', r.columns[1].name
       assert_equal [{:id => 1, :name => "matt"}], r.rows
     end
   end
