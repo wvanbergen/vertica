@@ -19,7 +19,7 @@ class FunctionalQueryTest < Minitest::Test
     end
   end
 
-  def test_select_query_with_results_as_hash
+  def test_select_query_with_buffered_results
     r = @connection.query("SELECT * FROM test_ruby_vertica_table")
     assert_equal 1, r.size
     assert_equal 2, r.row_description.length
@@ -28,25 +28,14 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal :varchar, r.columns[1].data_type
     assert_equal 'name', r.columns[1].name
 
-    assert_equal [{:id => 1, :name => "matt"}], r.rows
-  end
-
-  def test_select_query_with_results_as_array
-    @connection.options[:row_style] = :array
-    r = @connection.query("SELECT * FROM test_ruby_vertica_table")
-    assert_equal 1, r.size
-    assert_equal 2, r.row_description.length
-    assert_equal :integer, r.row_description[0].data_type
-    assert_equal 'id', r.row_description[0].name
-    assert_equal :varchar, r.row_description[1].data_type
-    assert_equal 'name', r.row_description[1].name
-
-    assert_equal [[1, "matt"]], r.rows
+    assert_equal 1, r[0][:id]
+    assert_equal 'matt', r[0][:name]
   end
 
   def test_select_query_with_streaming_results
     rows = []
-    result = @connection.query("SELECT 1 AS a, 2 AS b UNION ALL SELECT 3, 4", row_style: :hash) do |row|
+    result = @connection.query("SELECT 1 AS a, 2 AS b UNION ALL SELECT 3, 4") do |row|
+      assert_kind_of Vertica::Row, row
       rows << row
     end
 
@@ -62,7 +51,7 @@ class FunctionalQueryTest < Minitest::Test
 
   def test_select_query_with_zero_streaming_results
     rows = []
-    result = @connection.query("SELECT 'impossible' WHERE 1=2", row_style: :hash) do |row|
+    result = @connection.query("SELECT 'impossible' WHERE 1=2") do |row|
       rows << row
     end
 
@@ -79,7 +68,7 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal 'id', r.columns[0].name
     assert_equal :varchar, r.columns[1].data_type
     assert_equal 'name', r.columns[1].name
-    assert_equal [], r.rows
+    assert_empty r.rows
   end
 
   def test_insert
@@ -89,7 +78,7 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal 1, r.columns.length
     assert_equal :integer, r.columns[0].data_type
     assert_equal 'OUTPUT', r.columns[0].name
-    assert_equal [{:OUTPUT => 1}], r.rows
+    assert_equal 1, r.value
   end
 
 
@@ -100,7 +89,7 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal 1, r.columns.length
     assert_equal :integer, r.columns[0].data_type
     assert_equal 'OUTPUT', r.columns[0].name
-    assert_equal [{:OUTPUT => 0}], r.rows
+    assert_equal 0, r.value
   end
 
   def test_delete_of_a_row
@@ -110,7 +99,7 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal 1, r.columns.length
     assert_equal :integer, r.columns[0].data_type
     assert_equal 'OUTPUT', r.columns[0].name
-    assert_equal [{:OUTPUT => 1}], r.rows
+    assert_equal 1, r.value
   end
 
   def test_empty_query
@@ -134,7 +123,7 @@ class FunctionalQueryTest < Minitest::Test
       assert_equal 'id', r.columns[0].name
       assert_equal :varchar, r.columns[1].data_type
       assert_equal 'name', r.columns[1].name
-      assert_equal [{:id => 1, :name => "matt"}], r.rows
+      assert_equal [{'id' => 1, 'name' => "matt"}], r.map(&:to_h)
     end
   end
 
@@ -162,7 +151,7 @@ class FunctionalQueryTest < Minitest::Test
       data.write "11|#{"a" * 1_000_000}\n"
     end
 
-    result = @connection.query("SELECT id FROM test_ruby_vertica_table ORDER BY id", :row_style => :array)
+    result = @connection.query("SELECT id FROM test_ruby_vertica_table ORDER BY id")
     assert_equal 2, result.length
   end
 
@@ -172,9 +161,9 @@ class FunctionalQueryTest < Minitest::Test
       data << "12|More stuff\n13|Fin" << "al stuff\n"
     end
 
-    result = @connection.query("SELECT * FROM test_ruby_vertica_table ORDER BY id", :row_style => :array)
+    result = @connection.query("SELECT * FROM test_ruby_vertica_table ORDER BY id")
     assert_equal 4, result.length
-    assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.rows
+    assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.map(&:to_a)
   end
 
   def test_copy_in_with_gzip
@@ -184,9 +173,9 @@ class FunctionalQueryTest < Minitest::Test
       gz.close
     end
 
-    result = @connection.query("SELECT * FROM test_ruby_vertica_table ORDER BY id", :row_style => :array)
+    result = @connection.query("SELECT * FROM test_ruby_vertica_table ORDER BY id")
     assert_equal 4, result.length
-    assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.rows
+    assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.map(&:to_a)
   end
 
   def test_copy_with_ruby_exception
@@ -199,7 +188,7 @@ class FunctionalQueryTest < Minitest::Test
       rescue Vertica::Error::CopyFromStdinFailed
       end
 
-      result = @connection.query("SELECT id FROM test_ruby_vertica_table ORDER BY id", :row_style => :array)
+      result = @connection.query("SELECT id FROM test_ruby_vertica_table ORDER BY id")
       assert_equal 1, result.length
     end
   end
@@ -213,7 +202,7 @@ class FunctionalQueryTest < Minitest::Test
       rescue Vertica::Error::CopyRejected
       end
 
-      result = @connection.query("SELECT id FROM test_ruby_vertica_table ORDER BY id", :row_style => :array)
+      result = @connection.query("SELECT id FROM test_ruby_vertica_table ORDER BY id")
       assert_equal 1, result.length
     end
   end
@@ -221,17 +210,17 @@ class FunctionalQueryTest < Minitest::Test
   def test_copy_in_with_file
     filename = File.expand_path('../../resources/test_ruby_vertica_table.csv', __FILE__)
     @connection.copy("COPY test_ruby_vertica_table FROM STDIN", source: filename)
-    result = @connection.query("SELECT * FROM test_ruby_vertica_table ORDER BY id", :row_style => :array)
+    result = @connection.query("SELECT * FROM test_ruby_vertica_table ORDER BY id")
     assert_equal 4, result.length
-    assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.rows
+    assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.map(&:to_a)
   end
 
   def test_copy_in_with_io
     io = StringIO.new("11|Stuff\r\n12|More stuff\n13|Final stuff\n")
     @connection.copy("COPY test_ruby_vertica_table FROM STDIN", source: io)
-    result = @connection.query("SELECT * FROM test_ruby_vertica_table ORDER BY id", :row_style => :array)
+    result = @connection.query("SELECT * FROM test_ruby_vertica_table ORDER BY id")
     assert_equal 4, result.length
-    assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.rows
+    assert_equal [[1, "matt"], [11, "Stuff"], [12, "More stuff"], [13, "Final stuff"]], result.map(&:to_a)
   end
 
   def test_notice_handler

@@ -36,7 +36,7 @@ Or add it to your Gemfile:
 The <code>Vertica.connect</code> methods takes a connection parameter hash and returns a
 connection object. For most options, the gem will use a default value if no value is provided.
 
-    connection = Vertica.connect({
+    connection = Vertica.connect(
       :host     => 'db_server',
       :username => 'user',
       :password => 'password',
@@ -45,22 +45,23 @@ connection object. For most options, the gem will use a default value if no valu
       # :database    => 'db',  # there is only one database
       # :role        => nil,   # the (additional) role(s) to enable for the user.
       # :search_path => nil,   # default: <user>,public,v_catalog
-      # :row_style   => :hash  # can also be :array (see below)
-    })
+    )
 
 To close the connection when you're done with it, run <code>connection.close</code>.
 
 You can pass `OpenSSL::SSL::SSLContext` in `:ssl` to customize SSL connection options.
 
-### Querying with unbuffered result as streaming rows
+### Running queries
 
-You can run simple queries using the <code>query</code> method, either in buffered and
-unbuffered mode. For large result sets, you probably do not want to use buffered results.
+You can run queries using the <code>query</code> method, either in buffered and
+unbuffered mode. For large result sets, you probably do not want to use buffered results,
+because buffering the entire result may require a lot of memory.
 
 Get all the result rows without buffering by providing a block:
 
     connection.query("SELECT id, name FROM my_table") do |row|
-      puts row # => {:id => 123, :name => "Jim Bob"}
+      puts row['id']   # => 123
+      puts row['name'] # => 'Jim Bob'
     end
 
 Note: you can only use the connection for one query at the time. If you try to run another
@@ -73,26 +74,23 @@ Store the result of the query method as a variable to get a buffered resultset:
     result = connection.query("SELECT id, name FROM my_table")
     connection.close
 
-    result.rows # => [{:id => 123, :name => "Jim Bob"}, {:id => 456, :name => "Joe Jack"}]
     result.size # => 2
 
     result.each do |row|
-      puts row # => {:id => 123, :name => "Jim Bob"}
+      puts row # => Vertica::Row[123, "Jim Bob"]>
     end
 
-### Row format
+Rows are provided as `Vertica::Row` instances. You can access the individial fields by
+referring to their name as String or Symbol,  or the index of the field in the result.
 
-By default, rows are returned as hashes, using symbols for the column names. Rows can also
-be returned as arrays by providing a row_style:
+    result.each do |row|
+      puts row # => Vertica::Row[123, "Jim Bob"]>
 
-    connection.query("SELECT id, name FROM my_table", :row_style => :array) do |row|
-      puts row # => [123, "Jim Bob"]
+      puts row['id'], row[:id], row[]      # Three times '123'
+      puts row['name'], row[:name], row[1] # Three times 'Jim Bob'
     end
 
-By adding <code>:row_style => :array</code> to the connection hash, all results will be
-returned as array.
-
-### Loading data into Vertica using COPY
+### Loading data into Vertica using COPY statements
 
 Using the COPY statement, you can load arbitrary data from your ruby script to the database.
 

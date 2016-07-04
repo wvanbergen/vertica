@@ -5,8 +5,8 @@ class Vertica::Result
   attr_reader :rows
   attr_reader :tag
 
-  def initialize(row_description: nil, rows: [], tag: nil)
-    @row_description, @rows, @tag = Vertica::RowDescription.build(row_description), rows, tag
+  def initialize(row_description: nil, rows: nil, tag: nil)
+    @row_description, @rows, @tag = row_description, rows, tag
   end
 
   def each(&block)
@@ -18,7 +18,7 @@ class Vertica::Result
   end
 
   def size
-    @rows.size
+    @rows.length
   end
 
   alias_method :count, :size
@@ -27,12 +27,7 @@ class Vertica::Result
   def fetch(row_index, col = nil)
     row = rows.fetch(row_index)
     return row if col.nil?
-
-    column, index = row_description.column_with_index(col)
-    case row
-      when Hash; row.fetch(column.name.to_sym)
-      when Array; row.fetch(index)
-    end
+    row.fetch(col)
   end
 
   alias_method :[], :fetch
@@ -44,4 +39,10 @@ class Vertica::Result
   alias_method :the_value, :value
 
   alias_method :columns, :row_description
+
+  def self.build(row_description: nil, rows: [], tag: nil)
+    row_description = Vertica::RowDescription.build(row_description)
+    rows = rows.map { |values| row_description.build_row(values) }
+    new(row_description: row_description, rows: rows, tag: tag)
+  end
 end

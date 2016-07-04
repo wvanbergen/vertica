@@ -12,7 +12,7 @@ class Vertica::Connection
 
   # Opens a connectio the a Vertica server
   # @param [Hash] options The connection options to use.
-  def initialize(host: nil, port: 5433, username: nil, password: nil, database: nil, interruptable: false, ssl: nil, read_timeout: 600,row_style: :hash, debug: false, role: nil, search_path: nil, timezone: nil, skip_startup: false)
+  def initialize(host: nil, port: 5433, username: nil, password: nil, database: nil, interruptable: false, ssl: nil, read_timeout: 600, debug: false, role: nil, search_path: nil, timezone: nil, skip_startup: false)
     reset_state
     @notice_handler = nil
 
@@ -26,7 +26,6 @@ class Vertica::Connection
       ssl: ssl,
       interruptable: interruptable,
       read_timeout: read_timeout,
-      row_style: row_style,
       role: role,
       search_path: search_path,
       timezone: timezone
@@ -85,7 +84,7 @@ class Vertica::Connection
 
   def inspect
     safe_options = @options.reject { |name, _| name == :password }
-    "#<Vertica::Connection:#{object_id} @parameters=#{@parameters.inspect} @backend_pid=#{@backend_pid}, @backend_key=#{@backend_key}, @transaction_status=#{@transaction_status}, @socket=#{@socket}, @options=#{safe_options.inspect}, @row_style=#{@row_style}>"
+    "#<Vertica::Connection:#{object_id} @parameters=#{@parameters.inspect} @backend_pid=#{@backend_pid}, @backend_key=#{@backend_key}, @transaction_status=#{@transaction_status}, @socket=#{@socket}, @options=#{safe_options.inspect}>"
   end
 
   def close

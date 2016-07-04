@@ -38,17 +38,43 @@ class Vertica::RowDescription
     @columns.size
   end
 
+  alias_method :length, :size
+
   def to_a
     @columns.clone
   end
 
-  def to_h
+  def to_h(symbolize_keys: false)
     @columns.inject({}) do |carry, column|
-      carry.merge(column.name => column)
+      key = symbolize_keys ? column.name.to_sym : column.name
+      carry.merge(key => column)
     end
   end
 
-  alias_method :length, :size
+  def build_row(values)
+    case values
+    when Vertica::Row
+      values
+
+    when Vertica::Protocol::DataRow
+      converted_values = @columns.map.with_index do |column, index|
+        column.convert(values.values.fetch(index))
+      end
+      Vertica::Row.new(self, converted_values)
+
+    when Array
+      raise ArgumentError, "Number of values does not match row description" if values.size != size
+      Vertica::Row.new(self, values)
+
+    when Hash
+      raise ArgumentError, "Number of values does not match row description" if values.size != size
+      values_as_array = @columns.map { |column| values[column.name] || values[column.name.to_sym] }
+      Vertica::Row.new(self, values_as_array)
+
+    else
+      raise ArgumentError, "Don't know how to build a row from a #{values.class.name} instance"
+    end
+  end
 
   def eql?(other)
     self.class === other && other.to_a == self.to_a

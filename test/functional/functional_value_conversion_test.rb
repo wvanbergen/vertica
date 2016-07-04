@@ -4,7 +4,7 @@ require 'test_helper'
 class FunctionalValueConversionTest < Minitest::Test
 
   def setup
-    @connection = Vertica::Connection.new(row_style: :array, **TEST_CONNECTION_HASH)
+    @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
 
     @connection.query <<-SQL
       CREATE TABLE IF NOT EXISTS conversions_table (
@@ -67,14 +67,15 @@ class FunctionalValueConversionTest < Minitest::Test
       ['d09fd180d0b8d0b2d0b5d1822c2068656c6c6f21'].pack('H*'),
       'hello world',
       Float::INFINITY,
-      Float::NAN], result.rows.first
+      Float::NAN
+    ], result[0].to_a
   end
 
   def test_nil_conversions
     @connection.query "INSERT INTO conversions_table VALUES (NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)"
     result = @connection.query "SELECT * FROM conversions_table LIMIT 1"
     assert_equal result.rows.length, 1
-    assert_equal [nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil], result.rows.first
+    assert_equal [nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil], result[0].to_a
   end
 
   def test_string_encoding
