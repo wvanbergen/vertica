@@ -54,6 +54,11 @@ class FunctionalConnectionTest < Minitest::Test
     assert_equal available_roles, enabled_roles
   end
 
+  def test_initialize_connection_with_timezone
+    connection = Vertica::Connection.new(timezone: 'America/Toronto', **TEST_CONNECTION_HASH)
+    assert_equal 'America/Toronto', connection_setting(connection, 'timezone')
+  end
+
   def test_connection_inspect_should_not_print_password
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     inspected_string = connection.inspect

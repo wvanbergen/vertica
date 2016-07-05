@@ -1,4 +1,5 @@
 require 'date'
+require 'time'
 require 'bigdecimal'
 
 # Main module for this library. It contains the {.connect} method to return a
@@ -13,8 +14,8 @@ module Vertica
   # Opens a new connection to a Vertica database.
   # @param (see Vertica::Connection#initialize)
   # @return [Vertica::Connection] The created connection to Vertica, ready for queries.
-  def self.connect(options)
-    Vertica::Connection.new(options)
+  def self.connect(**kwargs)
+    Vertica::Connection.new(**kwargs)
   end
 
   # Properly quotes a value for safe usage in SQL queries.
@@ -29,8 +30,8 @@ module Vertica
       when nil        then 'NULL'
       when false      then 'FALSE'
       when true       then 'TRUE'
-      when DateTime   then value.strftime("'%Y-%m-%d %H:%M:%S'::timestamp")
-      when Time       then value.strftime("'%Y-%m-%d %H:%M:%S'::timestamp")
+      when DateTime   then value.strftime("'%Y-%m-%dT%H:%M:%S.%6N%z'::timestamptz")
+      when Time       then value.strftime("'%Y-%m-%dT%H:%M:%S.%6N%z'::timestamptz")
       when Date       then value.strftime("'%Y-%m-%d'::date")
       when String     then "'#{value.gsub(/'/, "''")}'"
       when BigDecimal then value.to_s('F')
