@@ -1,45 +1,15 @@
 class Vertica::Result
   include Enumerable
 
-  attr_reader :columns
+  attr_reader :row_description
   attr_reader :rows
-  attr_accessor :tag, :notice
+  attr_reader :tag
 
-  def initialize(row_style = :hash)
-    @row_style = row_style
-    @rows = []
+  def initialize(row_description: nil, rows: nil, tag: nil)
+    @row_description, @rows, @tag = row_description, rows, tag
   end
 
-  def descriptions=(message)
-    @columns = message.fields.map { |fd| Vertica::Column.new(fd) }
-  end
-
-  def format_row_as_hash(row_data)
-    row = {}
-    row_data.values.each_with_index do |value, idx|
-      col = columns.fetch(idx)
-      row[col.name] = col.convert(value)
-    end
-    row
-  end
-
-  def format_row(row_data)
-    send("format_row_as_#{@row_style}", row_data)
-  end
-
-  def format_row_as_array(row_data)
-    row = []
-    row_data.values.each_with_index do |value, idx|
-      row << columns.fetch(idx).convert(value)
-    end
-    row
-  end
-
-  def add_row(row)
-    @rows << row
-  end
-
-  def each_row(&block)
+  def each(&block)
     @rows.each(&block)
   end
 
@@ -47,24 +17,32 @@ class Vertica::Result
     @rows.empty?
   end
 
-  def the_value
-    if empty?
-      nil
-    else
-      @row_style == :array ? rows[0][0] : rows[0][columns[0].name]
-    end
+  def size
+    @rows.length
   end
 
-  def [](row, col = nil)
-    col.nil? ? row[row] : rows[row][col]
+  alias_method :count, :size
+  alias_method :length, :size
+
+  def fetch(row_index, col = nil)
+    row = rows.fetch(row_index)
+    return row if col.nil?
+    row.fetch(col)
   end
 
-  alias_method :each, :each_row
+  alias_method :[], :fetch
 
-  def row_count
-    @rows.size
+  def value
+    fetch(0, 0)
   end
 
-  alias_method :size, :row_count
-  alias_method :length, :row_count
+  alias_method :the_value, :value
+
+  alias_method :columns, :row_description
+
+  def self.build(row_description: nil, rows: [], tag: nil)
+    row_description = Vertica::RowDescription.build(row_description)
+    rows = rows.map { |values| row_description.build_row(values) }
+    new(row_description: row_description, rows: rows, tag: tag)
+  end
 end

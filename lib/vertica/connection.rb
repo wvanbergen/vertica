@@ -2,9 +2,9 @@ require 'socket'
 
 class Vertica::Connection
 
-  attr_reader :notices, :transaction_status, :backend_pid, :backend_key, :parameters, :notice_handler, :session_id
+  attr_reader :transaction_status, :backend_pid, :backend_key, :parameters, :notice_handler, :session_id
 
-  attr_accessor :row_style, :debug, :options
+  attr_reader :options
 
   def self.cancel(existing_conn)
     existing_conn.cancel
@@ -12,44 +12,30 @@ class Vertica::Connection
 
   # Opens a connectio the a Vertica server
   # @param [Hash] options The connection options to use.
-  def initialize(options = {})
-    reset_values
+  def initialize(host: nil, port: 5433, username: nil, password: nil, database: nil, interruptable: false, ssl: nil, read_timeout: 600, debug: false, role: nil, search_path: nil, timezone: nil, skip_startup: false)
+    reset_state
     @notice_handler = nil
 
-    @options = {}
-    @debug = false
+    @options = {
+      host: host,
+      port: port.to_i,
+      username: username,
+      password: password,
+      database: database,
+      debug: debug,
+      ssl: ssl,
+      interruptable: interruptable,
+      read_timeout: read_timeout,
+      role: role,
+      search_path: search_path,
+      timezone: timezone
+    }
 
-    options.each { |key, value| @options[key.to_s.to_sym] = value if value}
-
-    @options[:port] ||= 5433
-    @options[:read_timeout] ||= 600
-
-    @row_style = @options[:row_style] ? @options[:row_style] : :hash
-    boot_connection unless options[:skip_startup]
+    boot_connection unless skip_startup
   end
 
   def on_notice(&block)
     @notice_handler = block
-  end
-
-  def socket
-    @socket ||= begin
-      raw_socket = TCPSocket.new(@options[:host], @options[:port].to_i)
-      if @options[:ssl]
-        require 'openssl'
-        raw_socket.write Vertica::Messages::SslRequest.new.to_bytes
-        if raw_socket.read(1) == 'S'
-          ssl_context = @options[:ssl].is_a?(OpenSSL::SSL::SSLContext) ? @options[:ssl] : OpenSSL::SSL::SSLContext.new
-          raw_socket = OpenSSL::SSL::SSLSocket.new(raw_socket, ssl_context)
-          raw_socket.sync = true
-          raw_socket.connect
-        else
-          raise Vertica::Error::SSLNotSupported.new("SSL requested but server doesn't support it.")
-        end
-      end
-
-      raw_socket
-    end
   end
 
   def ssl?
@@ -72,43 +58,46 @@ class Vertica::Connection
     !busy?
   end
 
-  def write_message(message)
-    puts "=> #{message.inspect}" if @debug
-    write_bytes message.to_bytes
-  rescue SystemCallError, IOError => e
-    close_socket
-    raise Vertica::Error::ConnectionError.new(e.message)
+  def interruptable?
+    !session_id.nil?
+  end
+
+  def query(sql, **kwargs, &block)
+    row_handler = block_given? ? block : nil
+    job = Vertica::Query.new(self, sql, row_handler: row_handler, **kwargs)
+    run_with_mutex(job)
+  end
+
+  def copy(sql, source: nil, **kwargs, &block)
+    copy_handler = if block_given?
+      block
+    elsif source && File.exist?(source.to_s)
+      lambda { |data| file_copy_handler(source, data) }
+    elsif source.respond_to?(:read) && source.respond_to?(:eof?)
+      lambda { |data| io_copy_handler(source, data) }
+    end
+
+    job = Vertica::Query.new(self, sql, copy_handler: copy_handler, **kwargs)
+
+    run_with_mutex(job)
+  end
+
+  def inspect
+    safe_options = @options.reject { |name, _| name == :password }
+    "#<Vertica::Connection:#{object_id} @parameters=#{@parameters.inspect} @backend_pid=#{@backend_pid}, @backend_key=#{@backend_key}, @transaction_status=#{@transaction_status}, @socket=#{@socket}, @options=#{safe_options.inspect}>"
   end
 
   def close
-    write_message Vertica::Messages::Terminate.new
+    write_message(Vertica::Protocol::Terminate.new)
   ensure
     close_socket
   end
 
-  def close_socket
-    socket.close
-    @socket = nil
-  rescue SystemCallError, IOError
-  ensure
-    reset_values
-  end
-
-  def reset_connection
-    close
-    boot_connection
-  end
-
-  def boot_connection
-    startup_connection
-    initialize_connection
-  end
-
   def cancel
-    conn = self.class.new(options.merge(:skip_startup => true))
-    conn.write_message Vertica::Messages::CancelRequest.new(backend_pid, backend_key)
-    conn.write_message Vertica::Messages::Flush.new
-    conn.socket.close
+    conn = self.class.new(skip_startup: true, **options)
+    conn.write_message(Vertica::Protocol::CancelRequest.new(backend_pid, backend_key))
+    conn.write_message(Vertica::Protocol::Flush.new)
+    conn.close_socket
   end
 
   def interrupt
@@ -119,34 +108,40 @@ class Vertica::Connection
     return response
   end
 
-  def interruptable?
-    !session_id.nil?
+  # @private
+  def write_message(message)
+    puts "=> #{message.inspect}" if options.fetch(:debug)
+    write_bytes(message.to_bytes)
+  rescue SystemCallError, IOError => e
+    close_socket
+    raise Vertica::Error::ConnectionError.new(e.message)
   end
 
+  # @private
   def read_message
-    type = read_bytes(1)
-    size = read_bytes(4).unpack('N').first
+    type, size = read_bytes(5).unpack('aN')
     raise Vertica::Error::MessageError.new("Bad message size: #{size}.") unless size >= 4
-    message = Vertica::Messages::BackendMessage.factory type, read_bytes(size - 4)
-    puts "<= #{message.inspect}" if @debug
+    message = Vertica::Protocol::BackendMessage.factory(type, read_bytes(size - 4))
+    puts "<= #{message.inspect}" if options.fetch(:debug)
     return message
   rescue SystemCallError, IOError => e
     close_socket
     raise Vertica::Error::ConnectionError.new(e.message)
   end
 
+  # @private
   def process_message(message)
     case message
-    when Vertica::Messages::ErrorResponse
+    when Vertica::Protocol::ErrorResponse
       raise Vertica::Error::ConnectionError.new(message.error_message)
-    when Vertica::Messages::NoticeResponse
+    when Vertica::Protocol::NoticeResponse
       @notice_handler.call(message) if @notice_handler
-    when Vertica::Messages::BackendKeyData
+    when Vertica::Protocol::BackendKeyData
       @backend_pid = message.pid
       @backend_key = message.key
-    when Vertica::Messages::ParameterStatus
+    when Vertica::Protocol::ParameterStatus
       @parameters[message.name] = message.value
-    when Vertica::Messages::ReadyForQuery
+    when Vertica::Protocol::ReadyForQuery
       @transaction_status = message.transaction_status
       @mutex.unlock
     else
@@ -154,30 +149,27 @@ class Vertica::Connection
     end
   end
 
-  def query(sql, options = {}, &block)
-    job = Vertica::Query.new(self, sql, { :row_style => @row_style }.merge(options))
-    job.row_handler = block if block_given?
-    run_with_mutex(job)
-  end
-
-  def copy(sql, source = nil, &block)
-    job = Vertica::Query.new(self, sql, :row_style => @row_style)
-    if block_given?
-      job.copy_handler = block
-    elsif source && File.exist?(source.to_s)
-      job.copy_handler = lambda { |data| file_copy_handler(source, data) }
-    elsif source.respond_to?(:read) && source.respond_to?(:eof?)
-      job.copy_handler = lambda { |data| io_copy_handler(source, data) }
-    end
-    run_with_mutex(job)
-  end
-
-  def inspect
-    safe_options = @options.reject{ |name, _| name == :password }
-    "#<Vertica::Connection:#{object_id} @parameters=#{@parameters.inspect} @backend_pid=#{@backend_pid}, @backend_key=#{@backend_key}, @transaction_status=#{@transaction_status}, @socket=#{@socket}, @options=#{safe_options.inspect}, @row_style=#{@row_style}>"
-  end
-
   protected
+
+  def socket
+    @socket ||= begin
+      raw_socket = TCPSocket.new(@options[:host], @options[:port].to_i)
+      if @options[:ssl]
+        require 'openssl'
+        raw_socket.write(Vertica::Protocol::SslRequest.new.to_bytes)
+        if raw_socket.read(1) == 'S'
+          ssl_context = @options[:ssl].is_a?(OpenSSL::SSL::SSLContext) ? @options[:ssl] : OpenSSL::SSL::SSLContext.new
+          raw_socket = OpenSSL::SSL::SSLSocket.new(raw_socket, ssl_context)
+          raw_socket.sync = true
+          raw_socket.connect
+        else
+          raise Vertica::Error::SSLNotSupported.new("SSL requested but server doesn't support it.")
+        end
+      end
+
+      raw_socket
+    end
+  end
 
   def run_with_mutex(job)
     boot_connection if closed?
@@ -193,19 +185,18 @@ class Vertica::Connection
     end
   end
 
-  COPY_FROM_IO_BLOCK_SIZE = 1024 * 4096
+  DEFAULT_IO_COPY_HANDLER_BLOCK_SIZE = 1024 * 4096
+  private_constant :DEFAULT_IO_COPY_HANDLER_BLOCK_SIZE
 
   def file_copy_handler(input_file, output)
     File.open(input_file, 'r') do |input|
-      while data = input.read(COPY_FROM_IO_BLOCK_SIZE)
-        output << data
-      end
+      io_copy_handler(input, output)
     end
   end
 
   def io_copy_handler(input, output)
     until input.eof?
-      output << input.read(COPY_FROM_IO_BLOCK_SIZE)
+      output << input.read(DEFAULT_IO_COPY_HANDLER_BLOCK_SIZE)
     end
   end
 
@@ -241,18 +232,18 @@ class Vertica::Connection
   end
 
   def startup_connection
-    write_message Vertica::Messages::Startup.new(@options[:user] || @options[:username], @options[:database])
+    write_message(Vertica::Protocol::Startup.new(@options[:username], @options[:database]))
     message = nil
     begin
       case message = read_message
-      when Vertica::Messages::Authentication
-        if message.code != Vertica::Messages::Authentication::OK
-          write_message Vertica::Messages::Password.new(@options[:password], message.code, {:user => @options[:user], :salt => message.salt})
+      when Vertica::Protocol::Authentication
+        if message.code != Vertica::Protocol::Authentication::OK
+          write_message(Vertica::Protocol::Password.new(@options[:password], auth_method: message.code, user: @options[:username], salt: message.salt))
         end
       else
         process_message(message)
       end
-    end until message.kind_of?(Vertica::Messages::ReadyForQuery)
+    end until message.kind_of?(Vertica::Protocol::ReadyForQuery)
   end
 
   def initialize_connection
@@ -261,7 +252,26 @@ class Vertica::Connection
     @session_id = query("SELECT session_id FROM v_monitor.current_session").the_value if options[:interruptable]
   end
 
-  def reset_values
+  def close_socket
+    @socket.close if @socket
+  rescue SystemCallError, IOError
+    # ignore
+  ensure
+    reset_state
+  end
+
+  def reset_connection
+    close
+    boot_connection
+  end
+
+  def boot_connection
+    startup_connection
+    initialize_connection
+  end
+
+
+  def reset_state
     @parameters         = {}
     @session_id         = nil
     @backend_pid        = nil
@@ -271,8 +281,3 @@ class Vertica::Connection
     @mutex              = Mutex.new.lock
   end
 end
-
-require 'vertica/query'
-require 'vertica/column'
-require 'vertica/result'
-require 'vertica/messages/message'
