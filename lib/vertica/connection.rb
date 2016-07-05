@@ -2,9 +2,7 @@ require 'socket'
 
 class Vertica::Connection
 
-  attr_reader :transaction_status, :backend_pid, :backend_key, :parameters, :notice_handler, :session_id
-
-  attr_reader :options
+  attr_reader :transaction_status, :parameters, :options
 
   # Opens a connectio the a Vertica server
   # @param [Hash] options The connection options to use.
@@ -147,6 +145,8 @@ class Vertica::Connection
   end
 
   protected
+
+  attr_reader :backend_pid, :backend_key,  :session_id
 
   def socket
     @socket ||= begin

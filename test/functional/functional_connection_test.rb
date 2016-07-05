@@ -162,8 +162,6 @@ class FunctionalConnectionTest < Minitest::Test
     refute connection.closed?
 
     # connection variables
-    assert connection.backend_pid
-    assert connection.backend_key
     assert connection.transaction_status
 
     # parameters
@@ -175,8 +173,6 @@ class FunctionalConnectionTest < Minitest::Test
     refute connection.opened?
     assert connection.closed?
     assert_equal({}, connection.parameters)
-    assert_nil connection.backend_pid
-    assert_nil connection.backend_key
     assert_nil connection.transaction_status
   end
 end
