@@ -6,10 +6,6 @@ class Vertica::Connection
 
   attr_reader :options
 
-  def self.cancel(existing_conn)
-    existing_conn.cancel
-  end
-
   # Opens a connectio the a Vertica server
   # @param [Hash] options The connection options to use.
   def initialize(host: nil, port: 5433, username: nil, password: nil, database: nil, interruptable: false, ssl: nil, read_timeout: 600, debug: false, role: nil, search_path: nil, timezone: nil, autocommit: false, skip_startup: false, skip_initialize: false, user: nil)
