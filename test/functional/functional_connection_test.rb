@@ -121,6 +121,23 @@ class FunctionalConnectionTest < Minitest::Test
     connection.close
   end
 
+  def test_autocommit_enabled
+    connection = Vertica::Connection.new(autocommit: true, **TEST_CONNECTION_HASH)
+    connection.query("DROP TABLE IF EXISTS test_ruby_vertica_autocommit_table CASCADE;")
+    connection.query("CREATE TABLE test_ruby_vertica_autocommit_table (id int, name varchar(100))")
+    connection.query("CREATE PROJECTION IF NOT EXISTS test_ruby_vertica_autoccommit_table_p (id, name) AS SELECT * FROM test_ruby_vertica_autocommit_table SEGMENTED BY HASH(id) ALL NODES OFFSET 1")
+    connection.query("INSERT INTO test_ruby_vertica_autocommit_table VALUES (1, 'willem')")
+
+    # The inserted record should be visible during the session in which the record was inserted.
+    assert_equal 1, connection.query('SELECT COUNT(*) FROM test_ruby_vertica_autocommit_table').value
+
+    connection.close
+
+    # The inserted record should be persisted even after starting a new session, even without calling commit.
+    connection = Vertica::Connection.new(autocommit: true, **TEST_CONNECTION_HASH)
+    assert_equal 1, connection.query('SELECT COUNT(*) FROM test_ruby_vertica_autocommit_table').value
+  end
+
   private
 
   def connection_setting(connection, setting)

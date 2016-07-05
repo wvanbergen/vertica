@@ -12,7 +12,7 @@ class Vertica::Connection
 
   # Opens a connectio the a Vertica server
   # @param [Hash] options The connection options to use.
-  def initialize(host: nil, port: 5433, username: nil, password: nil, database: nil, interruptable: false, ssl: nil, read_timeout: 600, debug: false, role: nil, search_path: nil, timezone: nil, skip_startup: false)
+  def initialize(host: nil, port: 5433, username: nil, password: nil, database: nil, interruptable: false, ssl: nil, read_timeout: 600, debug: false, role: nil, search_path: nil, timezone: nil, autocommit: false, skip_startup: false)
     reset_state
     @notice_handler = nil
 
@@ -28,7 +28,8 @@ class Vertica::Connection
       read_timeout: read_timeout,
       role: role,
       search_path: search_path,
-      timezone: timezone
+      timezone: timezone,
+      autocommit: autocommit,
     }
 
     boot_connection unless skip_startup
@@ -251,6 +252,7 @@ class Vertica::Connection
     initialize_connection_with_role
     initialize_connection_with_search_path
     initialize_connection_with_timezone
+    initialize_connection_with_autocommit
   end
 
   def initialize_connection_with_role
@@ -268,6 +270,10 @@ class Vertica::Connection
 
   def initialize_connection_with_timezone
     query("SET TIME ZONE TO #{Vertica.quote(options[:timezone])}") if options[:timezone]
+  end
+
+  def initialize_connection_with_autocommit
+    query("SET AUTOCOMMIT TO ON") if options[:autocommit]
   end
 
   def close_socket
