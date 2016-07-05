@@ -12,7 +12,7 @@ class Vertica::Connection
 
   # Opens a connectio the a Vertica server
   # @param [Hash] options The connection options to use.
-  def initialize(host: nil, port: 5433, username: nil, password: nil, database: nil, interruptable: false, ssl: nil, read_timeout: 600, debug: false, role: nil, search_path: nil, timezone: nil, autocommit: false, skip_startup: false, user: nil)
+  def initialize(host: nil, port: 5433, username: nil, password: nil, database: nil, interruptable: false, ssl: nil, read_timeout: 600, debug: false, role: nil, search_path: nil, timezone: nil, autocommit: false, skip_startup: false, skip_initialize: false, user: nil)
     reset_state
     @notice_handler = nil
 
@@ -32,7 +32,7 @@ class Vertica::Connection
       autocommit: autocommit,
     }
 
-    boot_connection unless skip_startup
+    boot_connection(skip_initialize: skip_initialize) unless skip_startup
   end
 
   def on_notice(&block)
@@ -103,10 +103,10 @@ class Vertica::Connection
 
   def interrupt
     raise Vertica::Error::InterruptImpossible, "Session cannopt be interrupted because the session ID is not known!" if session_id.nil?
-    conn = self.class.new(options.merge(:interruptable => false, :role => nil, :search_path => nil))
-    response = conn.query("SELECT CLOSE_SESSION(#{Vertica.quote(session_id)})").the_value
-    conn.close
-    return response
+    conn = self.class.new(skip_initialize: true, **options)
+    conn.query("SELECT CLOSE_SESSION(#{Vertica.quote(session_id)})").the_value
+  ensure
+    conn.close if conn
   end
 
   # @private
@@ -289,9 +289,9 @@ class Vertica::Connection
     boot_connection
   end
 
-  def boot_connection
+  def boot_connection(skip_initialize: false)
     startup_connection
-    initialize_connection
+    initialize_connection unless skip_initialize
   end
 
   def reset_state

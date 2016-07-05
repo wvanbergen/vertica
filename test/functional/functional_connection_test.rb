@@ -27,6 +27,11 @@ class FunctionalConnectionTest < Minitest::Test
     assert connection.interruptable?, "The connection should be interruptable!"
   end
 
+  def test_interrupt_on_non_interruptable_connection
+    connection = Vertica::Connection.new(interruptable: false, **TEST_CONNECTION_HASH)
+    assert_raises(Vertica::Error::InterruptImpossible) { connection.interrupt }
+  end
+
   def test_new_with_error_response
     assert_raises(Vertica::Error::ConnectionError) do
       Vertica::Connection.new(TEST_CONNECTION_HASH.merge(database: 'nonexistant_db'))
