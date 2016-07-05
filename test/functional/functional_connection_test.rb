@@ -138,6 +138,14 @@ class FunctionalConnectionTest < Minitest::Test
     assert_equal 1, connection.query('SELECT COUNT(*) FROM test_ruby_vertica_autocommit_table').value
   end
 
+  def test_user_instead_of_username_for_backwards_compatibility
+    hash = TEST_CONNECTION_HASH.clone
+    hash[:user] = hash.delete(:username)
+
+    connection = Vertica::Connection.new(hash)
+    assert_valid_open_connection(connection)
+  end
+
   private
 
   def connection_setting(connection, setting)
