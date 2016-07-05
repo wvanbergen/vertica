@@ -247,9 +247,22 @@ class Vertica::Connection
   end
 
   def initialize_connection
-    query("SET SEARCH_PATH TO #{options[:search_path]}") if options[:search_path]
-    query("SET ROLE #{options[:role]}") if options[:role]
     @session_id = query("SELECT session_id FROM v_monitor.current_session").the_value if options[:interruptable]
+    initialize_connection_with_role
+    initialize_connection_with_search_path
+  end
+
+  def initialize_connection_with_role
+    case options[:role]
+    when :all, :none, :default
+      query("SET ROLE #{options[:role].to_s.upcase}")
+    when String, Array
+      query("SET ROLE #{Vertica.quote(options[:role])}")
+    end
+  end
+
+  def initialize_connection_with_search_path
+    query("SET SEARCH_PATH TO #{Vertica.quote(options[:search_path])}") if options[:search_path]
   end
 
   def close_socket
@@ -269,7 +282,6 @@ class Vertica::Connection
     startup_connection
     initialize_connection
   end
-
 
   def reset_state
     @parameters         = {}

@@ -33,6 +33,27 @@ class FunctionalConnectionTest < Minitest::Test
     end
   end
 
+  def test_initialize_connection_with_search_path
+    connection = Vertica::Connection.new(search_path: 'public', **TEST_CONNECTION_HASH)
+    assert_equal "public, v_catalog, v_monitor, v_internal", connection_setting(connection, 'search_path')
+
+    connection = Vertica::Connection.new(search_path: ['v_catalog', 'v_monitor', 'v_internal'], **TEST_CONNECTION_HASH)
+    assert_equal "v_catalog, v_monitor, v_internal", connection_setting(connection, 'search_path')
+  end
+
+  def test_initialize_connection_with_role
+    connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
+    available_roles = connection.query('show available roles').fetch(0, 'setting').split(', ')
+
+    connection = Vertica::Connection.new(role: :none, **TEST_CONNECTION_HASH)
+    enabled_roles = connection.query('show enabled roles').fetch(0, 'setting').split(', ')
+    assert_equal [], enabled_roles
+
+    connection = Vertica::Connection.new(role: :all, **TEST_CONNECTION_HASH)
+    enabled_roles = connection.query('show enabled roles').fetch(0, 'setting').split(', ')
+    assert_equal available_roles, enabled_roles
+  end
+
   def test_connection_inspect_should_not_print_password
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     inspected_string = connection.inspect
@@ -96,6 +117,10 @@ class FunctionalConnectionTest < Minitest::Test
   end
 
   private
+
+  def connection_setting(connection, setting)
+    connection.query("SHOW ALL").detect { |row| row['name'] == setting }.fetch('setting')
+  end
 
   def assert_valid_open_connection(connection)
     assert connection.opened?
