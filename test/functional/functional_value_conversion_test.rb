@@ -12,6 +12,7 @@ class FunctionalValueConversionTest < Minitest::Test
         "string_field" varchar(100),
         "date_field" date,
         "timestamp_field" timestamp,
+        "timestamptz_field" timestamptz,
         "time_field" time,
         "interval_field" interval,
         "boolean_field" boolean,
@@ -35,7 +36,8 @@ class FunctionalValueConversionTest < Minitest::Test
           123,
           'hello world',
           '2010-01-01',
-          '2010-01-01 12:00:00',
+          '2010-01-01 12:00:00.123456',
+          '2010-01-01 12:00:00 +0930',
           '12:00:00',
           INTERVAL '1 DAY',
           TRUE,
@@ -58,7 +60,8 @@ class FunctionalValueConversionTest < Minitest::Test
       123,
       'hello world',
       Date.parse('2010-01-01'),
-      DateTime.parse('2010-01-01 12:00:00'),
+      Time.new(2010, 1, 1, 12, 0, BigDecimal.new("0.123456")),
+      Time.new(2010, 1, 1, 12, 0, 0, '+09:30'),
       "12:00:00",
       "1",
       true,
@@ -72,18 +75,43 @@ class FunctionalValueConversionTest < Minitest::Test
   end
 
   def test_nil_conversions
-    @connection.query "INSERT INTO conversions_table VALUES (NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)"
+    @connection.query "INSERT INTO conversions_table VALUES (NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)"
     result = @connection.query "SELECT * FROM conversions_table LIMIT 1"
     assert_equal result.rows.length, 1
-    assert_equal [nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil], result[0].to_a
+    assert_equal [nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil], result[0].to_a
   end
 
-  def test_string_encoding
+  def test_string_decoding
     assert_equal 'åßç∂ë', @connection.query("SELECT 'åßç∂ë'").the_value
+    assert_equal Encoding::UTF_8, @connection.query("SELECT 'åßç∂ë'").the_value.encoding
   end
 
-  def test_binary_encoding
+  def test_binary_decoding
     assert_equal ['d09fd180d0b8d0b2d0b5d1822c2068656c6c6f21'].pack('H*'), @connection.query("SELECT HEX_TO_BINARY('d09fd180d0b8d0b2d0b5d1822c2068656c6c6f21')").the_value
     assert_equal Encoding::BINARY, @connection.query("SELECT HEX_TO_BINARY('d09fd180d0b8d0b2d0b5d1822c2068656c6c6f21')").the_value.encoding
+  end
+
+  def test_timestamp_decoding_with_utc_timezone_connection
+    @connection.query("SET TIMEZONE TO 'UTC'")
+
+    assert_equal Time.new(2013, 1, 2, 14, 15, 16), @connection.query("SELECT '2013-01-02 14:15:16'::timestamp").the_value
+    assert_equal Time.new(2013, 1, 2, 19, 15, 16), @connection.query("SELECT '2013-01-02 14:15:16 America/Toronto'::timestamp").the_value
+    assert_equal Time.new(2013, 1, 2,  4, 45, 16), @connection.query("SELECT '2013-01-02 14:15:16 +9:30'::timestamp").the_value
+
+    assert_equal Time.new(2013, 1, 2, 14, 15, 16, '+00:00'), @connection.query("SELECT '2013-01-02 14:15:16'::timestamptz").the_value
+    assert_equal Time.new(2013, 1, 2, 19, 15, 16, '+00:00'), @connection.query("SELECT '2013-01-02 14:15:16 America/Toronto'::timestamptz").the_value
+    assert_equal Time.new(2013, 1, 2,  4, 45, 16, '+00:00'), @connection.query("SELECT '2013-01-02 14:15:16 +09:30'::timestamptz").the_value
+  end
+
+  def test_timestamp_decoding_with_toronto_timezone_connection
+    @connection.query("SET TIMEZONE TO 'America/Toronto'")
+
+    assert_equal Time.new(2013, 1, 2, 14, 15, 16), @connection.query("SELECT '2013-01-02 14:15:16'::timestamp").the_value
+    assert_equal Time.new(2013, 1, 2, 14, 15, 16), @connection.query("SELECT '2013-01-02 14:15:16 America/Toronto'::timestamp").the_value
+    assert_equal Time.new(2013, 1, 1, 23, 45, 16), @connection.query("SELECT '2013-01-02 14:15:16 +9:30'::timestamp").the_value
+
+    assert_equal Time.new(2013, 1, 2, 14, 15, 16, '-05:00'), @connection.query("SELECT '2013-01-02 14:15:16'::timestamptz").the_value
+    assert_equal Time.new(2013, 1, 2, 14, 15, 16, '-05:00'), @connection.query("SELECT '2013-01-02 14:15:16 America/Toronto'::timestamptz").the_value
+    assert_equal Time.new(2013, 1, 1, 23, 45, 16, '-05:00'), @connection.query("SELECT '2013-01-02 14:15:16 +09:30'::timestamptz").the_value
   end
 end

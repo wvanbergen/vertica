@@ -250,6 +250,7 @@ class Vertica::Connection
     @session_id = query("SELECT session_id FROM v_monitor.current_session").the_value if options[:interruptable]
     initialize_connection_with_role
     initialize_connection_with_search_path
+    initialize_connection_with_timezone
   end
 
   def initialize_connection_with_role
@@ -263,6 +264,10 @@ class Vertica::Connection
 
   def initialize_connection_with_search_path
     query("SET SEARCH_PATH TO #{Vertica.quote(options[:search_path])}") if options[:search_path]
+  end
+
+  def initialize_connection_with_timezone
+    query("SET TIME ZONE TO #{Vertica.quote(options[:timezone])}") if options[:timezone]
   end
 
   def close_socket
