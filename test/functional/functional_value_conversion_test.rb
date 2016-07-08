@@ -55,7 +55,7 @@ class FunctionalValueConversionTest < Minitest::Test
         FROM conversions_table LIMIT 1
     SQL
 
-    assert_equal result.rows.length, 1
+    assert_equal 1, result.size
     assert_equal [
       123,
       'hello world',
@@ -77,7 +77,7 @@ class FunctionalValueConversionTest < Minitest::Test
   def test_nil_conversions
     @connection.query "INSERT INTO conversions_table VALUES (NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)"
     result = @connection.query "SELECT * FROM conversions_table LIMIT 1"
-    assert_equal result.rows.length, 1
+    assert_equal 1, result.size
     assert_equal [nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil], result[0].to_a
   end
 

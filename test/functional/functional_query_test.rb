@@ -36,6 +36,7 @@ class FunctionalQueryTest < Minitest::Test
     rows = []
     result = @connection.query("SELECT 1 AS a, 2 AS b UNION ALL SELECT 3, 4") do |row|
       assert_kind_of Vertica::Row, row
+      assert_kind_of Vertica::RowDescription, row.row_description
       rows << row
     end
 
@@ -68,7 +69,7 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal 'id', r.columns[0].name
     assert_equal :varchar, r.columns[1].data_type
     assert_equal 'name', r.columns[1].name
-    assert_empty r.rows
+    assert_empty r
   end
 
   def test_insert

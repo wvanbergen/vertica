@@ -53,4 +53,11 @@ class RowDescriptionTest < Minitest::Test
     hash = { 'id' => @column1, 'name' => @column2}
     assert_equal hash, @row_description.to_h
   end
+
+  def test_build_row
+    row1 = @row_description.build_row([1, 'name'])
+    row2 = @row_description.build_row(id: 1, name: 'name')
+
+    assert_equal row1, row2
+  end
 end

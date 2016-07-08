@@ -64,7 +64,7 @@ class Vertica::Query
 
   def handle_command_complete(message)
     if buffer_rows?
-      @result = Vertica::Result.build(row_description: @row_description, rows: @buffer, tag: message.tag)
+      @result = Vertica::Result.new(row_description: @row_description, rows: @buffer, tag: message.tag)
       @row_description, @buffer = nil, nil
     else
       @result = message.tag

@@ -47,13 +47,15 @@ class Vertica::RowDescription
   def to_h(symbolize_keys: false)
     @columns.inject({}) do |carry, column|
       key = symbolize_keys ? column.name.to_sym : column.name
-      carry.merge(key => column)
+      carry[key] = column
+      carry
     end
   end
 
   def build_row(values)
     case values
     when Vertica::Row
+      raise ArgumentError, "Row description of provided row does match this row description" if values.row_description != self
       values
 
     when Vertica::Protocol::DataRow
