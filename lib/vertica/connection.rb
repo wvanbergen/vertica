@@ -5,8 +5,28 @@ class Vertica::Connection
   attr_reader :transaction_status, :parameters, :options
 
   # Opens a connectio the a Vertica server
-  # @param [Hash] options The connection options to use.
-  def initialize(host: nil, port: 5433, username: nil, password: nil, database: nil, interruptable: false, ssl: nil, read_timeout: 600, debug: false, role: nil, search_path: nil, timezone: nil, autocommit: false, skip_startup: false, skip_initialize: false, user: nil)
+  # @param host [String] The hostname to connect to. E.g. `localhost`
+  # @param port [Integer] The port to connect to. Defaults to `5433`.
+  # @param username [String] The username for the session.
+  # @param password [String] The password for the session.
+  # @param interruptable [true, false] Whether to make this session interruptible. Setting this to true
+  #   allows you to interrupt sessions and queries, but requires running a query during startup in order
+  #   to obtain the session id.
+  # @param ssl [OpenSSL::SSL::SSLContext, Boolean] Set this to an OpenSSL::SSL::SSLContext instance to
+  #   require the connection to be encrypted using SSL/TLS. `true` will use the default SSL options.
+  #   Not every server has support for SSL encryption. In that case you'll have to leave this to false.
+  # @param read_timeout [Integer] The number of seconds to wait for data on the connection. You should
+  #   set this to a sufficiently high value when executing complicated queries that require a long time
+  #   to be evaluated.
+  # @param role [Array<String>, :all, :none, :default] A list of additional roles to enable for the session. See the
+  #   [Vertica documentation for `SET ROLE`](https://my.vertica.com/docs/7.1.x/HTML/Content/Authoring/SQLReferenceManual/Statements/SET/SETROLE.htm).
+  # @param timezone [String] The timezone to use for the session. See the
+  #   [Vertica documentation for `SET TIME ZONE`](https://my.vertica.com/docs/7.1.x/HTML/Content/Authoring/SQLReferenceManual/Statements/SET/SETTIMEZONE.htm).
+  # @param search_path [Array<String>] A list of schemas to use as search path. See the
+  #   [Vertica documentation for `SET SEARCH_PATH`](https://my.vertica.com/docs/7.1.x/HTML/Content/Authoring/SQLReferenceManual/Statements/SET/SETSEARCH_PATH.htm).
+  # @param debug [Boolean] Setting this to true will log all the communication between client and server
+  #   to STDOUT. Useful when developing this library.
+  def initialize(host: nil, port: 5433, username: nil, password: nil, database: nil, interruptable: false, ssl: false, read_timeout: 600, debug: false, role: nil, search_path: nil, timezone: nil, autocommit: false, skip_startup: false, skip_initialize: false, user: nil)
     reset_state
     @notice_handler = nil
 
