@@ -89,6 +89,12 @@ class Vertica::RowDescription
     @columns.hash
   end
 
+  # Returns a user-consumable string representation of this row description.
+  # @return [String]
+  def inspect
+    "<Vertica::RowDescription[#{@columns.map(&:name).join(', ')}]>"
+  end
+
   protected
 
   def columns_index

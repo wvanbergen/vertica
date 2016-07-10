@@ -59,6 +59,23 @@ class RowDescriptionTest < Minitest::Test
     assert_raises(Vertica::Error::DuplicateColumnName) { row_description.to_h }
   end
 
+  def test_eql?
+    rd1 = Vertica::RowDescription.build([@column1, @column2])
+    rd1_copy = Vertica::RowDescription.build([@column1, @column2])
+    rd2 = Vertica::RowDescription.build([@column1])
+
+    assert_equal rd1, rd1_copy
+    refute_equal rd1, rd2
+
+    refute_equal rd1, nil
+    refute_equal rd1, Vertica::RowDescription
+    refute_equal rd1, rd2.build_row([1])
+  end
+
+  def test_inspect
+    assert_equal "<Vertica::RowDescription[id, name]>", @row_description.inspect
+  end
+
   def test_build_row
     row1 = @row_description.build_row([1, 'name'])
     row2 = @row_description.build_row(id: 1, name: 'name')
