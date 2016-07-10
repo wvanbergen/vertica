@@ -1,10 +1,32 @@
 require 'socket'
 
+# A client for a Vertica server, which allows you to run queries against it.
+#
+# Use {Vertica.connect} to establish a connection. Then, the {#query} method will allow you
+# to run SQL queries against the database. For `COPY FROM STDIN` queries, use the {#copy} method
+# instead. You can use {#interrupt} to interrupt long running queries. {#close} will close the
+# connection to the server.
+#
+# @attr_reader transaction_status [:no_transaction, :in_transaction, :failed_transaction] The current
+#   transaction state of the session. This will be updated after every query.
+# @attr_reader parameters [Hash<String, String>] Connection parameters as provided by the server.
+# @attr_reader options [Hash] The connection options provided to the constructor. See {#initialize}.
+#
+# @example Running a buffered query against the database
+#   connection = Vertica.connect(host: 'db_server', username: 'user', password: 'password', ...)
+#   result = connection.query("SELECT id, name FROM my_table")
+#   result.each do |row|
+#     puts "Row: #row['id']: #{row['name']}"
+#   end
+#   connection.close
+#
+# @see Vertica.connect
+# @see Vertica::Result
 class Vertica::Connection
 
   attr_reader :transaction_status, :parameters, :options
 
-  # Opens a connectio the a Vertica server
+  # Creates a connection the a Vertica server.
   # @param host [String] The hostname to connect to. E.g. `localhost`
   # @param port [Integer] The port to connect to. Defaults to `5433`.
   # @param username [String] The username for the session.
@@ -49,41 +71,110 @@ class Vertica::Connection
     boot_connection(skip_initialize: skip_initialize) unless skip_startup
   end
 
-  def on_notice(&block)
-    @notice_handler = block
-  end
-
+  # @return [Boolean] Returns true iff the connection is encrypted.
   def ssl?
     Object.const_defined?('OpenSSL') && @socket.kind_of?(OpenSSL::SSL::SSLSocket)
   end
 
+  # @return [Boolean] Returns true iff the connection to the server is opened.
+  # @note The connection will be opened automatically if you use it.
   def opened?
     @socket && @backend_pid && @transaction_status
   end
 
+  # @return [Boolean] Returns false iff the connection to the server is opened.
+  # @note Even if the connection is closed, it will be opened automatically if you use it.
   def closed?
     !opened?
   end
 
+  # @return [Boolean] Returns true iff the connection is in use.
   def busy?
     @mutex.locked?
   end
 
+  # @return [Boolean] Returns true iff the connection is ready to handle queries.
   def ready_for_query?
     !busy?
   end
 
+  # Returns true iff the connection can be interrupted.
+  #
+  # Connections can only be interrupted if the session ID is known, so it can
+  # run `SELECT CLOSE_SESSION(session_id)` using a separate connection. By passing
+  # `interruptable: true` as a connection parameter (see {#initialize}), the connection
+  # will discover its session id before you can use it, allowing it to be interrupted.
+  #
+  # @return [Boolean] Returns true iff the connection can be interrupted.
+  # @see {#interrupt}
   def interruptable?
     !session_id.nil?
   end
 
-  def query(sql, **kwargs, &block)
-    row_handler = block_given? ? block : nil
-    job = Vertica::Query.new(self, sql, row_handler: row_handler, **kwargs)
-    run_with_mutex(job)
+  # Runs a SQL query against the database.
+  #
+  # @overload query(sql)
+  #   Runs a query against the database, and return the full result as a {Vertica::Result}
+  #   instance.
+  #
+  #   @note This requires the entire result to be buffered in memory, which may cause problems
+  #     for queries with large results. Consider using the unbuffered version instead.
+  #
+  #   @param sql [String] The SQL command to run.
+  #   @return [Vertica::Result]
+  #   @raise [Vertica::Error::ConnectionError] The connection to the server failed.
+  #   @raise [Vertica::Error::QueryError] The server sent an error response indicating that
+  #     the provided query cannot be evaluated.
+  #
+  # @overload query(sql, &block)
+  #   Runs a query against the database, and yield every {Vertica::Row row} to the provided
+  #   block.
+  #
+  #   @param sql [String] The SQL command to run.
+  #   @yield The provided block will be called for every row in the result.
+  #   @yieldparam row [Vertica::Row]
+  #   @return [String] The kind of command that was executed, e.g. `"SELECT"`.
+  #   @raise [Vertica::Error::ConnectionError] The connection to the server failed.
+  #   @raise [Vertica::Error::QueryError] The server sent an error response indicating that
+  #     the provided query cannot be evaluated.
+  #
+  # @see https://my.vertica.com/docs/7.1.x/HTML/Content/Authoring/SQLReferenceManual/Statements/SELECT/SELECT.htm
+  #   Vertica's documentation for SELECT.
+  def query(sql, &block)
+    run_in_mutex(Vertica::Query.new(self, sql, row_handler: block))
   end
 
-  def copy(sql, source: nil, **kwargs, &block)
+  # Loads data into Vertica using a `COPY table FROM STDIN` query.
+  #
+  # @param sql [String] The `COPY ... FROM STDIN` SQL command to run.
+  # @param source [String, IO] The source of the data to be copied. This can either be a filename, or
+  #   an IO object. If you don't specify a source, you'll need to provide a block that will provide the
+  #   data to be copied.
+  # @yield A block that will be called with a writer that you can provided data to. If an exception is
+  #   raised in the block, the `COPY` command will be cancelled.
+  # @yieldparam io [:write] An object that you can call write on to provide data to be loaded.
+  # @return [String] The kind of command that was executed on the server. This should always be `"COPY"`.
+  #
+  # @example Loading data using an IO object as source
+  #   connection = Vertica.connect(host: 'db_server', username: 'user', password: 'password', ...)
+  #   File.open("filename.csv", "r") do |io|
+  #     connection.copy("COPY my_table FROM STDIN ...", source: io)
+  #   end
+  #
+  # @example Loading data using a filename as source
+  #   connection = Vertica.connect(host: 'db_server', username: 'user', password: 'password', ...)
+  #   connection.copy("COPY my_table FROM STDIN ...", source: "filename.csv")
+  #
+  # @example Loading data using a callback
+  #   connection = Vertica.connect(host: 'db_server', username: 'user', password: 'password', ...)
+  #   connection.copy("COPY my_table FROM STDIN ...") do |io|
+  #     io.write("my data")
+  #     io.write("more data")
+  #   end
+  #
+  # @see https://my.vertica.com/docs/7.1.x/HTML/Content/Authoring/SQLReferenceManual/Statements/COPY/COPY.htm
+  #   Vertica's documentation for COPY.
+  def copy(sql, source: nil, &block)
     copy_handler = if block_given?
       block
     elsif source && File.exist?(source.to_s)
@@ -92,22 +183,33 @@ class Vertica::Connection
       lambda { |data| io_copy_handler(source, data) }
     end
 
-    job = Vertica::Query.new(self, sql, copy_handler: copy_handler, **kwargs)
-
-    run_with_mutex(job)
+    run_in_mutex(Vertica::Query.new(self, sql, copy_handler: copy_handler))
   end
 
+  # Returns a user-consumable string representation of this row.
+  # @return [String]
   def inspect
     safe_options = @options.reject { |name, _| name == :password }
     "#<Vertica::Connection:#{object_id} @parameters=#{@parameters.inspect} @backend_pid=#{@backend_pid}, @backend_key=#{@backend_key}, @transaction_status=#{@transaction_status}, @socket=#{@socket}, @options=#{safe_options.inspect}>"
   end
 
+  # Closes the connection to the Vertica server.
+  # @return [void]
   def close
     write_message(Vertica::Protocol::Terminate.new)
   ensure
     close_socket
   end
 
+  # Cancels the current query.
+  #
+  # @note Vertica's protocol is based on the PostgreSQL protocol. This method to cancel sessions
+  #   in PostgreSQL is accepted by the Vertica server, but I haven't actually observed queries
+  #   actually being cancelled when using this method. Vertica provides an alternative method, by
+  #   running `SELECT CLOSE_SESSION(session_id)` as a query on a different connection. See {#interrupt}.
+  #
+  # @return [void]
+  # @see #interrupt
   def cancel
     conn = self.class.new(skip_startup: true, **options)
     conn.write_message(Vertica::Protocol::CancelRequest.new(backend_pid, backend_key))
@@ -115,6 +217,18 @@ class Vertica::Connection
     conn.close_socket
   end
 
+  # Interrupts this session to the Vertica server, which will cancel the running query.
+  #
+  # You'll have to call this method in a separate thread. It will open up a separate connection, and run
+  # `SELECT CLOSE_SESSION(current_session_id)` to close the current session. In order to be able to do this
+  # the client needs to know its session ID. You'll have to pass `interruptable: true` as a connection
+  # parameter (see {#initialize}) to make sure the connection will request its session id, by running
+  # `SELECT session_id FROM v_monitor.current_session` right after the connection is opened.
+  #
+  # @return [void]
+  # @see #interruptable?
+  # @see https://my.vertica.com/docs/7.1.x/HTML/Content/Authoring/SQLReferenceManual/Functions/VerticaFunctions/CLOSE_SESSION.htm
+  #   Vertica's documentation for CLOSE_SESSION
   def interrupt
     raise Vertica::Error::InterruptImpossible, "Session cannopt be interrupted because the session ID is not known!" if session_id.nil?
     conn = self.class.new(skip_initialize: true, **options)
@@ -123,6 +237,20 @@ class Vertica::Connection
     conn.close if conn
   end
 
+  # Installs a hanlder for notices that may be sent from the server to the client.
+  #
+  # You can only install one handler; if you call this method again it will replace the
+  # previous handler.
+  #
+  # @return [void]
+  def on_notice(&block)
+    @notice_handler = block
+  end
+
+  # Writes a frontend message to the socket.
+  # @note This method is for internal use only; you should not call it directly.
+  # @return [void]
+  # @raise [Vertica::Error::ConnectionError]
   # @private
   def write_message(message)
     puts "=> #{message.inspect}" if options.fetch(:debug)
@@ -132,6 +260,10 @@ class Vertica::Connection
     raise Vertica::Error::ConnectionError.new(e.message)
   end
 
+  # Reads a backend message from the socket.
+  # @note This method is for internal use only; you should not call it directly.
+  # @return [Vertica::Protocol::BackendMessage]
+  # @raise [Vertica::Error::ConnectionError]
   # @private
   def read_message
     type, size = read_bytes(5).unpack('aN')
@@ -144,6 +276,9 @@ class Vertica::Connection
     raise Vertica::Error::ConnectionError.new(e.message)
   end
 
+  # Processes a backend message that was received from the socket.
+  # @note This method is for internal use only; you should not call it directly.
+  # @return [void]
   # @private
   def process_message(message)
     case message
@@ -188,7 +323,7 @@ class Vertica::Connection
     end
   end
 
-  def run_with_mutex(job)
+  def run_in_mutex(job)
     boot_connection if closed?
     if @mutex.try_lock
       begin

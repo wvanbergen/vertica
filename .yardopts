@@ -1,3 +1,4 @@
 --hide-void-return
 --markup markdown
 --readme README.md
+--no-private
