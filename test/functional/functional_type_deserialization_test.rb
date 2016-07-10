@@ -1,7 +1,7 @@
 # encoding : UTF-8
 require 'test_helper'
 
-class FunctionalValueConversionTest < Minitest::Test
+class FunctionalTypeDeserializationTest < Minitest::Test
 
   def setup
     @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
