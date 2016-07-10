@@ -47,6 +47,7 @@ class Vertica::RowDescription
   def to_h(symbolize_keys: false)
     @columns.inject({}) do |carry, column|
       key = symbolize_keys ? column.name.to_sym : column.name
+      raise Vertica::Error::DuplicateColumnName, "Column with name #{key} occurs more than once in this row description." if carry.key?(key)
       carry[key] = column
       carry
     end

@@ -54,6 +54,11 @@ class RowDescriptionTest < Minitest::Test
     assert_equal hash, @row_description.to_h
   end
 
+  def test_to_h_with_duplicate_column_name_raises
+    row_description = Vertica::RowDescription.build([@column1, @column1])
+    assert_raises(Vertica::Error::DuplicateColumnName) { row_description.to_h }
+  end
+
   def test_build_row
     row1 = @row_description.build_row([1, 'name'])
     row2 = @row_description.build_row(id: 1, name: 'name')

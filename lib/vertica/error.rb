@@ -8,6 +8,7 @@ class Vertica::Error < StandardError
   class EmptyQueryError < Vertica::Error; end
   class TimedOutError < ConnectionError; end
   class UnknownTypeError < Vertica::Error; end
+  class DuplicateColumnName < Vertica::Error; end
 
   class SynchronizeError < Vertica::Error
     attr_reader :running_job, :requested_job
