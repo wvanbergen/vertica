@@ -13,6 +13,11 @@ class DataTypeTest < Minitest::Test
     refute_equal type, Vertica::DataType.new(oid: 7, size: 4)
   end
 
+  def test_inspect
+    type = Vertica::DataType.new(oid: 6, name: "integer", size: 4)
+    assert_equal '#<Vertica::DataType:6 "integer">', type.inspect
+  end
+
   def test_deserialize_bool
     type = Vertica::DataType.build(oid: 5)
 

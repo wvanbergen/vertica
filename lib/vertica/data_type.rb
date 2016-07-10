@@ -36,6 +36,14 @@ class Vertica::DataType
     deserializer.call(bytes)
   end
 
+  def inspect
+    "#<#{self.class.name}:#{oid} #{sql.inspect}>"
+  end
+
+  def sql
+    name
+  end
+
   TYPE_OIDS = {}
   TYPE_DESERIALIZERS = {
     generic: lambda { |bytes| bytes },
