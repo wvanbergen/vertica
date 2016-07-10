@@ -4,10 +4,10 @@ class Vertica::Query
 
   def initialize(connection, sql, row_handler: nil, copy_handler: nil)
     @connection, @sql = connection, sql
-    @buffer = [] if row_handler.nil? && copy_handler.nil?
+    @buffer = row_handler.nil? && copy_handler.nil? ? [] : nil
     @row_handler = row_handler || lambda { |row| buffer_row(row) }
     @copy_handler = copy_handler
-    @error = nil
+    @row_description, @error = nil, nil
   end
 
   def run
@@ -28,7 +28,7 @@ class Vertica::Query
   protected
 
   def buffer_rows?
-    !!@buffer
+    @buffer.is_a?(Array)
   end
 
   def process_message(message)

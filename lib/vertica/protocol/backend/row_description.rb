@@ -18,7 +18,7 @@ module Vertica
             :data_type_oid      => field_info[3],
             :data_type_size     => field_info[4],
             :data_type_modifier => field_info[5],
-            :format_code        => field_info[6],
+            :data_format        => field_info[6],
           }
 
           pos += 19 + field_info[0].size

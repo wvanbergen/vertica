@@ -104,7 +104,7 @@ class Vertica::RowDescription
     when Vertica::Protocol::DataRow
       raise ArgumentError, "Number of values does not match row description" if values.values.size != size
       converted_values = @columns.map.with_index do |column, index|
-        column.convert(values.values.fetch(index))
+        column.data_type.deserialize(values.values.fetch(index))
       end
       Vertica::Row.new(self, converted_values)
 

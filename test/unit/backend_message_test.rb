@@ -74,7 +74,7 @@ class BackendMessageTest < Minitest::Test
       :data_type_oid      => 6,
       :data_type_size     => 8,
       :data_type_modifier => 8,
-      :format_code        => 0
+      :data_format        => 0
     }
 
     msg = Vertica::Protocol::RowDescription.new("\x00\x02id\x00\x00\np8\x00\x01\x00\x00\x00\x06\x00\b\xFF\xFF\xFF\xFF\x00\x00name\x00\x00\np8\x00\x02\x00\x00\x00\t\xFF\xFF\x00\x00\x00h\x00\x00")
@@ -85,7 +85,7 @@ class BackendMessageTest < Minitest::Test
       :data_type_oid      => 6,
       :data_type_size     => 8,
       :data_type_modifier => 4294967295,
-      :format_code        => 0
+      :data_format        => 0
     }
     assert_equal msg.fields[1], {
       :name               => "name",
@@ -94,7 +94,7 @@ class BackendMessageTest < Minitest::Test
       :data_type_oid      => 9,
       :data_type_size     => 65535,
       :data_type_modifier => 104,
-      :format_code        => 0
+      :data_format        => 0
     }
   end
 
