@@ -112,7 +112,5 @@ class BackendMessageTest < Minitest::Test
   def test_command_complete_message
     msg = Vertica::Protocol::CommandComplete.new("CREATE TABLE\x00")
     assert_equal "CREATE TABLE", msg.tag
-    assert_nil msg.rows
-    assert_nil msg.oid
   end
 end
