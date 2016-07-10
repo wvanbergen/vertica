@@ -4,8 +4,8 @@ class ResultTest < Minitest::Test
   def setup
     @result = Vertica::Result.build(
       row_description: [
-        Vertica::Column.new(name: 'a', data_type_oid: 6),
-        Vertica::Column.new(name: 'b', data_type_oid: 6),
+        Vertica::Column.build(name: 'a', data_type_oid: 6),
+        Vertica::Column.build(name: 'b', data_type_oid: 6),
       ],
       rows: [
         [1, 2],

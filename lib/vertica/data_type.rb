@@ -90,8 +90,7 @@ class Vertica::DataType
     deserializer.call(bytes)
   end
 
-  # Returns a user-consumable string representation of this row.
-  # @return [String]
+  # @return [String] Returns a user-consumable string representation of this type.
   def inspect
     "#<#{self.class.name}:#{oid} #{sql.inspect}>"
   end

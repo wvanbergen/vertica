@@ -15,7 +15,7 @@ class Vertica::RowDescription
   def self.build(columns)
     case columns
     when Vertica::Protocol::RowDescription
-      new(columns.fields.map { |fd| Vertica::Column.new(fd) })
+      new(columns.fields.map { |fd| Vertica::Column.build(fd) })
     when Vertica::RowDescription
       columns
     when Array
@@ -134,8 +134,7 @@ class Vertica::RowDescription
     @columns.hash
   end
 
-  # Returns a user-consumable string representation of this row description.
-  # @return [String]
+  # @return [String] Returns a user-consumable string representation of this row description.
   def inspect
     "#<#{self.class.name}[#{@columns.map(&:name).join(', ')}]>"
   end

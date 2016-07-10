@@ -14,7 +14,7 @@ class ColumnTest < Minitest::Test
   end
 
   def test_initialize_from_row_description
-    column = Vertica::Column.new(@field_description)
+    column = Vertica::Column.build(@field_description)
     assert_equal 'OUTPUT', column.name
     assert_equal 'integer', column.data_type.name
     assert_equal 8, column.data_type.modifier
@@ -23,14 +23,19 @@ class ColumnTest < Minitest::Test
 
   def test_unknown_type_oid
     field_description = @field_description.merge(data_type_oid: 123456)
-    assert_raises(Vertica::Error::UnknownTypeError) { Vertica::Column.new(field_description) }
+    assert_raises(Vertica::Error::UnknownTypeError) { Vertica::Column.build(field_description) }
   end
 
   def test_equality
-    column = Vertica::Column.new(@field_description)
+    column = Vertica::Column.build(@field_description)
 
-    assert_equal column, Vertica::Column.new(@field_description)
-    refute_equal column, Vertica::Column.new(@field_description.merge(name: 'other'))
-    refute_equal column, Vertica::Column.new(@field_description.merge(data_format: 1))
+    assert_equal column, Vertica::Column.build(@field_description)
+    refute_equal column, Vertica::Column.build(@field_description.merge(name: 'other'))
+    refute_equal column, Vertica::Column.build(@field_description.merge(data_format: 1))
+  end
+
+  def test_inspect
+    column = Vertica::Column.build(@field_description)
+    assert_equal '#<Vertica::Column name="OUTPUT" data_type=#<Vertica::DataType:6 "integer">>', column.inspect
   end
 end
