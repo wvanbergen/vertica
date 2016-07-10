@@ -137,7 +137,7 @@ class Vertica::RowDescription
   # Returns a user-consumable string representation of this row description.
   # @return [String]
   def inspect
-    "<Vertica::RowDescription[#{@columns.map(&:name).join(', ')}]>"
+    "#<#{self.class.name}[#{@columns.map(&:name).join(', ')}]>"
   end
 
   protected

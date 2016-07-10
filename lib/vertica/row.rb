@@ -77,7 +77,7 @@ class Vertica::Row
   # Returns a user-consumable string representation of this row.
   # @return [String]
   def inspect
-    "<Vertica::Row#{@values.inspect}>"
+    "#<#{self.class.name}#{@values.inspect}>"
   end
 
   private

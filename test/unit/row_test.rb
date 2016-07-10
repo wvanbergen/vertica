@@ -50,6 +50,6 @@ class RowTest < Minitest::Test
 
   def test_inspect
     row = Vertica::Row.new(@row_description, [123, 'test'])
-    assert_equal "<Vertica::Row[123, \"test\"]>", row.inspect
+    assert_equal "#<Vertica::Row[123, \"test\"]>", row.inspect
   end
 end

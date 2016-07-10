@@ -73,7 +73,7 @@ class RowDescriptionTest < Minitest::Test
   end
 
   def test_inspect
-    assert_equal "<Vertica::RowDescription[id, name]>", @row_description.inspect
+    assert_equal "#<Vertica::RowDescription[id, name]>", @row_description.inspect
   end
 
   def test_build_row
