@@ -23,9 +23,9 @@ class FunctionalQueryTest < Minitest::Test
     r = @connection.query("SELECT * FROM test_ruby_vertica_table")
     assert_equal 1, r.size
     assert_equal 2, r.row_description.length
-    assert_equal :integer, r.columns[0].data_type
+    assert_equal 'integer', r.columns[0].data_type.name
     assert_equal 'id', r.columns[0].name
-    assert_equal :varchar, r.columns[1].data_type
+    assert_equal 'varchar', r.columns[1].data_type.name
     assert_equal 'name', r.columns[1].name
 
     assert_equal 1, r[0][:id]
@@ -65,9 +65,9 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal "SELECT", r.tag
     assert_equal 0, r.size
     assert_equal 2, r.columns.length
-    assert_equal :integer, r.columns[0].data_type
+    assert_equal 'integer', r.columns[0].data_type.name
     assert_equal 'id', r.columns[0].name
-    assert_equal :varchar, r.columns[1].data_type
+    assert_equal 'varchar', r.columns[1].data_type.name
     assert_equal 'name', r.columns[1].name
     assert_empty r
   end
@@ -77,7 +77,7 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal "INSERT", r.tag
     assert_equal 1, r.size
     assert_equal 1, r.columns.length
-    assert_equal :integer, r.columns[0].data_type
+    assert_equal 'integer', r.columns[0].data_type.name
     assert_equal 'OUTPUT', r.columns[0].name
     assert_equal 1, r.value
   end
@@ -88,7 +88,7 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal "DELETE", r.tag
     assert_equal 1, r.size
     assert_equal 1, r.columns.length
-    assert_equal :integer, r.columns[0].data_type
+    assert_equal 'integer', r.columns[0].data_type.name
     assert_equal 'OUTPUT', r.columns[0].name
     assert_equal 0, r.value
   end
@@ -98,7 +98,7 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal "DELETE", r.tag
     assert_equal 1, r.size
     assert_equal 1, r.columns.length
-    assert_equal :integer, r.columns[0].data_type
+    assert_equal 'integer', r.columns[0].data_type.name
     assert_equal 'OUTPUT', r.columns[0].name
     assert_equal 1, r.value
   end
@@ -120,9 +120,9 @@ class FunctionalQueryTest < Minitest::Test
       r = @connection.query("SELECT * FROM test_ruby_vertica_table")
       assert_equal 1, r.size
       assert_equal 2, r.columns.length
-      assert_equal :integer, r.columns[0].data_type
+      assert_equal 'integer', r.columns[0].data_type.name
       assert_equal 'id', r.columns[0].name
-      assert_equal :varchar, r.columns[1].data_type
+      assert_equal 'varchar', r.columns[1].data_type.name
       assert_equal 'name', r.columns[1].name
       assert_equal [{'id' => 1, 'name' => "matt"}], r.map(&:to_h)
     end

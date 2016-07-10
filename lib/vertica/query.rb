@@ -1,34 +1,56 @@
+# The Query class handles the state of the connection while a SQL query is being executed.
+# The connection should call {#run} and it will block until the query has been handled by
+# the connection, after which control will be given back to the {Connection} instance.
+#
+# @note This class is for internal use only, you should never interact with this class directly.
+#
+# @see Vertica::Connection#query
+# @see Vertica::Connection#copy
 class Vertica::Query
 
-  attr_reader :connection, :sql, :error, :result
-
+  # Instantiates a new query
+  # @param connection [Vertica::Connection] The connection to use for the query
+  # @param sql [String] The SQL statement to execute.
+  # @param row_handler [Proc, nil] Callback that will be called for every row that is returned.
+  #   If no handler is provided, all rows will be buffered so a {Vertica::Result} can be returned.
+  #
+  # @param copy_handler [Proc, nil] Callback that will be called when the connection is ready
+  #   to receive data for a `COPY ... FROM STDIN` statement.
   def initialize(connection, sql, row_handler: nil, copy_handler: nil)
     @connection, @sql = connection, sql
-    @buffer = [] if row_handler.nil? && copy_handler.nil?
+    @buffer = row_handler.nil? && copy_handler.nil? ? [] : nil
     @row_handler = row_handler || lambda { |row| buffer_row(row) }
     @copy_handler = copy_handler
-    @error = nil
+    @row_description, @error = nil, nil
   end
 
+  # Sends the query to the server, and processes the results.
+  # @return [String] For an unbuffered query, the type of SQL command will be return as a string
+  #   (e.g. `"SELECT"` or `"COPY"`).
+  # @return [Vertica::Result] For a buffered query, this method will return a {Vertica::Result} instance
+  # @raise [Vertica::Error::ConnectionError] if the connection between client and
+  #   server fails.
+  # @raise [Vertica::Error::QueryError] if the server cannot evaluate the query.
   def run
-    @connection.write_message(Vertica::Protocol::Query.new(sql))
+    @connection.write_message(Vertica::Protocol::Query.new(@sql))
 
     begin
       process_message(message = @connection.read_message)
     end until message.kind_of?(Vertica::Protocol::ReadyForQuery)
 
-    raise error unless error.nil?
-    return result
+    raise @error unless @error.nil?
+    return @result
   end
 
-  def to_s
-    @sql
+  # @return [String] Returns a user-consumable string representation of this query instance.
+  def inspect
+    "#<Vertica::Query:#{object_id} sql=#{@sql.inspect}>"
   end
 
-  protected
+  private
 
   def buffer_rows?
-    !!@buffer
+    @buffer.is_a?(Array)
   end
 
   def process_message(message)
@@ -72,7 +94,7 @@ class Vertica::Query
       @connection.write_message(Vertica::Protocol::CopyFail.new('no handler provided'))
     else
       begin
-        @copy_handler.call(CopyFromStdinWriter.new(connection))
+        @copy_handler.call(CopyFromStdinWriter.new(@connection))
         @connection.write_message(Vertica::Protocol::CopyDone.new)
       rescue => e
         @connection.write_message(Vertica::Protocol::CopyFail.new(e.message))

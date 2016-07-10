@@ -15,7 +15,7 @@ class Vertica::RowDescription
   def self.build(columns)
     case columns
     when Vertica::Protocol::RowDescription
-      new(columns.fields.map { |fd| Vertica::Column.new(fd) })
+      new(columns.fields.map { |fd| Vertica::Column.build(fd) })
     when Vertica::RowDescription
       columns
     when Array
@@ -104,7 +104,7 @@ class Vertica::RowDescription
     when Vertica::Protocol::DataRow
       raise ArgumentError, "Number of values does not match row description" if values.values.size != size
       converted_values = @columns.map.with_index do |column, index|
-        column.convert(values.values.fetch(index))
+        column.data_type.deserialize(values.values.fetch(index))
       end
       Vertica::Row.new(self, converted_values)
 
@@ -134,10 +134,9 @@ class Vertica::RowDescription
     @columns.hash
   end
 
-  # Returns a user-consumable string representation of this row description.
-  # @return [String]
+  # @return [String] Returns a user-consumable string representation of this row description.
   def inspect
-    "<Vertica::RowDescription[#{@columns.map(&:name).join(', ')}]>"
+    "#<#{self.class.name}[#{@columns.map(&:name).join(', ')}]>"
   end
 
   protected

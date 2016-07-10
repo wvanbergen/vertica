@@ -16,7 +16,7 @@ class FunctionalConnectionTest < Minitest::Test
 
     connection.close
     assert_valid_closed_connection(connection)
-    assert !connection.ssl?
+    refute connection.ssl?
 
   rescue Vertica::Error::SSLNotSupported
     puts "\nThe test server doesn't support SSL, so SSL connections could not be tested."
@@ -93,7 +93,7 @@ class FunctionalConnectionTest < Minitest::Test
     TCPSocket.any_instance.expects(:read_nonblock).raises(Errno::ETIMEDOUT)
 
     assert_raises(Vertica::Error::ConnectionError) { Vertica::Connection.new(TEST_CONNECTION_HASH) }
-    end
+  end
 
   def test_socket_write_error_during_query
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH)

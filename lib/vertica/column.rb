@@ -1,92 +1,58 @@
-module Vertica
-  class Column
-    attr_reader :name
-    attr_reader :table_oid
-    attr_reader :attribute_number
-    attr_reader :format
-    attr_reader :data_type
-    attr_reader :data_type_size
-    attr_reader :data_type_modifier
+# Class representing a column in a result.
+#
+# @attr_reader name [String] The name of the column
+# @attr_reader table_oid [Integer, nil] The OID of the table this column originates from. This can
+#   be nil if the volumn was computed, and was not soruced from a table
+# @attr_reader attribute_number [Integer, nil] The attribute index in the table this column originates from.
+#   This can be nil if the volumn was computed, and was not soruced from a table
+# @attr_reader data_type [Vertica::DataType] The type of the values in this column.
+#
+# @see Vertica::RowDescription
+# @see Vertica::DataType
+class Vertica::Column
 
-    STRING_CONVERTER = lambda { |s| s.force_encoding('utf-8') }
+  # Builds a new column instance based on the values provided by a {Vertica::Protocol::RowDescription} message.
+  # @param name [String] The name of the column
+  # @param table_oid [Integer, nil] The OID of the table this column originates from. This can
+  #   be nil if the volumn was computed, and was not soruced from a table
+  # @param attribute_number [Integer, nil] The attribute index in the table this column originates from.
+  #   This can be nil if the volumn was computed, and was not soruced from a table
+  # @param data_type_oid [Integer] The object ID of the type.
+  # @param data_type_size [Integer] The size of the type.
+  # @param data_type_modifier [Integer] A modifier of the type.
+  # @param data_format [Integer] The serialization format of this type.
+  # @return [Vertica::Column]
+  def self.build(name: nil, table_oid: nil, attribute_number: nil, data_format: 0, data_type_oid: nil, data_type_size: nil, data_type_modifier: nil)
+    data_type = Vertica::DataType.build(oid: data_type_oid, size: data_type_size, modifier: data_type_modifier, format: data_format)
+    new(name: name, data_type: data_type, table_oid: table_oid, attribute_number: attribute_number)
+  end
 
-    FLOAT_CONVERTER = lambda do |s|
-      case s
-      when 'Infinity'
-        Float::INFINITY
-      when '-Infinity'
-        -Float::INFINITY
-      when 'NaN'
-        Float::NAN
-      else
-        s.to_f
-      end
-    end
+  attr_reader :name, :data_type, :table_oid, :attribute_number
 
-    DATA_TYPE_CONVERSIONS = {
-      0   => [:unspecified,  nil],
-      1   => [:tuple,        nil],
-      2   => [:pos,          nil],
-      3   => [:record,       nil],
-      4   => [:unknown,      nil],
-      5   => [:bool,         lambda { |s| s == 't' }],
-      6   => [:integer,      lambda { |s| s.to_i }],
-      7   => [:float,        FLOAT_CONVERTER],
-      8   => [:char,         STRING_CONVERTER],
-      9   => [:varchar,      STRING_CONVERTER],
-      10  => [:date,         lambda { |s| Date.parse(s) }],
-      11  => [:time,         nil],
-      12  => [:timestamp,    lambda { |s| Time.parse(s) }],
-      13  => [:timestamp_tz, lambda { |s| Time.parse(s) }],
-      14  => [:interval,     nil],
-      15  => [:time_tz,      nil],
-      16  => [:numeric,      lambda { |s| BigDecimal.new(s) }],
-      17  => [:bytea,        lambda { |s| s.gsub(/\\([0-3][0-7][0-7])/) { $1.to_i(8).chr }} ],
-      18  => [:rle_tuple,    nil],
-      115 => [:long_varchar, STRING_CONVERTER],
-    }
+  # Initializes a new Vertica::Column.
+  # @see .build
+  def initialize(name: nil, data_type: nil, table_oid: nil, attribute_number: nil)
+    @name             = name
+    @table_oid        = table_oid
+    @attribute_number = attribute_number
+    @data_type        = data_type
+  end
 
-    DATA_TYPES = DATA_TYPE_CONVERSIONS.values.map { |t| t[0] }
+  # @return [Boolean] Returns true iff this record is equal to the other provided object
+  def eql?(other)
+    self.class === other && other.name == name && other.data_type == data_type &&
+      other.table_oid == table_oid && other.attribute_number == attribute_number
+  end
 
-    def initialize(name: nil, table_oid: nil, attribute_number: nil, format_code: 0, data_type_oid: nil, data_type_size: nil, data_type_modifier: nil)
-      @name             = name
-      @table_oid        = table_oid
-      @attribute_number = attribute_number
+  alias_method :==, :eql?
 
-      @format                = format_code == 0 ? :text : :binary
-      @data_type_size        = data_type_size
-      @data_type_modifier    = data_type_modifier
-      @data_type, @converter = column_type_from_oid(data_type_oid)
-    end
+  # @return [Integer] Returns a hash digtest of this object.
+  def hash
+    [name, data_type, table_oid, attribute_number].hash
+  end
 
-    def eql?(other)
-      self.class === other &&
-        other.name == name &&
-        other.format == format &&
-        other.data_type == data_type &&
-        other.data_type_size == data_type_size &&
-        other.data_type_modifier == data_type_modifier &&
-        other.table_oid == table_oid &&
-        other.attribute_number == attribute_number
-    end
-
-    alias_method :==, :eql?
-
-    def hash
-      [name, format, data_type, data_type_size, data_type_modifier, table_oid, attribute_number].hash
-    end
-
-    def convert(s)
-      return unless s
-      @converter ? @converter.call(s) : s
-    end
-
-    private
-
-    def column_type_from_oid(oid)
-      DATA_TYPE_CONVERSIONS.fetch(oid) do |unknown_oid|
-        raise Vertica::Error::UnknownTypeError, "Unknown type OID: #{unknown_oid}"
-      end
-    end
+  # @return [String] Returns a user-consumable string representation of this column.
+  def inspect
+    "#<#{self.class.name} name=#{name.inspect} data_type=#{data_type.inspect}>"
   end
 end

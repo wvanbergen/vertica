@@ -74,10 +74,9 @@ class Vertica::Row
     [row_description, values].hash
   end
 
-  # Returns a user-consumable string representation of this row.
-  # @return [String]
+  # @return [String] Returns a user-consumable string representation of this row.
   def inspect
-    "<Vertica::Row#{@values.inspect}>"
+    "#<#{self.class.name}#{@values.inspect}>"
   end
 
   private
