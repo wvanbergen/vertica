@@ -4,12 +4,8 @@ class Vertica::Query
 
   def initialize(connection, sql, row_handler: nil, copy_handler: nil)
     @connection, @sql = connection, sql
-    if row_handler.nil?
-      @buffer = []
-      @row_handler = lambda { |row| buffer_row(row) }
-    else
-      @row_handler = row_handler
-    end
+    @buffer = [] if row_handler.nil? && copy_handler.nil?
+    @row_handler = row_handler || lambda { |row| buffer_row(row) }
     @copy_handler = copy_handler
     @error = nil
   end
@@ -64,7 +60,7 @@ class Vertica::Query
 
   def handle_command_complete(message)
     if buffer_rows?
-      @result = Vertica::Result.build(row_description: @row_description, rows: @buffer, tag: message.tag)
+      @result = Vertica::Result.new(row_description: @row_description, rows: @buffer, tag: message.tag)
       @row_description, @buffer = nil, nil
     else
       @result = message.tag

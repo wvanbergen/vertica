@@ -28,4 +28,28 @@ class RowTest < Minitest::Test
     hash = { 'id' => 123, 'name' => 'test' }
     assert_equal hash, row.to_h
   end
+
+  def test_to_h_with_duplicate_column_name_raises
+    row_description = Vertica::RowDescription.build([@column1, @column1])
+    row = Vertica::Row.new(row_description, [123, 456])
+
+    assert_raises(Vertica::Error::DuplicateColumnName) { row.to_h }
+  end
+
+  def test_eql?
+    rd1 = Vertica::RowDescription.build([@column1, @column2])
+    rd2 = Vertica::RowDescription.build([@column1, @column1])
+
+    row = Vertica::Row.new(rd1, [123, 'test'])
+
+    assert_equal row, Vertica::Row.new(rd1, [123, 'test'])
+    refute_equal rd1, Vertica::Row.new(rd1, [124, 'test'])
+    refute_equal rd1, Vertica::Row.new(rd2, [123, 'test'])
+    refute_equal rd1, nil
+  end
+
+  def test_inspect
+    row = Vertica::Row.new(@row_description, [123, 'test'])
+    assert_equal "<Vertica::Row[123, \"test\"]>", row.inspect
+  end
 end

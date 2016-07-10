@@ -23,7 +23,7 @@ module Vertica
   # This method has quoting rules for common types. Any other object will be converted to
   # a string using +:to_s+ and then quoted as a string.
   #
-  # @param [Object] value The value to quote.
+  # @param value [Object] The value to quote.
   # @return [String] The quoted value that can be safely included in SQL queries.
   def self.quote(value)
     case value
@@ -42,7 +42,7 @@ module Vertica
   end
 
   # Quotes an identifier for safe use within SQL queries, using double quotes.
-  # @param [:to_s] identifier The identifier to quote.
+  # @param identifier [:to_s] The identifier to quote.
   # @return [String] The quoted identifier that can be safely included in SQL queries.
   def self.quote_identifier(identifier)
     "\"#{identifier.to_s.gsub(/"/, '""')}\""

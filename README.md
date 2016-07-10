@@ -119,9 +119,9 @@ end
 You can also provide a filename or an IO object:
 
 ``` ruby
-connection.copy("COPY table FROM STDIN ...", "data.csv")
+connection.copy("COPY table FROM STDIN ...", source: "data.csv")
 File.open('file.csv') do |io|
-  connection.copy("COPY table FROM STDIN ...", io)
+  connection.copy("COPY table FROM STDIN ...", source: io)
 end
 ```
 
@@ -130,7 +130,7 @@ For more information, see [the Vertica documentation](https://my.vertica.com/doc
 ### Interrupting sessions
 
 ``` ruby
-connection = Vertica.connect(...)
+connection = Vertica.connect(host: 'dbserver', ...)
 
 Thread.new do
   sleep(60)
