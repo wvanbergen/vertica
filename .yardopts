@@ -2,3 +2,4 @@
 --markup markdown
 --readme README.md
 --no-private
+- CHANGELOG.md

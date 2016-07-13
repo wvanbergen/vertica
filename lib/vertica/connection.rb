@@ -46,6 +46,8 @@ class Vertica::Connection
   #   [Vertica documentation for `SET TIME ZONE`](https://my.vertica.com/docs/7.1.x/HTML/Content/Authoring/SQLReferenceManual/Statements/SET/SETTIMEZONE.htm).
   # @param search_path [Array<String>] A list of schemas to use as search path. See the
   #   [Vertica documentation for `SET SEARCH_PATH`](https://my.vertica.com/docs/7.1.x/HTML/Content/Authoring/SQLReferenceManual/Statements/SET/SETSEARCH_PATH.htm).
+  # @param autocommit [Boolean] Enable autocommit on the session. See [the Vertica documentation](https://my.vertica.com/docs/7.1.x/HTML/Content/Authoring/ConnectingToHPVertica/vsql/AUTOCOMMIT.htm)
+  #   for more information.
   # @param debug [Boolean] Setting this to true will log all the communication between client and server
   #   to STDOUT. Useful when developing this library.
   def initialize(host: nil, port: 5433, username: nil, password: nil, database: nil, interruptable: false, ssl: false, read_timeout: 600, debug: false, role: nil, search_path: nil, timezone: nil, autocommit: false, skip_startup: false, skip_initialize: false, user: nil)
