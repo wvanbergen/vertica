@@ -29,6 +29,8 @@ Now, run `bundle install`.
 
 ## Usage
 
+See the [API Documentation](http://www.rubydoc.info/gems/vertica) for a full reference of the API. Examples of basic use cases are below
+
 ### Connecting
 
 The `Vertica.connect` methods takes keyword arguments and returns a connection
@@ -170,7 +172,7 @@ Travis CI against Vertica 7 CE, and against several Ruby versions.
 ### See also
 
 * [Website](http://vanbergen.org/vertica)
-* [API Documentation](http://www.rubydoc.info/gems/vertica/frames)
+* [API Documentation](http://www.rubydoc.info/gems/vertica)
 * [Vertica documentation](https://my.vertica.com/docs/7.1.x/HTML/index.htm)
 * [sequel-vertica](https://github.com/camilo/sequel-vertica): Sequel integration
 * [newrelic-vertica](https://github.com/wvanbergen/newrelic-vertica): NewRelic monitoring of queries
