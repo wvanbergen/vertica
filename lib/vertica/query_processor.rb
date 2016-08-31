@@ -1,5 +1,14 @@
 module Vertica::QueryProcessor
 
+  def process_backend_messages
+    begin
+      process_message(message = @connection.read_message)
+    end until message.kind_of?(Vertica::Protocol::ReadyForQuery)
+
+    raise @error unless @error.nil?
+    return @result
+  end
+
   def process_message(message)
   	case message
   	  when Vertica::Protocol::ErrorResponse

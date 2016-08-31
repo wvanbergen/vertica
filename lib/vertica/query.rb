@@ -36,12 +36,7 @@ class Vertica::Query
   def run
     @connection.write_message(Vertica::Protocol::Query.new(@sql))
 
-    begin
-      process_message(message = @connection.read_message)
-    end until message.kind_of?(Vertica::Protocol::ReadyForQuery)
-
-    raise @error unless @error.nil?
-    return @result
+    process_backend_messages
   end
 
   # @return [String] Returns a user-consumable string representation of this query instance.

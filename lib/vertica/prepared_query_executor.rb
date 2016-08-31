@@ -22,12 +22,7 @@ class Vertica::PreparedQueryExecutor
     @connection.write_message(Vertica::Protocol::Sync.new)
     @connection.write_message(Vertica::Protocol::Flush.new)
 
-    begin
-      process_message(message = @connection.read_message)
-    end until message.kind_of?(Vertica::Protocol::ReadyForQuery)
-
-    raise @error unless @error.nil?
-    return @result
+    process_backend_messages
   end
 
   def process_message(message)
