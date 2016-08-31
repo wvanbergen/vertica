@@ -51,8 +51,10 @@ end
 
 require 'vertica/version'
 require 'vertica/error'
+require 'vertica/query_processor'
 require 'vertica/connection'
 require 'vertica/query'
+require 'vertica/prepared_query_executor'
 require 'vertica/prepared_query'
 require 'vertica/data_type'
 require 'vertica/column'

@@ -20,18 +20,49 @@ class Vertica::PreparedQuery
   def run
     @connection.write_message(Vertica::Protocol::Parse.new(@name, @sql, []))
     @connection.write_message(Vertica::Protocol::Describe.new(:prepared_statement, @name))
+    @connection.write_message(Vertica::Protocol::Sync.new)
     @connection.write_message(Vertica::Protocol::Flush.new)
 
     begin
       process_message(message = @connection.read_message)
-    end until message.kind_of?(Vertica::Protocol::RowDescription) || @error
+    end until message.kind_of?(Vertica::Protocol::ReadyForQuery)
 
     raise @error unless @error.nil?
 
     self
   end
 
-  def execute(parameter_values)
+  # Runs a prepared query against the database.
+  #
+  # @overload execute(parameter_values)
+  #   Runs a query against the database, and return the full result as a {Vertica::Result}
+  #   instance.
+  #
+  #   @note This requires the entire result to be buffered in memory, which may cause problems
+  #     for queries with large results. Consider using the unbuffered version instead.
+  #
+  #   @param parameter_values [Array<Object>] The values of the parameters to bind for the prepared query
+  #   @return [Vertica::Result]
+  #   @raise [Vertica::Error::ConnectionError] The connection to the server failed.
+  #   @raise [Vertica::Error::QueryError] The server sent an error response indicating that
+  #     the provided query cannot be evaluated.
+  #
+  # @overload execute(parameter_values, &block)
+  #   Runs a query against the database, and yield every {Vertica::Row row} to the provided
+  #   block.
+  #
+  #   @param parameter_values [Array<Object>] The values of the parameters to bind for the prepared query
+  #   @yield The provided block will be called for every row in the result.
+  #   @yieldparam row [Vertica::Row]
+  #   @return [void]
+  #   @raise [Vertica::Error::ConnectionError] The connection to the server failed.
+  #   @raise [Vertica::Error::QueryError] The server sent an error response indicating that
+  #     the provided query cannot be evaluated.
+  #
+  def execute(*parameter_values, &block)
+    @connection.send(:run_in_mutex, 
+      Vertica::PreparedQueryExecutor.new(@connection, @name, @row_description, @parameter_types, parameter_values, block)
+    )
   end
   
   private
