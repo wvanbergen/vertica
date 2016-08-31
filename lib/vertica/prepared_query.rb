@@ -6,6 +6,8 @@
 # @see Vertica::Connection#prepare
 class Vertica::PreparedQuery
 
+  attr_reader :parameter_types
+
   # Instantiates a new prepared query
   # @param connection [Vertica::Connection] The connection to use for the query
   # @param sql [String] The SQL statement to execute.
