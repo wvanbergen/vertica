@@ -12,7 +12,7 @@ class Vertica::PreparedQuery
   # @param connection [Vertica::Connection] The connection to use for the query
   # @param sql [String] The SQL statement to execute.
   def initialize(connection, sql)
-    @connection, @sql, @name = connection, sql, connection.next_prepared_query_name
+    @connection, @sql, @name, @error = connection, sql, connection.next_prepared_query_name, nil
   end
 
   # Sends the query to the server for preparation
@@ -63,7 +63,7 @@ class Vertica::PreparedQuery
   #
   def execute(*parameter_values, &block)
     @connection.send(:run_in_mutex, 
-      Vertica::PreparedQueryExecutor.new(@connection, @name, @row_description, @parameter_types, parameter_values, block)
+      Vertica::PreparedQueryExecutor.new(@connection, @sql, @name, @row_description, @parameter_types, parameter_values, block)
     )
   end
   

@@ -1,14 +1,14 @@
 require 'test_helper'
 
-class FunctionalQueryTest < Minitest::Test
+class FunctionalPreparedQueryTest < Minitest::Test
   
   def setup
     @connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
     @connection.query("DROP TABLE IF EXISTS test_ruby_vertica_table CASCADE;")
     @connection.query("CREATE TABLE test_ruby_vertica_table (id int, name varchar(100))")
-    @connection.query("DROP TABLE IF EXISTS conversions_table CASCADE;")
+    @connection.query("DROP TABLE IF EXISTS pq_conversions_table CASCADE;")
     @connection.query <<-SQL
-          CREATE TABLE IF NOT EXISTS conversions_table (
+          CREATE TABLE IF NOT EXISTS pq_conversions_table (
             "int_field" int,
             "varchar_field" varchar(100),
             "char_field" char(10),
@@ -116,10 +116,10 @@ class FunctionalQueryTest < Minitest::Test
     binary_data = ['d09fd180d0b8d0b2d0b5d1822c2068656c6c6f21'].pack('H*')
     decimal = BigDecimal.new('1.12')
 
-    @connection.prepare("INSERT INTO conversions_table VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    @connection.prepare("INSERT INTO pq_conversions_table VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
       .execute(123, 'hello world', 'hello', 'hello world', today, now, now, false, -1.123, decimal, binary_data)
 
-    r = @connection.query('select * from conversions_table where int_field = 123')  
+    r = @connection.query('select * from pq_conversions_table where int_field = 123')  
 
     assert_equal 1, r.size
     row = r[0]
@@ -142,66 +142,66 @@ class FunctionalQueryTest < Minitest::Test
     binary_data = ['d09fd180d0b8d0b2d0b5d1822c2068656c6c6f21'].pack('H*')
     decimal = BigDecimal.new('1.12')
 
-    @connection.prepare("INSERT INTO conversions_table VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    @connection.prepare("INSERT INTO pq_conversions_table VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
       .execute(124, 'hello world', 'hello', 'hello world', today, now, now, true, -1.123, decimal, binary_data)
 
-    pq = @connection.prepare("select * from conversions_table where int_field = ?")
+    pq = @connection.prepare("select * from pq_conversions_table where int_field = ?")
     
     assert_equal 1, pq.execute(124).size  
     assert_equal 0, pq.execute(125).size  
 
-    pq = @connection.prepare("select * from conversions_table where int_field > ?")
+    pq = @connection.prepare("select * from pq_conversions_table where int_field > ?")
 
     assert_equal 0, pq.execute(124).size  
     assert_equal 1, pq.execute(123).size  
 
-    pq = @connection.prepare("select * from conversions_table where int_field = 124 and varchar_field = ?")
+    pq = @connection.prepare("select * from pq_conversions_table where int_field = 124 and varchar_field = ?")
 
     assert_equal 1, pq.execute('hello world').size  
     assert_equal 0, pq.execute('hello world2').size  
 
-    pq = @connection.prepare("select * from conversions_table where int_field = 124 and char_field = ?")
+    pq = @connection.prepare("select * from pq_conversions_table where int_field = 124 and char_field = ?")
 
     assert_equal 1, pq.execute('hello     ').size  
     assert_equal 1, pq.execute('hello').size  
     assert_equal 0, pq.execute('hello2').size  
 
-    pq = @connection.prepare("select * from conversions_table where int_field = 124 and date_field = ?")
+    pq = @connection.prepare("select * from pq_conversions_table where int_field = 124 and date_field = ?")
 
     assert_equal 1, pq.execute(today).size  
     assert_equal 0, pq.execute(Date.today - 1).size  
 
-    pq = @connection.prepare("select * from conversions_table where int_field = 124 and date_field > ?")
+    pq = @connection.prepare("select * from pq_conversions_table where int_field = 124 and date_field > ?")
 
     assert_equal 0, pq.execute(today).size  
     assert_equal 1, pq.execute(Date.today - 1).size
 
-    pq = @connection.prepare("select * from conversions_table where int_field = 124 and timestamp_field = ?")
+    pq = @connection.prepare("select * from pq_conversions_table where int_field = 124 and timestamp_field = ?")
 
     assert_equal 1, pq.execute(now).size  
     assert_equal 0, pq.execute(now - 1).size
 
-    pq = @connection.prepare("select * from conversions_table where int_field = 124 and timestamptz_field > ?")
+    pq = @connection.prepare("select * from pq_conversions_table where int_field = 124 and timestamptz_field > ?")
 
     assert_equal 0, pq.execute(now).size  
     assert_equal 1, pq.execute(now - 1).size  
 
-    pq = @connection.prepare("select * from conversions_table where int_field = 124 and boolean_field = ?")
+    pq = @connection.prepare("select * from pq_conversions_table where int_field = 124 and boolean_field = ?")
 
     assert_equal 1, pq.execute(true).size  
     assert_equal 0, pq.execute(false).size  
 
-    pq = @connection.prepare("select * from conversions_table where int_field = 124 and float_field = ?")
+    pq = @connection.prepare("select * from pq_conversions_table where int_field = 124 and float_field = ?")
 
     assert_equal 1, pq.execute(-1.123).size  
     assert_equal 0, pq.execute(-1.3).size  
 
-    pq = @connection.prepare("select * from conversions_table where int_field = 124 and numeric_field = ?")
+    pq = @connection.prepare("select * from pq_conversions_table where int_field = 124 and numeric_field = ?")
 
     assert_equal 1, pq.execute(decimal).size  
     assert_equal 0, pq.execute(decimal - 1).size  
 
-    pq = @connection.prepare("select * from conversions_table where int_field = 124 and binary_field = ?")
+    pq = @connection.prepare("select * from pq_conversions_table where int_field = 124 and binary_field = ?")
 
     assert_equal 1, pq.execute(binary_data).size  
     assert_equal 0, pq.execute(binary_data + '3').size  

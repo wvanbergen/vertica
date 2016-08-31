@@ -8,12 +8,13 @@ class Vertica::PreparedQueryExecutor
 
   include Vertica::QueryProcessor
 
-  def initialize(connection, prepared_query_name, row_description, parameter_types, parameter_values, row_handler)
-    @connection, @prepared_query_name, @row_description, @parameter_types, @parameter_values = 
-      connection, prepared_query_name, row_description, parameter_types, parameter_values
+  def initialize(connection, sql, prepared_query_name, row_description, parameter_types, parameter_values, row_handler)
+    @connection, @sql, @prepared_query_name, @row_description, @parameter_types, @parameter_values = 
+      connection, sql, prepared_query_name, row_description, parameter_types, parameter_values
     @row_handler = row_handler || lambda { |row| buffer_row(row) }
     @copy_handler = nil
     @buffer = row_handler.nil? ? [] : nil
+    @error = nil
   end
 
   def run
