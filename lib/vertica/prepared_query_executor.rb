@@ -6,6 +6,9 @@
 # @see Vertica::PreparedQuery#execute
 class Vertica::PreparedQueryExecutor
 
+  attr_reader :connection, :sql, :row_handler, :copy_handler
+  attr_accessor :error, :result, :row_description, :buffer
+ 
   include Vertica::QueryProcessor
 
   def initialize(connection, sql, prepared_query_name, row_description, parameter_types, parameter_values, row_handler)

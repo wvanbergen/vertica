@@ -8,6 +8,9 @@
 # @see Vertica::Connection#copy
 class Vertica::Query
 
+  attr_reader :connection, :sql, :row_handler, :copy_handler
+  attr_accessor :error, :result, :row_description, :buffer
+  
   include Vertica::QueryProcessor
 
   # Instantiates a new query
