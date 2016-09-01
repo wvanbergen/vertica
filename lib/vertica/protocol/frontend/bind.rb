@@ -24,6 +24,8 @@ module Vertica
         return '1' if parameter_type.name == 'bool' and TrueClass === val
         return '0' if parameter_type.name == 'bool' and FalseClass === val
 
+        return val.strftime('%Y-%m-%d %H:%M:%S.%6N %z') if Time === val
+
         val.to_s
       end
     end

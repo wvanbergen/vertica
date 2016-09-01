@@ -112,7 +112,7 @@ class FunctionalPreparedQueryTest < Minitest::Test
 
   def test_parameter_types
     today = Date.today
-    now = Time.now.round
+    now = Time.now.round(6)
     binary_data = ['d09fd180d0b8d0b2d0b5d1822c2068656c6c6f21'].pack('H*')
     decimal = BigDecimal.new('1.12')
 
@@ -128,17 +128,25 @@ class FunctionalPreparedQueryTest < Minitest::Test
     assert_equal 'hello     ', row[:char_field]
     assert_equal 'hello world', row[:long_varchar_field]
     assert_equal today, row[:date_field]
+
     assert_equal now, row[:timestamp_field]
     assert_equal now, row[:timestamptz_field]
     assert_equal false, row[:boolean_field]
     assert_equal -1.123, row[:float_field]
     assert_equal decimal, row[:numeric_field]
     assert_equal binary_data, row[:binary_field]
+
+    r = @connection.query("select TO_CHAR(timestamp_field, 'YYYY-MM-DD HH24:MI:SS.MS') as timestamp_str, TO_CHAR(timestamptz_field, 'YYYY-MM-DD HH24:MI:SS.MS TZ') as timestamptz_str from pq_conversions_table where int_field = 123")  
+
+    assert_equal 1, r.size
+    row = r[0]
+    assert_equal now.strftime('%Y-%m-%d %H:%M:%S.%L'), row[:timestamp_str]
+    assert_equal now.strftime('%Y-%m-%d %H:%M:%S.%L %Z'), row[:timestamptz_str]
   end
 
   def test_parameter_types_condition
     today = Date.today
-    now = Time.now.round
+    now = Time.now
     binary_data = ['d09fd180d0b8d0b2d0b5d1822c2068656c6c6f21'].pack('H*')
     decimal = BigDecimal.new('1.12')
 
