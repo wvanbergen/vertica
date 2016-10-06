@@ -3,7 +3,7 @@ module Vertica
     class SslRequest < FrontendMessage
       message_id nil
 
-      def to_bytes
+      def message_body
         [80877103].pack('N')
       end
     end
