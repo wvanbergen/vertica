@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 1.0.1
+
+- Fix an issue that made connecting over SSL not work.
+
 ## Version 1.0.0
 
 - Version 1.0 is a complete rewrite of the internals, but should be mostly API compatible
