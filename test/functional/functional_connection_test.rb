@@ -19,7 +19,11 @@ class FunctionalConnectionTest < Minitest::Test
     refute connection.ssl?
 
   rescue Vertica::Error::SSLNotSupported
-    puts "\nThe test server doesn't support SSL, so SSL connections could not be tested."
+    if ENV['VERTICA_SERVER_SUPPORTS_SSL']
+      raise
+    else
+      puts "\nThe test server doesn't support SSL, so SSL connections could not be tested."
+    end
   end
 
   def test_interruptable_connection
