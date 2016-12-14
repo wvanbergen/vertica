@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 1.0.2
+
+- Send more client information when connecting, so an admin knows who is connected.
+
 ## Version 1.0.1
 
 - Fix an issue that made connecting over SSL not work.
