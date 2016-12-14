@@ -10,9 +10,9 @@ module Vertica
         @options  = options
         @type     = "vertica-rb"
         @pid      = Process.pid.to_s
-        @platform = Gem::Platform.local.to_s
+        @platform = RUBY_PLATFORM
         @version  = Vertica::VERSION
-        @label    = @type+"-"+@version+"-"+SecureRandom.hex(10) 
+        @label    = "#{@type}-#{@version}-#{SecureRandom.uuid}"
       end
 
       def message_body

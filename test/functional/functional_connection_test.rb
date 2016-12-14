@@ -11,12 +11,13 @@ class FunctionalConnectionTest < Minitest::Test
 
   def test_connection_client_info
     connection = Vertica::Connection.new(TEST_CONNECTION_HASH)
-    connection.query("SELECT client_type, client_os, client_version, client_label FROM SESSIONS WHERE client_pid = "+Process.pid.to_s) do |row|
+
+    connection.query("SELECT client_type, client_os, client_version, client_label FROM SESSIONS WHERE client_pid = #{Vertica.quote(Process.pid)}") do |row|
       assert_equal "vertica-rb", row['client_type']
-      assert_equal Gem::Platform.local.to_s, row['client_os']
+      assert_equal RUBY_PLATFORM, row['client_os']
       assert_equal Vertica::VERSION, row['client_version']
-      assert_match "vertica-rb-"+Vertica::VERSION, row['client_label']
-    end
+      assert_match "vertica-rb-#{Vertica::VERSION}-", row['client_label']
+     end
 
     connection.close
     assert_valid_closed_connection(connection)
