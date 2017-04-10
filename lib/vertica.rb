@@ -1,6 +1,7 @@
 require 'date'
 require 'time'
 require 'bigdecimal'
+require 'securerandom'
 
 # Main module for this library. It contains the {.connect} method to return a
 # {Vertica::Connection} instance, and methods to quote values ({.quote}) and
