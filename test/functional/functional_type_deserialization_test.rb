@@ -52,20 +52,20 @@ class FunctionalTypeDeserializationTest < Minitest::Test
 
     result = @connection.query("SELECT * FROM conversions_table LIMIT 1")
 
-    assert_equal 1, result.size
-    assert_equal 123, result.fetch(0, 'int_field')
-    assert_equal 'hello world', result.fetch(0, 'varchar_field')
-    assert_equal 'hello     ', result.fetch(0, 'char_field')
-    assert_equal 'hello world', result.fetch(0, 'long_varchar_field')
-    assert_equal Date.parse('2010-01-01'), result.fetch(0, 'date_field')
-    assert_equal Time.new(2010, 1, 1, 12, 0, BigDecimal.new("0.123456")), result.fetch(0, 'timestamp_field')
-    assert_equal Time.new(2010, 1, 1, 12, 0, 0, '+09:30'), result.fetch(0, 'timestamptz_field')
-    assert_equal "12:00:00", result.fetch(0, 'time_field')
-    assert_equal "1", result.fetch(0, 'interval_field')
-    assert_equal true, result.fetch(0, 'boolean_field')
-    assert_equal -1.123, result.fetch(0, 'float_field')
-    assert_equal BigDecimal.new('1.12'), result.fetch(0, 'numeric_field')
-    assert_equal ['d09fd180d0b8d0b2d0b5d1822c2068656c6c6f21'].pack('H*'), result.fetch(0, 'binary_field')
+    assert_equal(1, result.size)
+    assert_equal(123, result.fetch(0, 'int_field'))
+    assert_equal('hello world', result.fetch(0, 'varchar_field'))
+    assert_equal('hello     ', result.fetch(0, 'char_field'))
+    assert_equal('hello world', result.fetch(0, 'long_varchar_field'))
+    assert_equal(Date.parse('2010-01-01'), result.fetch(0, 'date_field'))
+    assert_equal(Time.new(2010, 1, 1, 12, 0, BigDecimal.new("0.123456")), result.fetch(0, 'timestamp_field'))
+    assert_equal(Time.new(2010, 1, 1, 12, 0, 0, '+09:30'), result.fetch(0, 'timestamptz_field'))
+    assert_equal("12:00:00", result.fetch(0, 'time_field'))
+    assert_equal("1", result.fetch(0, 'interval_field'))
+    assert_equal(true, result.fetch(0, 'boolean_field'))
+    assert_equal(-1.123, result.fetch(0, 'float_field'))
+    assert_equal(BigDecimal.new('1.12'), result.fetch(0, 'numeric_field'))
+    assert_equal(['d09fd180d0b8d0b2d0b5d1822c2068656c6c6f21'].pack('H*'), result.fetch(0, 'binary_field'))
   end
 
   def test_nil_values_from_table
@@ -87,15 +87,15 @@ class FunctionalTypeDeserializationTest < Minitest::Test
              NULL::float
     SQL
 
-    assert_equal 1, result.size
-    assert_equal 0.0, result[0, 0]
-    assert_equal -0.0, result[0, 1]
-    assert_equal 1.1, result[0, 2]
-    assert_equal -1.1, result[0, 3]
-    assert_equal Float::INFINITY, result[0, 4]
-    assert_equal -Float::INFINITY, result[0, 5]
-    assert result[0, 6].equal?(Float::NAN)
-    assert_nil result[0, 7]
+    assert_equal(1, result.size)
+    assert_equal(0.0, result[0, 0])
+    assert_equal(-0.0, result[0, 1])
+    assert_equal(1.1, result[0, 2])
+    assert_equal(-1.1, result[0, 3])
+    assert_equal(Float::INFINITY, result[0, 4])
+    assert_equal(-Float::INFINITY, result[0, 5])
+    assert(result[0, 6].equal?(Float::NAN), "NaN should be derialized properly")
+    assert_nil(result[0, 7])
   end
 
   def test_deserialize_numeric_values
