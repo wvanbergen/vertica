@@ -30,21 +30,21 @@ class DataTypeTest < Minitest::Test
   def test_deserialize_integer
     type = Vertica::DataType.build(oid: 6)
 
-    assert_nil type.deserialize(nil)
-    assert_equal 0, type.deserialize('0')
-    assert_equal -123, type.deserialize('-123')
+    assert_nil(type.deserialize(nil))
+    assert_equal(0, type.deserialize('0'))
+    assert_equal(-123, type.deserialize('-123'))
     assert_raises(ArgumentError) { type.deserialize('foo') }
   end
 
   def test_deserialize_float
     type = Vertica::DataType.build(oid: 7)
 
-    assert_nil type.deserialize(nil)
-    assert_equal Float::INFINITY, type.deserialize('Infinity')
-    assert_equal -Float::INFINITY, type.deserialize('-Infinity')
-    assert type.deserialize('NaN').equal?(Float::NAN)
-    assert_equal 1.1, type.deserialize('1.1')
-    assert_equal -1.1, type.deserialize('-1.1')
+    assert_nil(type.deserialize(nil))
+    assert_equal(Float::INFINITY, type.deserialize('Infinity'))
+    assert_equal(-Float::INFINITY, type.deserialize('-Infinity'))
+    assert(type.deserialize('NaN').equal?(Float::NAN), "NaN should be deserialized as Float::NAN")
+    assert_equal(1.1, type.deserialize('1.1'))
+    assert_equal(-1.1, type.deserialize('-1.1'))
     assert_raises(ArgumentError) { type.deserialize('foo') }
   end
 
