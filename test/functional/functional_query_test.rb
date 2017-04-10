@@ -81,6 +81,20 @@ class FunctionalQueryTest < Minitest::Test
     assert_equal 'ニ', r.row_description[1].name
   end
 
+  # Query with multiple statements is not officailly supported
+  def test_query_with_multiple_statements
+    # Results of only the last statement are obtained
+    r = @connection.query("SET SEARCH_PATH TO default; SELECT 1 as one; SELECT 2 as two")
+    assert_equal 1, r.size
+    assert_equal 1, r.row_description.length
+    assert_equal 'two', r.row_description[0].name
+
+    # Error of the former statement is raised
+    assert_raises(Vertica::Error::MissingColumn) do
+      @connection.query("SELECT missing FROM test_ruby_vertica_table; SELECT 1 FROM missing")
+    end
+  end
+
   def test_insert
     r = @connection.query("INSERT INTO test_ruby_vertica_table VALUES (2, 'stefanie')")
     assert_equal "INSERT", r.tag
