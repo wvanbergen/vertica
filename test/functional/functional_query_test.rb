@@ -72,6 +72,15 @@ class FunctionalQueryTest < Minitest::Test
     assert_empty r
   end
 
+  def test_select_query_with_multibyte_column_names_results
+    r = @connection.query("SELECT 1 as \"イチ\", 2 as \"ニ\"")
+    assert_equal 1, r.size
+    assert_equal 2, r.row_description.length
+
+    assert_equal 'イチ', r.row_description[0].name
+    assert_equal 'ニ', r.row_description[1].name
+  end
+
   def test_insert
     r = @connection.query("INSERT INTO test_ruby_vertica_table VALUES (2, 'stefanie')")
     assert_equal "INSERT", r.tag

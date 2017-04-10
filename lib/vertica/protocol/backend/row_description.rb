@@ -21,7 +21,7 @@ module Vertica
             :data_format        => field_info[6],
           }
 
-          pos += 19 + field_info[0].size
+          pos += 19 + field_info[0].bytesize
         end
       end
     end
