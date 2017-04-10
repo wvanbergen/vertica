@@ -146,6 +146,14 @@ class Vertica::Connection
     run_in_mutex(Vertica::Query.new(self, sql, row_handler: block))
   end
 
+  # Prepare a SQL query against the database.
+  #
+  # @param sql [String] The SQL command to prepare.
+  # @return [VerticaPreparedQuery] Returns a parepared query object that can later be executed
+  def prepare(sql, &block)
+    run_in_mutex(Vertica::PreparedQuery.new(self, sql))
+  end
+
   # Loads data into Vertica using a `COPY table FROM STDIN` query.
   #
   # @param sql [String] The `COPY ... FROM STDIN` SQL command to run.
@@ -299,6 +307,12 @@ class Vertica::Connection
     else
       raise Vertica::Error::MessageError, "Unhandled message: #{message.inspect}"
     end
+  end
+
+  def next_prepared_query_name
+    @parepared_query_index ||= 0
+    @parepared_query_index += 1
+    "s#@parepared_query_index"
   end
 
   protected
