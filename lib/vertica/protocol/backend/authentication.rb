@@ -19,6 +19,7 @@ module Vertica
 
       def initialize(data)
         @code, other = data.unpack('Na*')
+        puts "codes we received #{@code}, #{other}"
         case @code
           when CRYPT_PASSWORD, MD5_PASSWORD then @salt = other
           when GSS_CONTINUE then @auth_data = other
