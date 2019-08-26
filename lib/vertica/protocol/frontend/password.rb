@@ -22,7 +22,7 @@ module Vertica
           @password = "md5#{@password}"
         when Vertica::Protocol::Authentication::HASH, \
              Vertica::Protocol::Authentication::HASH_SHA512
-          require 'digest/sha512'
+          require 'digest'
           @password = Digest::SHA512.hexdigest("#{@password}#{@userSalt}")
           @password = Digest::SHA512.hexdigest("#{@password}#{@salt}")
           @password = "sha512#{@password}"
