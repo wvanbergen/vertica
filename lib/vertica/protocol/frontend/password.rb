@@ -14,7 +14,10 @@ module Vertica
           @password
         when Vertica::Protocol::Authentication::CRYPT_PASSWORD
           @password.crypt(@salt)
-        when Vertica::Protocol::Authentication::MD5_PASSWORD
+        when Vertica::Protocol::Authentication::MD5_PASSWORD, \
+             Vertica::Protocol::Authentication::HASH_MD5,     \
+             Vertica::Protocol::Authentication::HASH,         \
+             Vertica::Protocol::Authentication::HASH_SHA512
           require 'digest/md5'
           @password = Digest::MD5.hexdigest("#{@password}#{@user}")
           @password = Digest::MD5.hexdigest("#{@password}#{@salt}")
