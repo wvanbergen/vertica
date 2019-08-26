@@ -16,8 +16,8 @@ module Vertica
       PASSWORD_CHANGED    = 10
       PASSWORD_GRACE      = 11
       HASH                = 65536
-      HASH_MD5            = 65536 + 5
-      HASH_SHA512         = 65536+512
+      HASH_MD5            = 65541
+      HASH_SHA512         = 66048
 
       attr_reader :code
       attr_reader :salt
