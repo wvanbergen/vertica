@@ -10,7 +10,7 @@ require 'securerandom'
 module Vertica
 
   # The protocol version (3.0.0) implemented in this library.
-  PROTOCOL_VERSION = 3 << 16
+  PROTOCOL_VERSION = 3 << 16 | 5
 
   # Opens a new connection to a Vertica database.
   # @param (see Vertica::Connection#initialize)
