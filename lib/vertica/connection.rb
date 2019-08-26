@@ -394,7 +394,7 @@ class Vertica::Connection
       case message = read_message
       when Vertica::Protocol::Authentication
         if message.code != Vertica::Protocol::Authentication::OK
-          write_message(Vertica::Protocol::Password.new(@options[:password], auth_method: message.code, user: @options[:username], salt: message.salt))
+          write_message(Vertica::Protocol::Password.new(@options[:password], auth_method: message.code, user: @options[:username], salt: message.salt, userSalt: message.userSalt))
         end
       else
         process_message(message)

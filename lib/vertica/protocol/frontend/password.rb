@@ -3,7 +3,7 @@ module Vertica
     class Password < FrontendMessage
       message_id 'p'
 
-      def initialize(password, auth_method: Vertica::Protocol::Authentication::CLEARTEXT_PASSWORD, salt: nil, user: nil)
+      def initialize(password, auth_method: Vertica::Protocol::Authentication::CLEARTEXT_PASSWORD, salt: nil, user: nil, userSalt: nil)
         @password = password
         @auth_method, @salt, @user, @userSalt = auth_method, salt, user, userSalt
       end
