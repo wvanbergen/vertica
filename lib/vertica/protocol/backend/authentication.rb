@@ -33,7 +33,7 @@ module Vertica
           when GSS_CONTINUE then @auth_data = other
           when HASH, HASH_MD5
             @salt =  other[4..other.size]
-            @userSaltLen = other[4..7].unpack('!I')[0]
+            @userSaltLen = other[4..8].unpack('!I')[0]
             puts "user salt length is #{@userSaltLen}"
             @userSalt = other[8..other.size].unpack("!#{@userSaltLen}s")[0]
             puts "user salt is #{@userSalt}"
