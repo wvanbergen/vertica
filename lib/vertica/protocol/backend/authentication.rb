@@ -31,9 +31,9 @@ module Vertica
           when CRYPT_PASSWORD then @salt = other
           when MD5_PASSWORD, HASH_MD5 then @salt = other[4..other.size]
           when GSS_CONTINUE then @auth_data = other
-          when HASH, HASH_MD5
+          when HASH, HASH_SHA512
             @salt =  other[4..other.size]
-            @userSaltLen = other[4..8].unpack('!I')[0]
+            @userSaltLen = other[4..7].unpack('!I')[0]
             puts "user salt length is #{@userSaltLen}"
             @userSalt = other[8..other.size].unpack("!#{@userSaltLen}s")[0]
             puts "user salt is #{@userSalt}"
