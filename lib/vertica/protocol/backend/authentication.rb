@@ -29,16 +29,16 @@ module Vertica
         puts "codes we received #{@code}, #{other}"
         case @code
           when CRYPT_PASSWORD then @salt = other
-          when MD5_PASSWORD, HASH_MD5 then @salt = other[0..3]
+          when MD5_PASSWORD, HASH_MD5 then @salt = other[0...4]
           when GSS_CONTINUE then @auth_data = other
           when HASH, HASH_SHA512
-            @salt =  other[0..3]
-            @userSaltLen = other[4..7].unpack('n').first
+            @salt =  other[0...4]
+            @userSaltLen = other[4...8].unpack('n').first
             puts "user salt length is #{@userSaltLen}"
             if @userSaltLen != 16
               puts "user salt length isn't 16, raise error"
             end 
-            @userSalt = other[8..other.size].unpack('Na*').first
+            @userSalt = other[8...other.size].unpack('Na*').first
             puts "user salt is #{@userSalt}"
         end
       end
