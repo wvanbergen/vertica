@@ -43,7 +43,7 @@ module Vertica
             if @userSaltLen != 16
               puts "user salt length isn't 16, raise error"
             end 
-            @userSalt = other[8...other.size].unpack('Na*').first
+            @userSalt = other[8...other.size].unpack('n').first
             puts "user salt is #{@userSalt}"
         end
       end
