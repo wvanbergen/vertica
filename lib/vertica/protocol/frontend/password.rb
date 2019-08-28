@@ -23,6 +23,7 @@ module Vertica
         when Vertica::Protocol::Authentication::HASH, \
              Vertica::Protocol::Authentication::HASH_SHA512
           require 'digest'
+          puts "#{@userSalt} is the user salt in the password file"
           @password = Digest::SHA512.hexdigest("#{@password}#{@userSalt}")
           @password = Digest::SHA512.hexdigest("#{@password}#{@salt}")
           @password = "sha512#{@password}"
