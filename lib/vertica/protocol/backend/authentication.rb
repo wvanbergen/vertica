@@ -35,15 +35,12 @@ module Vertica
             @salt =  other[0...4]
             @userSaltLen = other[4...8].unpack('n').first
             puts "user salt length is #{@userSaltLen}"
-            for i in 5..12 do 
-              puts "trying other range #{i}"
-              thisSalt = other[4...i].unpack('n').first
-              puts "#{thisSalt}"
-            end
             if @userSaltLen != 16
               puts "user salt length isn't 16, raise error"
             end 
-            @userSalt = other[8...other.size].unpack('n').first
+            userSaltArray = other[8...other.size].unpack('n')
+            puts "user salt array is #{userSaltArray}"
+            @userSalt = userSaltArray.first
             puts "user salt is #{@userSalt}"
         end
       end
