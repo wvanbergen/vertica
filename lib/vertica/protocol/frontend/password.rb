@@ -26,12 +26,8 @@ module Vertica
           puts "#{@userSalt} is the user salt in the password file"
           @password = Digest::SHA512.hexdigest("#{@password}#{@userSalt}")
           @password = Digest::SHA512.hexdigest("#{@password}#{@salt}")
-          @password = "sha512#{@password}"
-          @expected_password = Digest::SHA512.hexdigest("#{@userSalt}")
-          @expected_password = Digest::SHA512.hexdigest("#{@expected_password}#{@salt}")
-          @expected_password = "sha512#{@expected_password}"
-          puts "         password is #{@password}"
-          puts "expected password is #{@expected_password}"
+          prefix = "sha512".bytes
+          @password = "#{prefix}#{@password}"
         else
           raise ArgumentError.new("unsupported authentication method: #{@auth_method}")
         end
