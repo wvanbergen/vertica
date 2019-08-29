@@ -33,16 +33,12 @@ module Vertica
           when GSS_CONTINUE then @auth_data = other
           when HASH, HASH_SHA512
             @salt =  other[0...4]
-            puts "#{other[4...8]}"
-            puts "#{other[4...8].unpack('n')}"
-            @userSaltLen = other[4...8].unpack('n').first
+            @userSaltLen = other[4...8].unpack('I>').first
             puts "user salt length is #{@userSaltLen}"
             if @userSaltLen != 16
               puts "user salt length isn't 16, raise error"
             end 
-            puts "#{other[8...other.size]}"
-            puts "#{other[8...other.size].unpack('n')}"
-            userSaltArray = other[8...other.size].unpack('n')
+            userSaltArray = other[8...other.size].unpack('I>')
             @userSalt = userSaltArray.first
             puts "user salt is #{@userSalt}"
         end
