@@ -25,7 +25,9 @@ module Vertica
           require 'digest'
           puts "#{@userSalt} is the user salt in the password file"
           @password = Digest::SHA512.hexdigest("#{@password}#{@userSalt}")
+          puts "@password after user salt is \n#{@password}"
           @password = Digest::SHA512.hexdigest("#{@password}#{@salt}")
+          puts "@password after salt is \n#{@password}"
           prefix = "sha512".bytes
           @password = "#{prefix}#{@password}"
         else
