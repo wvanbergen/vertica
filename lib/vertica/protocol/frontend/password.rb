@@ -19,7 +19,8 @@ module Vertica
           require 'digest/md5'
           @password = Digest::MD5.hexdigest("#{@password}#{@user}")
           @password = Digest::MD5.hexdigest("#{@password}#{@salt}")
-          @password = "md5#{@password}"
+          prefix = "md5".bytes
+          @password = "#{prefix}#{@password}"
         when Vertica::Protocol::Authentication::HASH, \
              Vertica::Protocol::Authentication::HASH_SHA512
           require 'digest'
@@ -29,7 +30,7 @@ module Vertica
           @password = Digest::SHA512.hexdigest("#{@password}#{@salt}")
           puts "@password after salt is \n#{@password}"
           prefix = "sha512".bytes
-          @password = "#{prefix}#{@password}"
+          @password = prefix + @password
         else
           raise ArgumentError.new("unsupported authentication method: #{@auth_method}")
         end
