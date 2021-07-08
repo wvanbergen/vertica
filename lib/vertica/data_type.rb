@@ -42,7 +42,7 @@ class Vertica::DataType
         raise Vertica::Error::UnknownTypeError, "Unknown type OID: #{unknown_oid}"
       end
 
-      new(args.merge(kwargs))
+      new(**args.merge(kwargs))
     end
 
     # The name of the default deserializer proc.

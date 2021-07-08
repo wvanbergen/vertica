@@ -15,7 +15,7 @@ class Vertica::RowDescription
   def self.build(columns)
     case columns
     when Vertica::Protocol::RowDescription
-      new(columns.fields.map { |fd| Vertica::Column.build(fd) })
+      new(columns.fields.map { |fd| Vertica::Column.build(**fd) })
     when Vertica::RowDescription
       columns
     when Array
